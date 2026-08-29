@@ -1,13 +1,15 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Spectrum.ViewModels"
+        xmlns:models="using:Spectrum.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
         x:Class="Spectrum.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Spectrum">
+        Title="Spectrum — Color Palette"
+        Width="1000" Height="650">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -15,6 +17,105 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <TextBlock Grid.Row="0" Text="Color Palette" FontSize="22" FontWeight="Bold" Margin="0,0,0,12"/>
+
+        <Grid Grid.Row="1" ColumnDefinitions="300,16,*">
+
+            <!-- Left panel: color editor, harmony generator, export -->
+            <ScrollViewer Grid.Column="0">
+                <StackPanel Spacing="10">
+
+                    <Border Background="{Binding BaseColorBrush}" Height="70" CornerRadius="6"
+                            BorderBrush="Gray" BorderThickness="1"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Hex" VerticalAlignment="Center" Width="40"/>
+                        <TextBox Text="{Binding BaseHex}" Watermark="#RRGGBB" Width="140"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding BaseR, StringFormat='R: {0:F0}'}"/>
+                        <Slider Minimum="0" Maximum="255" Value="{Binding BaseR}"/>
+                        <TextBlock Text="{Binding BaseG, StringFormat='G: {0:F0}'}"/>
+                        <Slider Minimum="0" Maximum="255" Value="{Binding BaseG}"/>
+                        <TextBlock Text="{Binding BaseB, StringFormat='B: {0:F0}'}"/>
+                        <Slider Minimum="0" Maximum="255" Value="{Binding BaseB}"/>
+                    </StackPanel>
+
+                    <Separator/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Name" VerticalAlignment="Center" Width="40"/>
+                        <TextBox Text="{Binding NewSwatchName}" Width="140"/>
+                    </StackPanel>
+                    <Button Content="Add Current Color" Command="{Binding AddCurrentColorCommand}" HorizontalAlignment="Stretch"/>
+
+                    <Separator/>
+
+                    <TextBlock Text="Harmony" FontWeight="SemiBold"/>
+                    <ComboBox ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}" HorizontalAlignment="Stretch"/>
+                    <Button Content="Generate Harmony" Command="{Binding GenerateHarmonyCommand}" HorizontalAlignment="Stretch"/>
+
+                    <Separator/>
+
+                    <Button Content="Copy All as Text" Command="{Binding CopyAllHexCommand}" HorizontalAlignment="Stretch"/>
+                    <Button Content="Clear Palette" Command="{Binding ClearPaletteCommand}" HorizontalAlignment="Stretch"/>
+
+                    <Separator/>
+
+                    <TextBlock Text="Export" FontWeight="SemiBold"/>
+                    <ComboBox ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}" HorizontalAlignment="Stretch"/>
+                    <Button Content="Build Preview" Command="{Binding BuildExportPreviewCommand}" HorizontalAlignment="Stretch"/>
+                    <Button Content="Copy Export" Command="{Binding CopyExportCommand}" HorizontalAlignment="Stretch"/>
+                    <TextBox Text="{Binding ExportPreview}" AcceptsReturn="True" IsReadOnly="True"
+                             Height="120" TextWrapping="Wrap" FontFamily="Consolas,monospace"/>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Right panel: the palette itself -->
+            <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1" CornerRadius="6" Padding="12">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Palette}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:ColorSwatch">
+                                <Border Width="150" Margin="6" BorderBrush="Gray" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+                                    <StackPanel>
+                                        <Border Height="70" Background="{Binding Brush}"/>
+                                        <StackPanel Margin="8" Spacing="4">
+                                            <TextBox Text="{Binding Name}" BorderThickness="0" Background="Transparent"
+                                                     Padding="0" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Hex}" FontFamily="Consolas,monospace" Foreground="Gray"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                                <Button Content="↑" FontSize="11" Padding="6,2"
+                                                        Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"/>
+                                                <Button Content="↓" FontSize="11" Padding="6,2"
+                                                        Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"/>
+                                                <Button Content="Copy" FontSize="11" Padding="6,2"
+                                                        Command="{Binding CopyCommand}" CommandParameter="{Binding}"/>
+                                                <Button Content="✕" FontSize="11" Padding="6,2"
+                                                        Command="{Binding RemoveCommand}" CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+        </Grid>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="Gray" Margin="0,10,0,0"/>
+
+    </Grid>
 
 </Window>
