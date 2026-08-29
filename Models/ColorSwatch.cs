@@ -18,9 +18,20 @@ namespace Spectrum.Models
         [ObservableProperty]
         private string _name = "Color";
 
+        // Locked swatches survive "Shuffle" instead of being replaced.
+        [ObservableProperty]
+        private bool _isLocked;
+
         public string Hex => $"#{Color.R:X2}{Color.G:X2}{Color.B:X2}";
 
         public IBrush Brush => new SolidColorBrush(Color);
+
+        // Picks readable black or white text/icons for whatever the swatch color is,
+        // using the standard relative-luminance formula.
+        public IBrush ForegroundBrush =>
+            (0.2126 * Color.R + 0.7152 * Color.G + 0.0722 * Color.B) / 255.0 > 0.6
+                ? new SolidColorBrush(Color.FromRgb(0x1E, 0x20, 0x25))
+                : Brushes.White;
 
         public ICommand? CopyCommand { get; set; }
         public ICommand? RemoveCommand { get; set; }
@@ -31,6 +42,7 @@ namespace Spectrum.Models
         {
             OnPropertyChanged(nameof(Hex));
             OnPropertyChanged(nameof(Brush));
+            OnPropertyChanged(nameof(ForegroundBrush));
         }
 
         public ColorSwatch()

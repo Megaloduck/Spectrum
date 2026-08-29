@@ -1,0 +1,185 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ===================== Design tokens ===================== -->
+  <Styles.Resources>
+
+    <!-- Canvas: a calm, cool studio wall neutral, not warm cream, not near black -->
+    <SolidColorBrush x:Key="CanvasBrush" Color="#E7E8EC"/>
+
+    <!-- Surfaces: cards read like crisp swatch-card stock -->
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#F5F5F7"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#ECEDF0"/>
+
+    <SolidColorBrush x:Key="HairlineBrush" Color="#D4D6DB"/>
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1E2025"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#6B7078"/>
+
+    <!-- Accent: a proofing-ink indigo, used only for primary actions and emphasis -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#4B4ACF"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#3D3CB0"/>
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF"/>
+
+    <SolidColorBrush x:Key="DangerBrush" Color="#C1443B"/>
+
+  </Styles.Resources>
+
+  <!-- ===================== Base ===================== -->
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource CanvasBrush}"/>
+    <Setter Property="FontFamily" Value="Inter"/>
+  </Style>
+
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <Style Selector="Flyout > FlyoutPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="10"/>
+  </Style>
+
+  <!-- ===================== Typography ===================== -->
+  <Style Selector="TextBlock.h1">
+    <Setter Property="FontSize" Value="30"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="LetterSpacing" Value="-0.5"/>
+  </Style>
+
+  <Style Selector="TextBlock.eyebrow">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="LetterSpacing" Value="0.8"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+  </Style>
+
+  <Style Selector="TextBlock.caption">
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+  </Style>
+
+  <Style Selector="TextBlock.mono">
+    <Setter Property="FontFamily" Value="Cascadia Mono,JetBrains Mono,Consolas,Menlo,Courier New,monospace"/>
+  </Style>
+
+  <!-- ===================== Panels / cards ===================== -->
+  <Style Selector="Border.panel">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="12"/>
+  </Style>
+
+  <!-- ===================== Buttons ===================== -->
+  <Style Selector="Button">
+    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="14,10"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="Button:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+  </Style>
+
+  <!-- Ghost pill buttons in the toolbar -->
+  <Style Selector="Button.ghost">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="Button.pill">
+    <Setter Property="CornerRadius" Value="20"/>
+  </Style>
+
+  <!-- Primary actions: Add Color, Generate Harmony, Export -->
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
+  </Style>
+
+  <!-- Small overlay icon buttons on top of a colored swatch bar.
+       Foreground is bound per-item (see ForegroundBrush) so text/icons
+       stay readable against whatever color the bar is. -->
+  <Style Selector="Button.iconOnly">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="4,2"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+  </Style>
+
+  <Style Selector="Button.iconOnly:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#33FFFFFF"/>
+  </Style>
+
+  <Style Selector="ToggleButton.iconOnly">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="4,2"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+    <Setter Property="Opacity" Value="0.55"/>
+  </Style>
+
+  <Style Selector="ToggleButton.iconOnly:checked">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+
+  <Style Selector="ToggleButton.iconOnly:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#33FFFFFF"/>
+  </Style>
+
+  <!-- Borderless inline name field on a swatch card -->
+  <Style Selector="TextBox.swatchName">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+
+  <!-- ===================== Inputs ===================== -->
+  <Style Selector="TextBox">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <Style Selector="ComboBox">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="10,8"/>
+  </Style>
+
+  <Style Selector="Separator">
+    <Setter Property="Background" Value="{DynamicResource HairlineBrush}"/>
+    <Setter Property="Height" Value="1"/>
+    <Setter Property="Margin" Value="0,4"/>
+  </Style>
+
+</Styles>

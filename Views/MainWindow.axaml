@@ -4,12 +4,12 @@
         xmlns:models="using:Spectrum.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+        mc:Ignorable="d" d:DesignWidth="1140" d:DesignHeight="720"
         x:Class="Spectrum.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="Spectrum — Color Palette"
-        Width="1000" Height="650">
+        Width="1140" Height="720">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -17,104 +17,162 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    <Grid RowDefinitions="Auto,*" Margin="24">
 
-        <TextBlock Grid.Row="0" Text="Color Palette" FontSize="22" FontWeight="Bold" Margin="0,0,0,12"/>
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Text="Color Palette" Classes="h1"/>
+            <TextBlock Text="Build, generate, and export beautiful palettes."
+                       Foreground="{DynamicResource AccentBrush}" FontSize="13"/>
+        </StackPanel>
 
-        <Grid Grid.Row="1" ColumnDefinitions="300,16,*">
+        <!-- Body: generator docked left, palette board + footer on the right -->
+        <Grid Grid.Row="1" ColumnDefinitions="280,20,*">
 
-            <!-- Left panel: color editor, harmony generator, export -->
-            <ScrollViewer Grid.Column="0">
-                <StackPanel Spacing="10">
+            <!-- ============ Docked color generator ============ -->
+            <Border Grid.Column="0" Classes="panel">
+                <ScrollViewer Margin="16">
+                    <StackPanel Spacing="10">
 
-                    <Border Background="{Binding BaseColorBrush}" Height="70" CornerRadius="6"
-                            BorderBrush="Gray" BorderThickness="1"/>
+                        <TextBlock Text="BASE COLOR" Classes="eyebrow"/>
+                        <Border Background="{Binding BaseColorBrush}" Height="64" CornerRadius="10"
+                                BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"/>
 
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Hex" VerticalAlignment="Center" Width="40"/>
-                        <TextBox Text="{Binding BaseHex}" Watermark="#RRGGBB" Width="140"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Hex" VerticalAlignment="Center" Width="36" Classes="caption"/>
+                            <TextBox Text="{Binding BaseHex}" Watermark="#RRGGBB" Width="140" Classes="mono"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="{Binding BaseR, StringFormat='R   {0:F0}'}" Classes="caption"/>
+                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseR}"/>
+                            <TextBlock Text="{Binding BaseG, StringFormat='G   {0:F0}'}" Classes="caption"/>
+                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseG}"/>
+                            <TextBlock Text="{Binding BaseB, StringFormat='B   {0:F0}'}" Classes="caption"/>
+                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseB}"/>
+                        </StackPanel>
+
+                        <Separator/>
+
+                        <TextBlock Text="ADD TO PALETTE" Classes="eyebrow"/>
+                        <TextBox Text="{Binding NewSwatchName}" Watermark="Name"/>
+                        <Button Content="Add Color" Classes="primary"
+                                Command="{Binding AddCurrentColorCommand}" HorizontalAlignment="Stretch"/>
+
+                        <Separator/>
+
+                        <TextBlock Text="HARMONY" Classes="eyebrow"/>
+                        <ComboBox ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}"
+                                  HorizontalAlignment="Stretch"/>
+                        <Button Content="Generate Harmony" Classes="primary"
+                                Command="{Binding GenerateHarmonyCommand}" HorizontalAlignment="Stretch"/>
+
+                        <Separator/>
+
+                        <Button Content="Shuffle" Classes="ghost" HorizontalAlignment="Stretch"
+                                Command="{Binding RandomizePaletteCommand}"
+                                ToolTip.Tip="Randomize the base color and harmony (locked swatches stay put)"/>
+
                     </StackPanel>
+                </ScrollViewer>
+            </Border>
 
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="{Binding BaseR, StringFormat='R: {0:F0}'}"/>
-                        <Slider Minimum="0" Maximum="255" Value="{Binding BaseR}"/>
-                        <TextBlock Text="{Binding BaseG, StringFormat='G: {0:F0}'}"/>
-                        <Slider Minimum="0" Maximum="255" Value="{Binding BaseG}"/>
-                        <TextBlock Text="{Binding BaseB, StringFormat='B: {0:F0}'}"/>
-                        <Slider Minimum="0" Maximum="255" Value="{Binding BaseB}"/>
-                    </StackPanel>
+            <!-- ============ Palette board ============ -->
+            <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto">
 
-                    <Separator/>
+                <!-- Palette board header: count + clear -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                    <TextBlock Grid.Column="0" Text="{Binding PaletteCountLabel}" Classes="caption"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Clear" Classes="ghost"
+                            Command="{Binding ClearPaletteCommand}" ToolTip.Tip="Remove every swatch"/>
+                </Grid>
 
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Name" VerticalAlignment="Center" Width="40"/>
-                        <TextBox Text="{Binding NewSwatchName}" Width="140"/>
-                    </StackPanel>
-                    <Button Content="Add Current Color" Command="{Binding AddCurrentColorCommand}" HorizontalAlignment="Stretch"/>
-
-                    <Separator/>
-
-                    <TextBlock Text="Harmony" FontWeight="SemiBold"/>
-                    <ComboBox ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}" HorizontalAlignment="Stretch"/>
-                    <Button Content="Generate Harmony" Command="{Binding GenerateHarmonyCommand}" HorizontalAlignment="Stretch"/>
-
-                    <Separator/>
-
-                    <Button Content="Copy All as Text" Command="{Binding CopyAllHexCommand}" HorizontalAlignment="Stretch"/>
-                    <Button Content="Clear Palette" Command="{Binding ClearPaletteCommand}" HorizontalAlignment="Stretch"/>
-
-                    <Separator/>
-
-                    <TextBlock Text="Export" FontWeight="SemiBold"/>
-                    <ComboBox ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}" HorizontalAlignment="Stretch"/>
-                    <Button Content="Build Preview" Command="{Binding BuildExportPreviewCommand}" HorizontalAlignment="Stretch"/>
-                    <Button Content="Copy Export" Command="{Binding CopyExportCommand}" HorizontalAlignment="Stretch"/>
-                    <TextBox Text="{Binding ExportPreview}" AcceptsReturn="True" IsReadOnly="True"
-                             Height="120" TextWrapping="Wrap" FontFamily="Consolas,monospace"/>
-
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- Right panel: the palette itself -->
-            <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1" CornerRadius="6" Padding="12">
-                <ScrollViewer>
+                <!-- Full-height color bars -->
+                <Border Grid.Row="1" Classes="panel" Padding="14">
                     <ItemsControl ItemsSource="{Binding Palette}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
+                                <UniformGrid Rows="1"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="models:ColorSwatch">
-                                <Border Width="150" Margin="6" BorderBrush="Gray" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
-                                    <StackPanel>
-                                        <Border Height="70" Background="{Binding Brush}"/>
-                                        <StackPanel Margin="8" Spacing="4">
-                                            <TextBox Text="{Binding Name}" BorderThickness="0" Background="Transparent"
-                                                     Padding="0" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding Hex}" FontFamily="Consolas,monospace" Foreground="Gray"/>
-                                            <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
-                                                <Button Content="↑" FontSize="11" Padding="6,2"
-                                                        Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"/>
-                                                <Button Content="↓" FontSize="11" Padding="6,2"
-                                                        Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"/>
-                                                <Button Content="Copy" FontSize="11" Padding="6,2"
-                                                        Command="{Binding CopyCommand}" CommandParameter="{Binding}"/>
-                                                <Button Content="✕" FontSize="11" Padding="6,2"
-                                                        Command="{Binding RemoveCommand}" CommandParameter="{Binding}"/>
-                                            </StackPanel>
+                                <Border Background="{Binding Brush}" CornerRadius="10" Margin="4">
+                                    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+
+                                        <!-- Icon stack: lock, reorder, rename, copy, remove -->
+                                        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="2">
+                                            <ToggleButton Content="Lock" Classes="iconOnly"
+                                                          Foreground="{Binding ForegroundBrush}"
+                                                          IsChecked="{Binding IsLocked, Mode=TwoWay}"
+                                                          ToolTip.Tip="Keep this color when shuffling"/>
+                                            <Button Content="↑" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"/>
+                                            <Button Content="↓" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"/>
+                                            <Button Content="Edit" Classes="iconOnly" Foreground="{Binding ForegroundBrush}">
+                                                <Button.Flyout>
+                                                    <Flyout>
+                                                        <StackPanel x:DataType="models:ColorSwatch" Width="180" Spacing="8" Margin="4">
+                                                            <TextBlock Text="RENAME" Classes="eyebrow"/>
+                                                            <TextBox Text="{Binding Name}" Watermark="Name"/>
+                                                        </StackPanel>
+                                                    </Flyout>
+                                                </Button.Flyout>
+                                            </Button>
+                                            <Button Content="Copy" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding CopyCommand}" CommandParameter="{Binding}"/>
+                                            <Button Content="✕" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding RemoveCommand}" CommandParameter="{Binding}"/>
                                         </StackPanel>
-                                    </StackPanel>
+
+                                        <!-- Hex label anchored to the bottom of the bar -->
+                                        <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Spacing="2">
+                                            <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
+                                            <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
+                                                       Classes="mono" Foreground="{Binding ForegroundBrush}"/>
+                                        </StackPanel>
+
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </ScrollViewer>
-            </Border>
+                </Border>
+
+                <!-- Footer -->
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,16,0,0">
+
+                    <Button Grid.Column="0" Content="Copy All as Text" Classes="ghost"
+                            Command="{Binding CopyAllHexCommand}"/>
+
+                    <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Classes="caption"
+                               VerticalAlignment="Center" Margin="16,0"/>
+
+                    <Button Grid.Column="2" Content="Export Palette" Classes="primary">
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel x:DataType="vm:MainWindowViewModel" Width="260" Spacing="10" Margin="4">
+                                    <TextBlock Text="EXPORT" Classes="eyebrow"/>
+                                    <ComboBox ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}"
+                                              HorizontalAlignment="Stretch"/>
+                                    <Button Content="Build Preview" Command="{Binding BuildExportPreviewCommand}"
+                                            HorizontalAlignment="Stretch"/>
+                                    <TextBox Text="{Binding ExportPreview}" AcceptsReturn="True" IsReadOnly="True"
+                                             Height="120" TextWrapping="Wrap" Classes="mono"/>
+                                    <Button Content="Copy Export" Classes="primary"
+                                            Command="{Binding CopyExportCommand}" HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                </Grid>
+
+            </Grid>
 
         </Grid>
-
-        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="Gray" Margin="0,10,0,0"/>
 
     </Grid>
 

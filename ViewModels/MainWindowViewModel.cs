@@ -6,6 +6,7 @@ using Spectrum.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Spectrum.ViewModels
@@ -41,6 +42,13 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private string _statusMessage = "Ready.";
 
+        [ObservableProperty]
+        private int _paletteCount;
+
+        public string PaletteCountLabel => PaletteCount == 1 ? "1 color" : $"{PaletteCount} colors";
+
+        partial void OnPaletteCountChanged(int value) => OnPropertyChanged(nameof(PaletteCountLabel));
+
         public Color BaseColor => Color.FromRgb(ToByte(BaseR), ToByte(BaseG), ToByte(BaseB));
 
         public IBrush BaseColorBrush => new SolidColorBrush(BaseColor);
@@ -57,6 +65,13 @@ namespace Spectrum.ViewModels
                     BaseB = color.B;
                 }
             }
+        }
+
+        public MainWindowViewModel()
+        {
+            // Keep the header's "N colors" pill in sync no matter what
+            // caused the palette to change (add, remove, clear, harmony...).
+            Palette.CollectionChanged += (_, _) => PaletteCount = Palette.Count;
         }
 
         partial void OnBaseRChanged(double value) => RaiseColorPropertiesChanged();
@@ -153,6 +168,37 @@ namespace Spectrum.ViewModels
             }
 
             StatusMessage = $"Added {colors.Count} colors from {SelectedHarmony} harmony.";
+        }
+
+        // "Shuffle": a fresh random base color + harmony, replacing the palette
+        // entirely except for any swatches the user has locked in place.
+        [RelayCommand]
+        private void RandomizePalette()
+        {
+            var rng = Random.Shared;
+            BaseR = rng.Next(0, 256);
+            BaseG = rng.Next(0, 256);
+            BaseB = rng.Next(0, 256);
+
+            var harmonies = (HarmonyType[])Enum.GetValues(typeof(HarmonyType));
+            SelectedHarmony = harmonies[rng.Next(harmonies.Length)];
+
+            var locked = Palette.Where(s => s.IsLocked).ToList();
+            Palette.Clear();
+            foreach (var swatch in locked)
+            {
+                Palette.Add(swatch);
+            }
+
+            var colors = ColorHarmonyService.Generate(BaseColor, SelectedHarmony);
+            foreach (var c in colors)
+            {
+                Palette.Add(CreateSwatch(c, SelectedHarmony.ToString()));
+            }
+
+            StatusMessage = locked.Count > 0
+                ? $"Shuffled ({SelectedHarmony}) — kept {locked.Count} locked color(s)."
+                : $"Shuffled ({SelectedHarmony}).";
         }
 
         [RelayCommand]
