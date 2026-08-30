@@ -11,7 +11,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="Color Palette"
-        Width="1360" Height="700">
+        Width="1080" Height="720">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -32,9 +32,9 @@
 
             <!-- ============ COLOR PANEL ============ -->
             <Border Grid.Column="0" Classes="panel">
-                 <Grid RowDefinitions="*,Auto">
-                    <ScrollViewer Margin="20" >
-                         <StackPanel Spacing="12">
+                 <Grid RowDefinitions="* ,Auto">
+                    <ScrollViewer>
+                         <StackPanel Spacing="12"  Margin="20" >
 
                         <TextBlock Text="COLOR PANEL" Classes="eyebrow"/>
 
@@ -88,8 +88,8 @@
                 </ScrollViewer>
 
                      <!-- Harmonize Button -->
-                     <StackPanel Grid.Row="1" Margin="20" Spacing="10">
-                         <Separator Margin="0,6"/>
+                     <StackPanel Grid.Row="1" Margin="20,10"  Spacing="10">
+                         <Separator VerticalAlignment="Center"/>
                          <Button Content="Press Space to Harmonize" Command="{Binding GeneratePaletteCommand}"
                                 HorizontalAlignment="Stretch" ToolTip.Tip="Regenerates every unlocked color — using the Harmonize tool if one is selected"/>
                      </StackPanel>
@@ -102,47 +102,87 @@
 
                 <TextBlock Grid.Row="0" Text="TOOLS" Classes="eyebrow" Margin="2,0,0,10"/>
 
-                <!-- Toolbar -->
-                <Grid Grid.Row="1" ColumnDefinitions="160,160,Auto,*,Auto,Auto,Auto" Margin="0,0,0,14">
-                    <ComboBox Grid.Column="0" ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}"
-                              Margin="0,0,8,0" ToolTip.Tip="Rule Generate/Space uses for unlocked colors"/>
-                    <ComboBox Grid.Column="1" ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
-                              Margin="0,0,8,0" ToolTip.Tip="Preview the board as someone with this color vision would see it"/>
-                    <Button Grid.Column="2" Command="{Binding ExtractFromImageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
-                            <TextBlock Text="Extract from Image" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                <!-- Toolbar: contained in a single panel card with generation controls on the left,
+     history and theme controls on the right, with thin dividers between groups -->
+<Border Grid.Row="1" Classes="panel" Padding="16,12" Margin="0,0,0,14">
+    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
 
-                    <Button Grid.Column="4" Classes="iconOnly" Padding="10,8"
-                            Command="{Binding UndoCommand}" ToolTip.Tip="Undo" Margin="0,0,4,0">
-                        <materialIcons:MaterialIcon Kind="Undo" Width="16" Height="16"/>
-                    </Button>
-                    <Button Grid.Column="5" Classes="iconOnly" Padding="10,8"
-                            Command="{Binding RedoCommand}" ToolTip.Tip="Redo" Margin="0,0,4,0">
-                        <materialIcons:MaterialIcon Kind="Redo" Width="16" Height="16"/>
-                    </Button>
-                    <Button Grid.Column="6" Classes="iconOnly" Padding="10,8"
-                            Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Toggle light / dark">
-                        <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="16" Height="16"/>
-                    </Button>
-                </Grid>
+        <!-- Harmony Type ComboBox -->
+        <ComboBox Grid.Column="0" MinWidth="150" Height="38"
+                  ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}"
+                  ToolTip.Tip="Rule Generate/Space uses for unlocked colors">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
 
-                <!-- Palette count + clear -->
-                <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
-                    <TextBlock Grid.Column="0" Text="{Binding PaletteCountLabel}" Classes="caption"
-                               FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Classes="ghost" Command="{Binding ClearPaletteCommand}"
-                            ToolTip.Tip="Remove every swatch">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="15" Height="15"/>
-                            <TextBlock Text="Clear" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </Grid>
+        <!-- Color Blind Mode ComboBox -->
+        <ComboBox Grid.Column="1" MinWidth="150" Height="38" Margin="8,0,0,0"
+                  ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
+                  ToolTip.Tip="Preview the board as someone with this color vision would see it">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
 
-                <!-- Full-height color bars -->
+        <!-- Divider 1 -->
+        <Border Grid.Column="2" Width="1" Height="24" Margin="16,0"
+                Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
+
+        <!-- Extract from Image Button -->
+        <Button Grid.Column="3" Height="38" Command="{Binding ExtractFromImageCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
+                <TextBlock Text="Extract from Image" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+
+        <!-- Flexible Spacer -->
+        <Grid Grid.Column="4"/>
+
+        <!-- Palette Count + Clear Button -->
+        <Grid Grid.Column="5" ColumnDefinitions="Auto,Auto" Margin="0,0,12,0">
+            <TextBlock Grid.Column="0" Text="{Binding PaletteCountLabel}" Classes="caption"
+                       FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <Button Grid.Column="1" Classes="ghost" Command="{Binding ClearPaletteCommand}"
+                    ToolTip.Tip="Remove every swatch" Padding="8,4" Height="38">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="15" Height="15"/>
+                    <TextBlock Text="Clear" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Divider 2 -->
+        <Border Grid.Column="6" Width="1" Height="24" Margin="12,0"
+                Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
+
+        <!-- Undo Button -->
+        <Button Grid.Column="7" Classes="iconOnly" Width="38" Height="38" Margin="12,0,0,0"
+                Command="{Binding UndoCommand}" ToolTip.Tip="Undo">
+            <materialIcons:MaterialIcon Kind="Undo" Width="16" Height="16"/>
+        </Button>
+
+        <!-- Redo Button -->
+        <Button Grid.Column="8" Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding RedoCommand}" ToolTip.Tip="Redo">
+            <materialIcons:MaterialIcon Kind="Redo" Width="16" Height="16"/>
+        </Button>
+
+        <!-- Theme Toggle Button -->
+        <Button Grid.Column="9" Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Toggle light / dark">
+            <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="16" Height="16"/>
+        </Button>
+
+    </Grid>
+</Border>   
+
+                <!-- THE PALETTE -->
                 <Border Grid.Row="3" Classes="panel" Padding="14">
                     <ItemsControl ItemsSource="{Binding Palette}">
                         <ItemsControl.ItemsPanel>
@@ -162,7 +202,7 @@
                                         <!-- Icon stack: lock, reorder, rename, copy, remove -->
                                         <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="6">
                                             <ToggleButton Classes="iconOnly"
-                                                          IsChecked="{Binding IsLocked, Mode=TwoWay}"
+                                                          IsChecked="{Binding IsLocked, Mode=TwoWay}"   
                                                           ToolTip.Tip="Keep this color when generating">
                                                 <materialIcons:MaterialIcon
                                                     Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
@@ -226,7 +266,13 @@
                     <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center"/>
 
                     <ComboBox Grid.Column="2" ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}"
-                              Margin="0,0,8,0"/>
+                              Margin="0,0,8,0" Height="38">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
                     <Button Grid.Column="3" Content="Export Palette">
                         <Button.Flyout>
