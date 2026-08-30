@@ -1,4 +1,7 @@
+using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Spectrum.Models;
@@ -7,42 +10,40 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Spectrum.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
+        private const int DefaultPaletteSize = 5;
+
         public ObservableCollection<ColorSwatch> Palette { get; } = new();
 
         public Array HarmonyTypes { get; } = Enum.GetValues(typeof(HarmonyType));
         public Array ExportFormats { get; } = Enum.GetValues(typeof(ExportFormat));
+        public Array ColorBlindModes { get; } = Enum.GetValues(typeof(ColorBlindMode));
 
-        // Snapshots of the palette for Undo/Redo. Each entry is the full
-        // palette state immediately before a mutating action.
-        private readonly Stack<List<PaletteSwatchDto>> _undoStack = new();
-        private readonly Stack<List<PaletteSwatchDto>> _redoStack = new();
+        // ---- Base color, expressed as Hue/Saturation/Lightness + a
+        // ---- Temperature tint applied on top, matching the "COLOR PANEL" sliders.
+        [ObservableProperty]
+        private double _hue = 9;
 
         [ObservableProperty]
-        private double _baseR = 76;
+        private double _saturation = 100;
 
         [ObservableProperty]
-        private double _baseG = 139;
+        private double _lightness = 64;
 
         [ObservableProperty]
-        private double _baseB = 245;
+        private double _temperature; // -100 (cool) .. 100 (warm), 0 = neutral
 
         [ObservableProperty]
-        private double _baseA = 255;
+        private HarmonyType _selectedHarmony = HarmonyType.Random;
 
         [ObservableProperty]
-        private string _newSwatchName = "Color";
-
-        [ObservableProperty]
-        private HarmonyType _selectedHarmony = HarmonyType.Complementary;
+        private ColorBlindMode _selectedColorBlindMode = ColorBlindMode.None;
 
         [ObservableProperty]
         private ExportFormat _selectedExportFormat = ExportFormat.Json;
@@ -51,70 +52,129 @@ namespace Spectrum.ViewModels
         private string _exportPreview = string.Empty;
 
         [ObservableProperty]
-        private string _statusMessage = "Ready.";
+        private string _statusMessage = "Ready to Inspire.";
 
         [ObservableProperty]
         private int _paletteCount;
-
-        // True when the hex quick-entry box currently contains unparsable text.
-        [ObservableProperty]
-        private bool _isHexInvalid;
 
         public string PaletteCountLabel => PaletteCount == 1 ? "1 color" : $"{PaletteCount} colors";
 
         partial void OnPaletteCountChanged(int value) => OnPropertyChanged(nameof(PaletteCountLabel));
 
-        public Color BaseColor => Color.FromArgb(ToByte(BaseA), ToByte(BaseR), ToByte(BaseG), ToByte(BaseB));
+        public Color BaseColor
+        {
+            get
+            {
+                var hslColor = ColorHarmonyService.FromHsl(Hue, Saturation / 100.0, Lightness / 100.0);
+                return ApplyTemperature(hslColor, Temperature);
+            }
+        }
 
         public IBrush BaseColorBrush => new SolidColorBrush(BaseColor);
+
+        public string BaseColorName => ColorNamingService.GetClosestName(BaseColor);
+
+        public IBrush BaseForegroundBrush =>
+            (0.2126 * BaseColor.R + 0.7152 * BaseColor.G + 0.0722 * BaseColor.B) / 255.0 > 0.6
+                ? new SolidColorBrush(Color.FromRgb(0x1E, 0x20, 0x25))
+                : Brushes.White;
 
         public string BaseHex
         {
             get => $"#{BaseColor.R:X2}{BaseColor.G:X2}{BaseColor.B:X2}";
             set
             {
-                if (TryParseHex(value, out var color))
-                {
-                    IsHexInvalid = false;
-                    BaseR = color.R;
-                    BaseG = color.G;
-                    BaseB = color.B;
-                }
-                else
-                {
-                    IsHexInvalid = true;
-                    StatusMessage = "Invalid hex color \u2014 use the format #RRGGBB.";
-                }
+                if (!TryParseHex(value, out var color)) return;
+
+                var (h, s, l) = ColorHarmonyService.ToHsl(color);
+                Hue = h;
+                Saturation = s * 100.0;
+                Lightness = l * 100.0;
+                Temperature = 0;
             }
         }
 
+        // ---- Gradient track backgrounds for the four sliders. Hue,
+        // ---- Brightness and Temperature are fixed; Saturation's end color
+        // ---- depends on the current Hue, so it's recomputed whenever that changes.
+        public IBrush HueTrackBrush { get; } = CreateHorizontalGradient(
+            (Color.FromRgb(255, 0, 0), 0.0),
+            (Color.FromRgb(255, 255, 0), 1.0 / 6),
+            (Color.FromRgb(0, 255, 0), 2.0 / 6),
+            (Color.FromRgb(0, 255, 255), 3.0 / 6),
+            (Color.FromRgb(0, 0, 255), 4.0 / 6),
+            (Color.FromRgb(255, 0, 255), 5.0 / 6),
+            (Color.FromRgb(255, 0, 0), 1.0));
+
+        public IBrush SaturationTrackBrush => CreateHorizontalGradient(
+            (Colors.White, 0.0),
+            (ColorHarmonyService.FromHsl(Hue, 1.0, 0.5), 1.0));
+
+        public IBrush BrightnessTrackBrush { get; } = CreateHorizontalGradient(
+            (Colors.Black, 0.0),
+            (Colors.White, 1.0));
+
+        public IBrush TemperatureTrackBrush { get; } = CreateHorizontalGradient(
+            (Color.FromRgb(0x4A, 0x90, 0xE2), 0.0),
+            (Color.FromRgb(0xF5, 0xA6, 0x23), 1.0));
+
+        // ---- Undo/redo history (covers add/remove/clear/generate/extract —
+        // ---- see PushHistory call sites. In-place edits like renaming or
+        // ---- toggling a lock aren't tracked.)
+        private readonly Stack<List<SwatchSnapshot>> _undoStack = new();
+        private readonly Stack<List<SwatchSnapshot>> _redoStack = new();
+        private bool _isRestoringHistory;
+
+        private readonly record struct SwatchSnapshot(Color Color, string Name, bool IsLocked);
+
         public MainWindowViewModel()
         {
-            // Keep the header's "N colors" pill in sync, and re-evaluate which
-            // move/clear buttons should be enabled, no matter what caused the
-            // palette to change (add, remove, clear, harmony, reorder...).
-            Palette.CollectionChanged += (_, _) =>
-            {
-                PaletteCount = Palette.Count;
-                MoveSwatchUpCommand.NotifyCanExecuteChanged();
-                MoveSwatchDownCommand.NotifyCanExecuteChanged();
-                ClearPaletteCommand.NotifyCanExecuteChanged();
-            };
+            // Keep the header's "N colors" pill in sync no matter what
+            // caused the palette to change (add, remove, clear, generate...).
+            Palette.CollectionChanged += (_, _) => PaletteCount = Palette.Count;
+
+            SeedInitialPalette();
         }
 
-        partial void OnBaseRChanged(double value) => RaiseColorPropertiesChanged();
-        partial void OnBaseGChanged(double value) => RaiseColorPropertiesChanged();
-        partial void OnBaseBChanged(double value) => RaiseColorPropertiesChanged();
-        partial void OnBaseAChanged(double value) => RaiseColorPropertiesChanged();
+        partial void OnHueChanged(double value)
+        {
+            RaiseColorPropertiesChanged();
+            OnPropertyChanged(nameof(SaturationTrackBrush));
+        }
+
+        partial void OnSaturationChanged(double value) => RaiseColorPropertiesChanged();
+        partial void OnLightnessChanged(double value) => RaiseColorPropertiesChanged();
+        partial void OnTemperatureChanged(double value) => RaiseColorPropertiesChanged();
+
+        partial void OnSelectedColorBlindModeChanged(ColorBlindMode value)
+        {
+            foreach (var swatch in Palette)
+            {
+                swatch.ColorBlindMode = value;
+            }
+        }
 
         private void RaiseColorPropertiesChanged()
         {
             OnPropertyChanged(nameof(BaseColor));
             OnPropertyChanged(nameof(BaseColorBrush));
+            OnPropertyChanged(nameof(BaseColorName));
+            OnPropertyChanged(nameof(BaseForegroundBrush));
             OnPropertyChanged(nameof(BaseHex));
         }
 
-        private static byte ToByte(double value) => (byte)Math.Clamp(value, 0, 255);
+        private static Color ApplyTemperature(Color c, double temperature)
+        {
+            // A simple photo-style temperature shift: push red up / blue down
+            // for "warm", or the reverse for "cool". Purely a visual tint on
+            // top of the HSL-derived color, not a physical color-temperature model.
+            var t = Math.Clamp(temperature, -100, 100) / 100.0;
+            var r = c.R + t * 40;
+            var b = c.B - t * 40;
+            return Color.FromRgb(ToByte(r), c.G, ToByte(b));
+        }
+
+        private static byte ToByte(double value) => (byte)Math.Clamp(Math.Round(value), 0, 255);
 
         private static bool TryParseHex(string? input, out Color color)
         {
@@ -135,12 +195,29 @@ namespace Spectrum.ViewModels
             return false;
         }
 
+        private static LinearGradientBrush CreateHorizontalGradient(params (Color Color, double Offset)[] stops)
+        {
+            var brush = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative)
+            };
+
+            foreach (var (color, offset) in stops)
+            {
+                brush.GradientStops.Add(new GradientStop(color, offset));
+            }
+
+            return brush;
+        }
+
         // Wires each swatch's card buttons back to this ViewModel's commands
         // so the UI never needs a reference back up to the parent DataContext.
         private ColorSwatch CreateSwatch(Color color, string name)
         {
             return new ColorSwatch(color, name)
             {
+                ColorBlindMode = SelectedColorBlindMode,
                 CopyCommand = CopyHexCommand,
                 RemoveCommand = RemoveSwatchCommand,
                 MoveUpCommand = MoveSwatchUpCommand,
@@ -148,185 +225,222 @@ namespace Spectrum.ViewModels
             };
         }
 
-        // ===================== Undo / Redo =====================
-
-        private List<PaletteSwatchDto> Snapshot() =>
-            Palette.Select(s => new PaletteSwatchDto(s.Name, s.Color.A, s.Color.R, s.Color.G, s.Color.B, s.IsLocked)).ToList();
-
-        // Call before any operation that adds, removes, replaces or reorders
-        // swatches, so that operation becomes undoable.
-        private void PushUndoSnapshot()
+        private void SeedInitialPalette()
         {
-            _undoStack.Push(Snapshot());
-            _redoStack.Clear();
-            UndoCommand.NotifyCanExecuteChanged();
-            RedoCommand.NotifyCanExecuteChanged();
-        }
-
-        private void RestoreSnapshot(List<PaletteSwatchDto> snapshot)
-        {
-            Palette.Clear();
-            foreach (var item in snapshot)
+            var rng = Random.Shared;
+            for (var i = 0; i < DefaultPaletteSize; i++)
             {
-                var swatch = CreateSwatch(Color.FromArgb(item.A, item.R, item.G, item.B), item.Name);
-                swatch.IsLocked = item.IsLocked;
-                Palette.Add(swatch);
+                var c = ColorHarmonyService.RandomPleasant(rng);
+                Palette.Add(CreateSwatch(c, ColorNamingService.GetClosestName(c)));
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanUndo))]
-        private void Undo()
-        {
-            if (_undoStack.Count == 0) return;
+        // ---------------- Undo / redo ----------------
 
-            _redoStack.Push(Snapshot());
-            RestoreSnapshot(_undoStack.Pop());
-            StatusMessage = "Undid last change.";
+        private List<SwatchSnapshot> CaptureSnapshot() =>
+            Palette.Select(s => new SwatchSnapshot(s.Color, s.Name, s.IsLocked)).ToList();
+
+        private void PushHistory()
+        {
+            if (_isRestoringHistory) return;
+            _undoStack.Push(CaptureSnapshot());
+            _redoStack.Clear();
+            NotifyHistoryChanged();
+        }
+
+        private void RestoreSnapshot(List<SwatchSnapshot> snapshot)
+        {
+            _isRestoringHistory = true;
+            Palette.Clear();
+            foreach (var s in snapshot)
+            {
+                var swatch = CreateSwatch(s.Color, s.Name);
+                swatch.IsLocked = s.IsLocked;
+                Palette.Add(swatch);
+            }
+            _isRestoringHistory = false;
+        }
+
+        private void NotifyHistoryChanged()
+        {
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();
         }
 
         private bool CanUndo() => _undoStack.Count > 0;
+        private bool CanRedo() => _redoStack.Count > 0;
+
+        [RelayCommand(CanExecute = nameof(CanUndo))]
+        private void Undo()
+        {
+            if (_undoStack.Count == 0) return;
+            _redoStack.Push(CaptureSnapshot());
+            RestoreSnapshot(_undoStack.Pop());
+            StatusMessage = "Undid last change.";
+            NotifyHistoryChanged();
+        }
 
         [RelayCommand(CanExecute = nameof(CanRedo))]
         private void Redo()
         {
             if (_redoStack.Count == 0) return;
-
-            _undoStack.Push(Snapshot());
+            _undoStack.Push(CaptureSnapshot());
             RestoreSnapshot(_redoStack.Pop());
-            StatusMessage = "Redid change.";
-            UndoCommand.NotifyCanExecuteChanged();
-            RedoCommand.NotifyCanExecuteChanged();
+            StatusMessage = "Redid last change.";
+            NotifyHistoryChanged();
         }
 
-        private bool CanRedo() => _redoStack.Count > 0;
-
-        // ===================== Palette editing =====================
+        // ---------------- Palette editing ----------------
 
         [RelayCommand]
         private void AddCurrentColor()
         {
-            PushUndoSnapshot();
-            var name = string.IsNullOrWhiteSpace(NewSwatchName) ? "Color" : NewSwatchName;
+            PushHistory();
+
+            var name = ColorNamingService.GetClosestName(BaseColor);
             Palette.Add(CreateSwatch(BaseColor, name));
-            StatusMessage = $"Added \"{name}\".";
+            StatusMessage = $"Added \"{name}\" to the palette.";
         }
 
         [RelayCommand]
         private void RemoveSwatch(ColorSwatch? swatch)
         {
             if (swatch is null) return;
-            PushUndoSnapshot();
+            PushHistory();
             Palette.Remove(swatch);
             StatusMessage = "Swatch removed.";
         }
 
-        [RelayCommand(CanExecute = nameof(CanClearPalette))]
+        [RelayCommand]
         private void ClearPalette()
         {
-            PushUndoSnapshot();
+            PushHistory();
             Palette.Clear();
             StatusMessage = "Palette cleared.";
         }
 
-        private bool CanClearPalette() => Palette.Count > 0;
-
-        [RelayCommand(CanExecute = nameof(CanMoveSwatchUp))]
+        [RelayCommand]
         private void MoveSwatchUp(ColorSwatch? swatch)
         {
             if (swatch is null) return;
             var index = Palette.IndexOf(swatch);
-            if (index <= 0) return;
-
-            PushUndoSnapshot();
-            Palette.Move(index, index - 1);
+            if (index > 0) Palette.Move(index, index - 1);
         }
 
-        private bool CanMoveSwatchUp(ColorSwatch? swatch)
-        {
-            if (swatch is null) return false;
-            return Palette.IndexOf(swatch) > 0;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanMoveSwatchDown))]
+        [RelayCommand]
         private void MoveSwatchDown(ColorSwatch? swatch)
         {
             if (swatch is null) return;
             var index = Palette.IndexOf(swatch);
-            if (index < 0 || index >= Palette.Count - 1) return;
-
-            PushUndoSnapshot();
-            Palette.Move(index, index + 1);
+            if (index >= 0 && index < Palette.Count - 1) Palette.Move(index, index + 1);
         }
 
-        private bool CanMoveSwatchDown(ColorSwatch? swatch)
-        {
-            if (swatch is null) return false;
-            var index = Palette.IndexOf(swatch);
-            return index >= 0 && index < Palette.Count - 1;
-        }
-
-        // Called from MainWindow's drag-and-drop handling to move a swatch
-        // to wherever it was dropped.
-        public void ReorderSwatch(ColorSwatch source, ColorSwatch target)
-        {
-            var oldIndex = Palette.IndexOf(source);
-            var newIndex = Palette.IndexOf(target);
-            if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
-
-            PushUndoSnapshot();
-            Palette.Move(oldIndex, newIndex);
-            StatusMessage = $"Moved \"{source.Name}\" to position {newIndex + 1}.";
-        }
-
+        // Coolors-style generator: press the "Press Space to Shuffle" button
+        // (or hit Space anywhere — see MainWindow.axaml.cs) and every unlocked
+        // swatch is rerolled, in place, keeping the palette's order and size
+        // intact. The board is padded up to 5 slots first if it's smaller.
+        // The "Harmonize" tool controls *how* colors are rerolled: left on
+        // Random, each unlocked swatch gets an independent random color;
+        // pick a specific rule and the whole set is rerolled together from
+        // that rule, cycling its colors across however many slots there are.
         [RelayCommand]
-        private void GenerateHarmony()
+        private void GeneratePalette()
         {
-            PushUndoSnapshot();
-            var colors = ColorHarmonyService.Generate(BaseColor, SelectedHarmony);
-            foreach (var c in colors)
-            {
-                Palette.Add(CreateSwatch(c, SelectedHarmony.ToString()));
-            }
-
-            StatusMessage = $"Added {colors.Count} colors from {SelectedHarmony} harmony.";
-        }
-
-        // "Shuffle": a fresh random base color + harmony, replacing the palette
-        // entirely except for any swatches the user has locked in place.
-        // Alpha is reset to fully opaque so shuffles don't produce surprise
-        // transparency.
-        [RelayCommand]
-        private void RandomizePalette()
-        {
-            PushUndoSnapshot();
+            PushHistory();
 
             var rng = Random.Shared;
-            BaseR = rng.Next(0, 256);
-            BaseG = rng.Next(0, 256);
-            BaseB = rng.Next(0, 256);
-            BaseA = 255;
 
-            var harmonies = (HarmonyType[])Enum.GetValues(typeof(HarmonyType));
-            SelectedHarmony = harmonies[rng.Next(harmonies.Length)];
-
-            var locked = Palette.Where(s => s.IsLocked).ToList();
-            Palette.Clear();
-            foreach (var swatch in locked)
+            while (Palette.Count < DefaultPaletteSize)
             {
-                Palette.Add(swatch);
+                var seedColor = ColorHarmonyService.RandomPleasant(rng);
+                Palette.Add(CreateSwatch(seedColor, ColorNamingService.GetClosestName(seedColor)));
             }
 
-            var colors = ColorHarmonyService.Generate(BaseColor, SelectedHarmony);
-            foreach (var c in colors)
+            List<Color>? harmonyColors = SelectedHarmony == HarmonyType.Random
+                ? null
+                : ColorHarmonyService.Generate(BaseColor, SelectedHarmony);
+
+            var colorIndex = 0;
+            var replaced = 0;
+
+            foreach (var swatch in Palette)
             {
-                Palette.Add(CreateSwatch(c, SelectedHarmony.ToString()));
+                if (swatch.IsLocked) continue;
+
+                var next = harmonyColors is { Count: > 0 }
+                    ? harmonyColors[colorIndex++ % harmonyColors.Count]
+                    : ColorHarmonyService.RandomPleasant(rng);
+
+                swatch.Color = next;
+                swatch.Name = ColorNamingService.GetClosestName(next);
+                replaced++;
             }
 
-            StatusMessage = locked.Count > 0
-                ? $"Shuffled ({SelectedHarmony}) \u2014 kept {locked.Count} locked color(s)."
-                : $"Shuffled ({SelectedHarmony}).";
+            StatusMessage = replaced == 0
+                ? "Every color is locked — unlock one to regenerate it."
+                : harmonyColors is null
+                    ? $"Generated {replaced} new color{(replaced == 1 ? "" : "s")}."
+                    : $"Generated {replaced} new color{(replaced == 1 ? "" : "s")} ({SelectedHarmony}).";
+        }
+
+        [RelayCommand]
+        private async Task ExtractFromImageAsync()
+        {
+            var bitmap = await FilePickerHelper.PickImageAsync();
+            if (bitmap is null)
+            {
+                StatusMessage = "No image selected.";
+                return;
+            }
+
+            PushHistory();
+
+            List<Color> colors;
+            try
+            {
+                colors = ImageColorExtractionService.ExtractDominantColors(bitmap, DefaultPaletteSize);
+            }
+            finally
+            {
+                bitmap.Dispose();
+            }
+
+            if (colors.Count == 0)
+            {
+                StatusMessage = "Couldn't find usable colors in that image.";
+                return;
+            }
+
+            while (Palette.Count < colors.Count)
+            {
+                Palette.Add(CreateSwatch(Colors.Gray, "Color"));
+            }
+
+            var index = 0;
+            var replaced = 0;
+
+            foreach (var swatch in Palette)
+            {
+                if (swatch.IsLocked || index >= colors.Count) continue;
+
+                var next = colors[index++];
+                swatch.Color = next;
+                swatch.Name = ColorNamingService.GetClosestName(next);
+                replaced++;
+            }
+
+            StatusMessage = $"Extracted {replaced} color{(replaced == 1 ? "" : "s")} from the image.";
+        }
+
+        [RelayCommand]
+        private void ToggleTheme()
+        {
+            var app = Application.Current;
+            if (app is null) return;
+
+            app.RequestedThemeVariant = app.ActualThemeVariant == ThemeVariant.Dark
+                ? ThemeVariant.Light
+                : ThemeVariant.Dark;
         }
 
         [RelayCommand]
@@ -358,56 +472,6 @@ namespace Spectrum.ViewModels
             if (string.IsNullOrEmpty(ExportPreview)) BuildExportPreview();
             await ClipboardHelper.SetTextAsync(ExportPreview);
             StatusMessage = "Copied export text to clipboard.";
-        }
-
-        // ===================== Save / Load palette =====================
-
-        [RelayCommand]
-        private async Task SavePaletteAsync()
-        {
-            var path = await PaletteFileService.PickSaveFileAsync("palette.json");
-            if (path is null) return;
-
-            try
-            {
-                var dto = Palette
-                    .Select(s => new PaletteSwatchDto(s.Name, s.Color.A, s.Color.R, s.Color.G, s.Color.B, s.IsLocked))
-                    .ToList();
-
-                var json = JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(path, json);
-                StatusMessage = $"Saved palette to {Path.GetFileName(path)}.";
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Couldn't save palette: {ex.Message}";
-            }
-        }
-
-        [RelayCommand]
-        private async Task LoadPaletteAsync()
-        {
-            var path = await PaletteFileService.PickOpenFileAsync();
-            if (path is null) return;
-
-            try
-            {
-                var json = await File.ReadAllTextAsync(path);
-                var dto = JsonSerializer.Deserialize<List<PaletteSwatchDto>>(json);
-                if (dto is null)
-                {
-                    StatusMessage = "That file didn't contain a recognizable palette.";
-                    return;
-                }
-
-                PushUndoSnapshot();
-                RestoreSnapshot(dto);
-                StatusMessage = $"Loaded palette from {Path.GetFileName(path)}.";
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Couldn't load palette: {ex.Message}";
-            }
         }
     }
 }

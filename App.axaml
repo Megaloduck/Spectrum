@@ -1,5 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialIcons="using:Material.Icons.Avalonia"
              x:Class="Spectrum.App"
              xmlns:local="using:Spectrum"
              RequestedThemeVariant="Default">
@@ -10,7 +11,8 @@
     </Application.DataTemplates>
   
     <Application.Styles>
-    <FluentTheme />
-    <StyleInclude Source="avares://Spectrum/Styles/Theme.axaml"/>
-</Application.Styles>
+        <FluentTheme />
+        <materialIcons:MaterialIconStyles />
+        <StyleInclude Source="avares://Spectrum/Styles/Theme.axaml"/>
+    </Application.Styles>
 </Application>

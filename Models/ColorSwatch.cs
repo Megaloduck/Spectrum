@@ -19,34 +19,30 @@ namespace Spectrum.Models
         [ObservableProperty]
         private string _name = "Color";
 
-        // Locked swatches survive "Shuffle" instead of being replaced.
+        // Locked swatches survive "Shuffle"/Generate instead of being replaced.
         [ObservableProperty]
         private bool _isLocked;
 
+        // Set by the ViewModel whenever the toolbar's "Color Blind" tool
+        // changes. This only affects how the swatch is *drawn* (Brush /
+        // ForegroundBrush below) — Hex, Name, and everything you copy or
+        // export always reflect the real, unsimulated color.
+        [ObservableProperty]
+        private ColorBlindMode _colorBlindMode = ColorBlindMode.None;
+
         public string Hex => $"#{Color.R:X2}{Color.G:X2}{Color.B:X2}";
 
-        // Only shown in the UI when the swatch isn't fully opaque.
-        public string HexRgba => $"#{Color.R:X2}{Color.G:X2}{Color.B:X2}{Color.A:X2}";
+        public Color DisplayColor => ColorBlindnessService.Simulate(Color, ColorBlindMode);
 
-        public bool IsTranslucent => Color.A < 255;
+        public IBrush Brush => new SolidColorBrush(DisplayColor);
 
-        public IBrush Brush => new SolidColorBrush(Color);
-
-        // Picks readable black or white text/icons for whatever the swatch color is,
-        // using the standard relative-luminance formula.
+        // Picks readable black or white text/icons against whatever is
+        // actually being displayed (post color-blind simulation), using the
+        // standard relative-luminance formula.
         public IBrush ForegroundBrush =>
-            (0.2126 * Color.R + 0.7152 * Color.G + 0.0722 * Color.B) / 255.0 > 0.6
+            (0.2126 * DisplayColor.R + 0.7152 * DisplayColor.G + 0.0722 * DisplayColor.B) / 255.0 > 0.6
                 ? new SolidColorBrush(Color.FromRgb(0x1E, 0x20, 0x25))
                 : Brushes.White;
-
-        // WCAG contrast ratios against pure white/black, shown in the rename
-        // flyout so it doubles as a quick accessibility check for the swatch.
-        public double ContrastWithWhite => ContrastService.ContrastRatio(Color, Colors.White);
-        public double ContrastWithBlack => ContrastService.ContrastRatio(Color, Colors.Black);
-
-        public string ContrastSummary =>
-            $"vs white {ContrastWithWhite:F1} ({ContrastService.Rate(ContrastWithWhite)}) \u00b7 " +
-            $"vs black {ContrastWithBlack:F1} ({ContrastService.Rate(ContrastWithBlack)})";
 
         public ICommand? CopyCommand { get; set; }
         public ICommand? RemoveCommand { get; set; }
@@ -56,13 +52,16 @@ namespace Spectrum.Models
         partial void OnColorChanged(Color value)
         {
             OnPropertyChanged(nameof(Hex));
-            OnPropertyChanged(nameof(HexRgba));
-            OnPropertyChanged(nameof(IsTranslucent));
+            OnPropertyChanged(nameof(DisplayColor));
             OnPropertyChanged(nameof(Brush));
             OnPropertyChanged(nameof(ForegroundBrush));
-            OnPropertyChanged(nameof(ContrastWithWhite));
-            OnPropertyChanged(nameof(ContrastWithBlack));
-            OnPropertyChanged(nameof(ContrastSummary));
+        }
+
+        partial void OnColorBlindModeChanged(ColorBlindMode value)
+        {
+            OnPropertyChanged(nameof(DisplayColor));
+            OnPropertyChanged(nameof(Brush));
+            OnPropertyChanged(nameof(ForegroundBrush));
         }
 
         public ColorSwatch()

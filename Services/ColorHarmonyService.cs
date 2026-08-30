@@ -14,36 +14,35 @@ namespace Spectrum.Services
         public static List<Color> Generate(Color baseColor, HarmonyType type)
         {
             var (h, s, l) = ToHsl(baseColor);
-            var alpha = baseColor.A;
             var result = new List<Color> { baseColor };
 
             switch (type)
             {
                 case HarmonyType.Complementary:
-                    result.Add(FromHsl(h + 180, s, l, alpha));
+                    result.Add(FromHsl(h + 180, s, l));
                     break;
 
                 case HarmonyType.Analogous:
-                    result.Add(FromHsl(h - 30, s, l, alpha));
-                    result.Add(FromHsl(h + 30, s, l, alpha));
-                    result.Add(FromHsl(h - 60, s, l, alpha));
-                    result.Add(FromHsl(h + 60, s, l, alpha));
+                    result.Add(FromHsl(h - 30, s, l));
+                    result.Add(FromHsl(h + 30, s, l));
+                    result.Add(FromHsl(h - 60, s, l));
+                    result.Add(FromHsl(h + 60, s, l));
                     break;
 
                 case HarmonyType.Triadic:
-                    result.Add(FromHsl(h + 120, s, l, alpha));
-                    result.Add(FromHsl(h + 240, s, l, alpha));
+                    result.Add(FromHsl(h + 120, s, l));
+                    result.Add(FromHsl(h + 240, s, l));
                     break;
 
                 case HarmonyType.SplitComplementary:
-                    result.Add(FromHsl(h + 150, s, l, alpha));
-                    result.Add(FromHsl(h + 210, s, l, alpha));
+                    result.Add(FromHsl(h + 150, s, l));
+                    result.Add(FromHsl(h + 210, s, l));
                     break;
 
                 case HarmonyType.Tetradic:
-                    result.Add(FromHsl(h + 90, s, l, alpha));
-                    result.Add(FromHsl(h + 180, s, l, alpha));
-                    result.Add(FromHsl(h + 270, s, l, alpha));
+                    result.Add(FromHsl(h + 90, s, l));
+                    result.Add(FromHsl(h + 180, s, l));
+                    result.Add(FromHsl(h + 270, s, l));
                     break;
 
                 case HarmonyType.Monochromatic:
@@ -51,15 +50,36 @@ namespace Spectrum.Services
                     for (var i = 0; i < 5; i++)
                     {
                         var lightness = Math.Clamp(l - 0.4 + i * 0.2, 0.05, 0.95);
-                        result.Add(FromHsl(h, s, lightness, alpha));
+                        result.Add(FromHsl(h, s, lightness));
                     }
+                    break;
+
+                case HarmonyType.Random:
+                    // No rule to apply — caller falls back to independent
+                    // random colors (see MainWindowViewModel.GeneratePalette).
                     break;
             }
 
             return result;
         }
 
-        private static (double H, double S, double L) ToHsl(Color c)
+        /// <summary>
+        /// Returns a single random color that stays within pleasant saturation/lightness
+        /// bands (vivid without being oversaturated, and never near-black or near-white).
+        /// Used by the Coolors-style "press Space to generate" palette generator, where
+        /// each unlocked swatch is rerolled independently rather than derived from one
+        /// base color + harmony rule.
+        /// </summary>
+        public static Color RandomPleasant(Random rng)
+        {
+            double h = rng.NextDouble() * 360.0;
+            double s = 0.45 + rng.NextDouble() * 0.45; // 45%–90% saturation
+            double l = 0.30 + rng.NextDouble() * 0.45; // 30%–75% lightness
+            return FromHsl(h, s, l);
+        }
+
+        /// <summary>Converts an RGB color to (Hue 0-360, Saturation 0-1, Lightness 0-1).</summary>
+        public static (double H, double S, double L) ToHsl(Color c)
         {
             double r = c.R / 255.0;
             double g = c.G / 255.0;
@@ -94,7 +114,8 @@ namespace Spectrum.Services
             return (h, s, l);
         }
 
-        private static Color FromHsl(double h, double s, double l, byte alpha = 255)
+        /// <summary>Converts (Hue 0-360, Saturation 0-1, Lightness 0-1) back to an RGB color.</summary>
+        public static Color FromHsl(double h, double s, double l)
         {
             h = ((h % 360) + 360) % 360;
             double r, g, b;
@@ -113,10 +134,10 @@ namespace Spectrum.Services
             }
 
             return new Color(
-                alpha,
-                (byte)Math.Round(r * 255),
-                (byte)Math.Round(g * 255),
-                (byte)Math.Round(b * 255));
+                255,
+                (byte)Math.Round(Math.Clamp(r, 0, 1) * 255),
+                (byte)Math.Round(Math.Clamp(g, 0, 1) * 255),
+                (byte)Math.Round(Math.Clamp(b, 0, 1) * 255));
         }
 
         private static double HueToRgb(double p, double q, double t)
@@ -129,4 +150,4 @@ namespace Spectrum.Services
             return p;
         }
     }
-}
+}   

@@ -2,15 +2,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Spectrum.ViewModels"
         xmlns:models="using:Spectrum.Models"
-        xmlns:conv="using:Spectrum.Converters"
+        xmlns:converters="using:Spectrum.Converters"
+        xmlns:materialIcons="using:Material.Icons.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1140" d:DesignHeight="720"
+        mc:Ignorable="d" d:DesignWidth="1360" d:DesignHeight="700"
         x:Class="Spectrum.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Spectrum — Color Palette"
-        Width="1140" Height="720">
+        Title="Color Palette"
+        Width="1360" Height="700">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -21,115 +22,129 @@
     <Grid RowDefinitions="Auto,*" Margin="24">
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+        <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,20">
             <TextBlock Text="Color Palette" Classes="h1"/>
-            <TextBlock Text="Build, generate, and export beautiful palettes."
-                       Foreground="{DynamicResource AccentBrush}" FontSize="13"/>
+            <TextBlock Text="Build, Generate and Export beautiful palettes" Classes="subtitle"/>
         </StackPanel>
 
-        <!-- Body: generator docked left, palette board + footer on the right -->
-      <Grid Grid.Row="1" ColumnDefinitions="300,20,*" >
+        <!-- Body: color panel docked left, tools + board on the right -->
+        <Grid Grid.Row="1" ColumnDefinitions="300,20,*">
 
-
-            <!-- ============ Docked color generator ============ -->
+            <!-- ============ COLOR PANEL ============ -->
             <Border Grid.Column="0" Classes="panel">
-                <ScrollViewer Margin="16">
-                    <StackPanel Spacing="10">
+                 <Grid RowDefinitions="*,Auto">
+                    <ScrollViewer Margin="20" >
+                         <StackPanel Spacing="12">
 
-                        <TextBlock Text="BASE COLOR" Classes="eyebrow"/>
-                        <Border Background="{Binding BaseColorBrush}" Height="64" CornerRadius="10"
-                                BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"/>
+                        <TextBlock Text="COLOR PANEL" Classes="eyebrow"/>
 
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="Hex" VerticalAlignment="Center" Width="36" Classes="caption"/>
-                            <TextBox Text="{Binding BaseHex}" Watermark="#RRGGBB" Width="140" Classes="mono"
-                                     Classes.error="{Binding IsHexInvalid}"
-                                     AutomationProperties.Name="Base color hex code"/>
-                        </StackPanel>
+                        <!-- Base color swatch with its auto-name overlaid, bottom-left -->
+                        <Border Background="{Binding BaseColorBrush}" Height="150" CornerRadius="14"
+                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                            <TextBlock Text="{Binding BaseColorName}" Foreground="{Binding BaseForegroundBrush}"
+                                       FontWeight="Bold" FontSize="14"
+                                       Margin="14" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
+                        </Border>
 
-                        <StackPanel Spacing="3">
-                            <TextBlock Text="{Binding BaseR, StringFormat='R   {0:F0}'}" Classes="caption"/>
-                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseR}"
-                                    AutomationProperties.Name="Red"/>
-                            <TextBlock Text="{Binding BaseG, StringFormat='G   {0:F0}'}" Classes="caption"/>
-                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseG}"
-                                    AutomationProperties.Name="Green"/>
-                            <TextBlock Text="{Binding BaseB, StringFormat='B   {0:F0}'}" Classes="caption"/>
-                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseB}"
-                                    AutomationProperties.Name="Blue"/>
-                            <TextBlock Text="{Binding BaseA, StringFormat='A   {0:F0}'}" Classes="caption"/>
-                            <Slider Minimum="0" Maximum="255" Value="{Binding BaseA}"
-                                    AutomationProperties.Name="Alpha (opacity)"/>
-                        </StackPanel>
+                        <Grid ColumnDefinitions="88,*">
+                            <ComboBox Grid.Column="0" SelectedIndex="0" Margin="0,0,8,0" HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="HEX"/>
+                            </ComboBox>
+                            <TextBox Grid.Column="1" Text="{Binding BaseHex}" Classes="mono" Watermark="#RRGGBB"/>
+                        </Grid>
 
-                        <Separator/>
+                        <Button Content="Add to Palette" Command="{Binding AddCurrentColorCommand}"
+                                HorizontalAlignment="Stretch"/>
 
-                        <TextBlock Text="ADD TO PALETTE" Classes="eyebrow"/>
-                        <TextBox Text="{Binding NewSwatchName}" Watermark="Name"
-                                 AutomationProperties.Name="New swatch name"/>
-                        <Button Content="Add Color" Classes="primary"
-                                Command="{Binding AddCurrentColorCommand}" HorizontalAlignment="Stretch"/>
+                        <StackPanel Spacing="10"  >
 
-                        <Separator/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Hue" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Hue, StringFormat=N0}" Classes="caption"/>
+                            </Grid>
+                            <Slider Minimum="0" Maximum="360" Value="{Binding Hue}" Height="40" Background="{Binding HueTrackBrush}"/>
 
-                        <TextBlock Text="HARMONY" Classes="eyebrow"/>
-                        <ComboBox ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}"
-                                  HorizontalAlignment="Stretch" AutomationProperties.Name="Harmony type">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={x:Static conv:EnumSpacedConverter.Instance}}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <Button Content="Generate Harmony" Classes="primary"
-                                Command="{Binding GenerateHarmonyCommand}" HorizontalAlignment="Stretch"/>
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                <TextBlock Text="Saturation" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Saturation, StringFormat=N0}" Classes="caption"/>
+                            </Grid>
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Saturation}" Height="40" Background="{Binding SaturationTrackBrush}"/>
 
-                        <Separator/>
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                <TextBlock Text="Brightness" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Lightness, StringFormat=N0}" Classes="caption"/>
+                            </Grid>
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Lightness}" Height="40"  Background="{Binding BrightnessTrackBrush}"/>
 
-                        <Button Content="Shuffle" Classes="ghost" HorizontalAlignment="Stretch"
-                                Command="{Binding RandomizePaletteCommand}"
-                                ToolTip.Tip="Randomize the base color and harmony (locked swatches stay put)"/>
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                <TextBlock Text="Temperature" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Temperature, StringFormat=N0}" Classes="caption"/>
+                            </Grid>
+                            <Slider Minimum="-100" Maximum="100" Value="{Binding Temperature}" Height="40" Background="{Binding TemperatureTrackBrush}"/>
 
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Undo" Classes="ghost" HorizontalAlignment="Stretch" Width="98"
-                                    Command="{Binding UndoCommand}" ToolTip.Tip="Undo the last palette change"/>
-                            <Button Content="Redo" Classes="ghost" HorizontalAlignment="Stretch" Width="98"
-                                    Command="{Binding RedoCommand}" ToolTip.Tip="Redo the last undone change"/>
-                        </StackPanel>
-
-                        <Separator/>
-
-                        <TextBlock Text="FILE" Classes="eyebrow"/>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Save…" Classes="ghost" HorizontalAlignment="Stretch" Width="98"
-                                    Command="{Binding SavePaletteCommand}"
-                                    ToolTip.Tip="Save this palette to a .json file"/>
-                            <Button Content="Load…" Classes="ghost" HorizontalAlignment="Stretch" Width="98"
-                                    Command="{Binding LoadPaletteCommand}"
-                                    ToolTip.Tip="Load a palette from a .json file"/>
                         </StackPanel>
 
                     </StackPanel>
                 </ScrollViewer>
+
+                     <!-- Harmonize Button -->
+                     <StackPanel Grid.Row="1" Margin="20" Spacing="10">
+                         <Separator Margin="0,6"/>
+                         <Button Content="Press Space to Harmonize" Command="{Binding GeneratePaletteCommand}"
+                                HorizontalAlignment="Stretch" ToolTip.Tip="Regenerates every unlocked color — using the Harmonize tool if one is selected"/>
+                     </StackPanel>
+                     
+                </Grid>
             </Border>
 
-            <!-- ============ Palette board ============ -->
-            <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto">
+            <!-- ============ TOOLS + palette board ============ -->
+            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,*,Auto">
 
-                <!-- Palette board header: count + clear -->
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
-                    <TextBlock Grid.Column="0" Text="{Binding PaletteCountLabel}" Classes="caption"
-                               FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="Clear" Classes="ghost"
-                            Command="{Binding ClearPaletteCommand}" ToolTip.Tip="Remove every swatch"
-                            AutomationProperties.Name="Clear all colors"/>
+                <TextBlock Grid.Row="0" Text="TOOLS" Classes="eyebrow" Margin="2,0,0,10"/>
+
+                <!-- Toolbar -->
+                <Grid Grid.Row="1" ColumnDefinitions="160,160,Auto,*,Auto,Auto,Auto" Margin="0,0,0,14">
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}"
+                              Margin="0,0,8,0" ToolTip.Tip="Rule Generate/Space uses for unlocked colors"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
+                              Margin="0,0,8,0" ToolTip.Tip="Preview the board as someone with this color vision would see it"/>
+                    <Button Grid.Column="2" Command="{Binding ExtractFromImageCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
+                            <TextBlock Text="Extract from Image" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Grid.Column="4" Classes="iconOnly" Padding="10,8"
+                            Command="{Binding UndoCommand}" ToolTip.Tip="Undo" Margin="0,0,4,0">
+                        <materialIcons:MaterialIcon Kind="Undo" Width="16" Height="16"/>
+                    </Button>
+                    <Button Grid.Column="5" Classes="iconOnly" Padding="10,8"
+                            Command="{Binding RedoCommand}" ToolTip.Tip="Redo" Margin="0,0,4,0">
+                        <materialIcons:MaterialIcon Kind="Redo" Width="16" Height="16"/>
+                    </Button>
+                    <Button Grid.Column="6" Classes="iconOnly" Padding="10,8"
+                            Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Toggle light / dark">
+                        <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="16" Height="16"/>
+                    </Button>
                 </Grid>
 
-                <!-- Full-height color bars. Cards can be dragged by their body
-                     (not their icon buttons) to reorder the palette - see
-                     MainWindow.axaml.cs for the drag/drop wiring. -->
-                <Border Grid.Row="1" Classes="panel" Padding="14">
-                    <ItemsControl x:Name="PaletteItemsControl" ItemsSource="{Binding Palette}">
+                <!-- Palette count + clear -->
+                <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                    <TextBlock Grid.Column="0" Text="{Binding PaletteCountLabel}" Classes="caption"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Classes="ghost" Command="{Binding ClearPaletteCommand}"
+                            ToolTip.Tip="Remove every swatch">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="15" Height="15"/>
+                            <TextBlock Text="Clear" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Full-height color bars -->
+                <Border Grid.Row="3" Classes="panel" Padding="14">
+                    <ItemsControl ItemsSource="{Binding Palette}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <UniformGrid Rows="1"/>
@@ -137,47 +152,55 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="models:ColorSwatch">
-                                <Border Background="{Binding Brush}" CornerRadius="10" Margin="4">
-                                    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+                                <Border Background="{Binding Brush}" CornerRadius="14" Margin="4" Cursor="Hand"
+                                        PointerPressed="OnSwatchPointerPressed"
+                                        PointerMoved="OnSwatchPointerMoved"
+                                        PointerReleased="OnSwatchPointerReleased"
+                                        ToolTip.Tip="Drag to reorder">
+                                    <Grid RowDefinitions="Auto,*,Auto" Margin="14">
 
                                         <!-- Icon stack: lock, reorder, rename, copy, remove -->
-                                        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="2">
-                                            <ToggleButton Content="Lock" Classes="iconOnly"
-                                                          Foreground="{Binding ForegroundBrush}"
+                                        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="6">
+                                            <ToggleButton Classes="iconOnly"
                                                           IsChecked="{Binding IsLocked, Mode=TwoWay}"
-                                                          ToolTip.Tip="Keep this color when shuffling"
-                                                          AutomationProperties.Name="Lock swatch to survive shuffle"/>
-                                            <Button Content="↑" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"
-                                                    AutomationProperties.Name="Move color earlier in palette"/>
-                                            <Button Content="↓" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"
-                                                    AutomationProperties.Name="Move color later in palette"/>
-                                            <Button Content="Edit" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    AutomationProperties.Name="Rename color and view contrast">
+                                                          ToolTip.Tip="Keep this color when generating">
+                                                <materialIcons:MaterialIcon
+                                                    Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
+                                                    Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                            </ToggleButton>
+                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding MoveUpCommand}" CommandParameter="{Binding}">
+                                                <materialIcons:MaterialIcon Kind="ArrowUp" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                            </Button>
+                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding MoveDownCommand}" CommandParameter="{Binding}">
+                                                <materialIcons:MaterialIcon Kind="ArrowDown" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                            </Button>
+                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}">
+                                                <materialIcons:MaterialIcon Kind="Pencil" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
                                                 <Button.Flyout>
                                                     <Flyout>
-                                                        <StackPanel x:DataType="models:ColorSwatch" Width="200" Spacing="8" Margin="4">
+                                                        <StackPanel x:DataType="models:ColorSwatch" Width="180" Spacing="8" Margin="4">
                                                             <TextBlock Text="RENAME" Classes="eyebrow"/>
                                                             <TextBox Text="{Binding Name}" Watermark="Name"/>
-                                                            <TextBlock Text="CONTRAST" Classes="eyebrow" Margin="0,6,0,0"/>
-                                                            <TextBlock Text="{Binding ContrastSummary}" Classes="caption" TextWrapping="Wrap"/>
-                                                            <TextBlock Text="{Binding HexRgba}" Classes="mono caption"
-                                                                       IsVisible="{Binding IsTranslucent}"/>
                                                         </StackPanel>
                                                     </Flyout>
                                                 </Button.Flyout>
                                             </Button>
-                                            <Button Content="Copy" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding CopyCommand}" CommandParameter="{Binding}"
-                                                    AutomationProperties.Name="Copy hex code"/>
-                                            <Button Content="✕" Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding RemoveCommand}" CommandParameter="{Binding}"
-                                                    AutomationProperties.Name="Remove color"/>
+                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding CopyCommand}" CommandParameter="{Binding}">
+                                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                            </Button>
+                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                                    Command="{Binding RemoveCommand}" CommandParameter="{Binding}">
+                                                <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                            </Button>
                                         </StackPanel>
 
-                                        <!-- Hex label anchored to the bottom of the bar -->
+                                        <!-- Name + hex label anchored to the bottom of the bar -->
                                         <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Spacing="2">
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"
+                                                       TextWrapping="Wrap" Foreground="{Binding ForegroundBrush}"/>
                                             <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
                                             <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
                                                        Classes="mono" Foreground="{Binding ForegroundBrush}"/>
@@ -191,35 +214,31 @@
                 </Border>
 
                 <!-- Footer -->
-                <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,16,0,0">
+                <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,16,0,0">
 
-                    <Button Grid.Column="0" Content="Copy All as Text" Classes="ghost"
-                            Command="{Binding CopyAllHexCommand}"
-                            AutomationProperties.Name="Copy all hex codes as text"/>
+                    <Button Grid.Column="0" Classes="ghost" Command="{Binding CopyAllHexCommand}" Margin="0,0,12,0">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="15" Height="15"/>
+                            <TextBlock Text="Copy All as Text" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                    <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Classes="caption"
-                               VerticalAlignment="Center" Margin="16,0"/>
+                    <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center"/>
 
-                    <Button Grid.Column="2" Content="Export Palette" Classes="primary"
-                            AutomationProperties.Name="Export palette">
+                    <ComboBox Grid.Column="2" ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}"
+                              Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="3" Content="Export Palette">
                         <Button.Flyout>
                             <Flyout>
                                 <StackPanel x:DataType="vm:MainWindowViewModel" Width="260" Spacing="10" Margin="4">
                                     <TextBlock Text="EXPORT" Classes="eyebrow"/>
-                                    <ComboBox ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}"
-                                              HorizontalAlignment="Stretch" AutomationProperties.Name="Export format">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Converter={x:Static conv:EnumSpacedConverter.Instance}}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
                                     <Button Content="Build Preview" Command="{Binding BuildExportPreviewCommand}"
                                             HorizontalAlignment="Stretch"/>
                                     <TextBox Text="{Binding ExportPreview}" AcceptsReturn="True" IsReadOnly="True"
                                              Height="120" TextWrapping="Wrap" Classes="mono"/>
-                                    <Button Content="Copy Export" Classes="primary"
-                                            Command="{Binding CopyExportCommand}" HorizontalAlignment="Stretch"/>
+                                    <Button Content="Copy Export" Command="{Binding CopyExportCommand}"
+                                            HorizontalAlignment="Stretch"/>
                                 </StackPanel>
                             </Flyout>
                         </Button.Flyout>

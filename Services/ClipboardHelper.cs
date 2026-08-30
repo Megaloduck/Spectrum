@@ -3,6 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Threading.Tasks;
 
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using System.Threading.Tasks;
+
 namespace Spectrum.Services
 {
     public static class ClipboardHelper
@@ -20,4 +25,4 @@ namespace Spectrum.Services
             }
         }
     }
-}
+}   
