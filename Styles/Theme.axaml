@@ -34,14 +34,7 @@
 
   <Style Selector="TextBlock">
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-  </Style>
-
-  <Style Selector="Flyout > FlyoutPresenter">
-    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="10"/>
-  </Style>
+  </Style>  
 
   <!-- ===================== Typography ===================== -->
   <Style Selector="TextBlock.h1">
@@ -180,6 +173,12 @@
     <Setter Property="Background" Value="{DynamicResource HairlineBrush}"/>
     <Setter Property="Height" Value="1"/>
     <Setter Property="Margin" Value="0,4"/>
+  </Style>
+
+  <!-- Applied to the hex quick-entry box when the typed value doesn't parse -->
+  <Style Selector="TextBox.error">
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+    <Setter Property="BorderThickness" Value="2"/>
   </Style>
 
 </Styles>

@@ -14,35 +14,36 @@ namespace Spectrum.Services
         public static List<Color> Generate(Color baseColor, HarmonyType type)
         {
             var (h, s, l) = ToHsl(baseColor);
+            var alpha = baseColor.A;
             var result = new List<Color> { baseColor };
 
             switch (type)
             {
                 case HarmonyType.Complementary:
-                    result.Add(FromHsl(h + 180, s, l));
+                    result.Add(FromHsl(h + 180, s, l, alpha));
                     break;
 
                 case HarmonyType.Analogous:
-                    result.Add(FromHsl(h - 30, s, l));
-                    result.Add(FromHsl(h + 30, s, l));
-                    result.Add(FromHsl(h - 60, s, l));
-                    result.Add(FromHsl(h + 60, s, l));
+                    result.Add(FromHsl(h - 30, s, l, alpha));
+                    result.Add(FromHsl(h + 30, s, l, alpha));
+                    result.Add(FromHsl(h - 60, s, l, alpha));
+                    result.Add(FromHsl(h + 60, s, l, alpha));
                     break;
 
                 case HarmonyType.Triadic:
-                    result.Add(FromHsl(h + 120, s, l));
-                    result.Add(FromHsl(h + 240, s, l));
+                    result.Add(FromHsl(h + 120, s, l, alpha));
+                    result.Add(FromHsl(h + 240, s, l, alpha));
                     break;
 
                 case HarmonyType.SplitComplementary:
-                    result.Add(FromHsl(h + 150, s, l));
-                    result.Add(FromHsl(h + 210, s, l));
+                    result.Add(FromHsl(h + 150, s, l, alpha));
+                    result.Add(FromHsl(h + 210, s, l, alpha));
                     break;
 
                 case HarmonyType.Tetradic:
-                    result.Add(FromHsl(h + 90, s, l));
-                    result.Add(FromHsl(h + 180, s, l));
-                    result.Add(FromHsl(h + 270, s, l));
+                    result.Add(FromHsl(h + 90, s, l, alpha));
+                    result.Add(FromHsl(h + 180, s, l, alpha));
+                    result.Add(FromHsl(h + 270, s, l, alpha));
                     break;
 
                 case HarmonyType.Monochromatic:
@@ -50,7 +51,7 @@ namespace Spectrum.Services
                     for (var i = 0; i < 5; i++)
                     {
                         var lightness = Math.Clamp(l - 0.4 + i * 0.2, 0.05, 0.95);
-                        result.Add(FromHsl(h, s, lightness));
+                        result.Add(FromHsl(h, s, lightness, alpha));
                     }
                     break;
             }
@@ -93,7 +94,7 @@ namespace Spectrum.Services
             return (h, s, l);
         }
 
-        private static Color FromHsl(double h, double s, double l)
+        private static Color FromHsl(double h, double s, double l, byte alpha = 255)
         {
             h = ((h % 360) + 360) % 360;
             double r, g, b;
@@ -112,7 +113,7 @@ namespace Spectrum.Services
             }
 
             return new Color(
-                255,
+                alpha,
                 (byte)Math.Round(r * 255),
                 (byte)Math.Round(g * 255),
                 (byte)Math.Round(b * 255));
