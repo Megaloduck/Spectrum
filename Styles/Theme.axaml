@@ -193,57 +193,31 @@
        so the full gradient reads uniformly, like the reference design,
        instead of looking like a progress bar. -->
 
-
-    
-    <!-- Your custom slider style -->
     <Style Selector="Slider:horizontal">
-        <!-- Set a consistent height for all sliders -->
-        <Setter Property="Height" Value="40" />
-        <Setter Property="Foreground" Value="Transparent"/>
-        
-        <!-- Style the track background -->
-        <Style Selector="^ Track">
-            <Style Selector="^ RepeatButton Border">
-                <Setter Property="Height" Value="8" />
-                <Setter Property="CornerRadius" Value="4" />
-                <Setter Property="Background" Value="#2D2D2D" />
-            </Style>
-        </Style>
-        
-        <!-- Style the filled portion (allows your Background binding to work) -->
-        <Style Selector="^ Track">
-            <Style Selector="^ RepeatButton#PART_DecreaseButton">
-                <!-- This allows the Background binding from your XAML to apply -->
-                <Setter Property="Background" Value="{Binding Background, RelativeSource={RelativeSource AncestorType=Slider}}" />
-                <Style Selector="^ Border">
-                    <Setter Property="Height" Value="8" />
-                    <Setter Property="CornerRadius" Value="4" />
-                </Style>
-            </Style>
-        </Style>
-        
-        <!-- Style the thumb (draggable handle) -->
-        <Style Selector="^ Thumb#PART_Thumb">
-            <Setter Property="Width" Value="18" />
-            <Setter Property="Height" Value="18" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#888" />
-            <Setter Property="BorderThickness" Value="1.5" />
-            <Setter Property="CornerRadius" Value="9" />
-            
-            <!-- Hover effect -->
-            <Style Selector="^:pointerover">
-                <Setter Property="Background" Value="#F0F0F0" />
-                <Setter Property="BorderBrush" Value="#666" />
-            </Style>
-            
-            <!-- Pressed effect -->
-            <Style Selector="^:pressed">
-                <Setter Property="Background" Value="#E0E0E0" />
-                <Setter Property="BorderBrush" Value="#555" />
-            </Style>
-        </Style>
+
+    <Setter Property="Height" Value="50"/>
+
+    <!-- Hide the default slider track -->
+    <Style Selector="^ Track RepeatButton">
+        <Setter Property="Background" Value="Transparent"/>
     </Style>
+
+</Style>
+
+
+<!-- CUSTOM THUMB -->
+<Style Selector="Slider:horizontal /template/ Thumb">
+
+    <Setter Property="Width" Value="5"/>
+    <Setter Property="Height" Value="20"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Background" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="4"/>
+
+</Style>
+    
+        
 
 
 </Styles>

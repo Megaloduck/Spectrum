@@ -57,84 +57,84 @@
                                 HorizontalAlignment="Stretch"/>
 
 
-                             <!-- Color Generator Slider -->
-                        <StackPanel Spacing="10"  >
+                                 <!-- Color Generator Slider -->
+                            <StackPanel         >
 
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Hue" FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Hue, StringFormat=N0}" Classes="caption"/>    
-                            </Grid>
-                            <Grid Height="40">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Hue" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Hue, StringFormat=N0}" Classes="caption"/>    
+                                </Grid>
+                                <Grid Height="40">
 
-    <!-- Actual gradient bar -->
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding HueTrackBrush}"/>
+        <!-- Actual gradient bar -->
+        <Border Height="8"
+                VerticalAlignment="Center"
+                CornerRadius="4"
+                Background="{Binding HueTrackBrush}"/>
 
-    <!-- Interactive slider -->
-    <Slider Minimum="0"
-            Maximum="360"
-            Value="{Binding Hue}"
-            Background="Transparent"/>
+        <!-- Interactive slider -->
+        <Slider Minimum="0"
+                Maximum="360"   
+                Value="{Binding Hue}"
+                Background="Transparent"/>
 
-</Grid>
+    </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
-                                <TextBlock Text="Saturation" FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Saturation, StringFormat=N0}" Classes="caption"/>
-                            </Grid>
-                            <Grid Height="40">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                    <TextBlock Text="Saturation" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Saturation, StringFormat=N0}" Classes="caption"/>
+                                </Grid>
+                                <Grid Height="40">
 
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding SaturationTrackBrush}"/>
+        <Border Height="8"
+                VerticalAlignment="Center"
+                CornerRadius="4"
+                Background="{Binding SaturationTrackBrush}"/>
 
-    <Slider Minimum="0"
-            Maximum="100"
-            Value="{Binding Saturation}"
-            Background="Transparent"/>
+        <Slider Minimum="0"
+                Maximum="100"
+                Value="{Binding Saturation}"
+                Background="Transparent"/>
 
-</Grid>
+    </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
-                                <TextBlock Text="Brightness" FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Lightness, StringFormat=N0}" Classes="caption"/>
-                            </Grid>
-                            <Grid Height="40">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                    <TextBlock Text="Brightness" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Lightness, StringFormat=N0}" Classes="caption"/>
+                                </Grid>
+                                <Grid Height="40">
 
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding BrightnessTrackBrush}"/>
+        <Border Height="8"
+                VerticalAlignment="Center"
+                CornerRadius="4"
+                Background="{Binding BrightnessTrackBrush}"/>
 
-    <Slider Minimum="0"
-            Maximum="100"
-            Value="{Binding Lightness}"
-            Background="Transparent"/>
+        <Slider Minimum="0"
+                Maximum="100"
+                Value="{Binding Lightness}"
+                Background="Transparent"/>
 
-</Grid>
+    </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
-                                <TextBlock Text="Temperature" FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Temperature, StringFormat=N0}" Classes="caption"/>
-                            </Grid>
-                            <Grid Height="40">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                    <TextBlock Text="Temperature" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Temperature, StringFormat=N0}" Classes="caption"/>
+                                </Grid>
+                                <Grid Height="40">
 
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding TemperatureTrackBrush}"/>
+        <Border Height="8"
+                VerticalAlignment="Center"
+                CornerRadius="4"
+                Background="{Binding TemperatureTrackBrush}"/>
 
-    <Slider Minimum="-100"
-            Maximum="100"
-            Value="{Binding Temperature}"
-            Background="Transparent"/>
+        <Slider Minimum="-100"
+                Maximum="100"
+                Value="{Binding Temperature}"
+                Background="Transparent"/>
 
-</Grid>
+    </Grid>
 
-                        </StackPanel>
+                            </StackPanel>
 
                     </StackPanel>
                 </ScrollViewer>
@@ -210,7 +210,7 @@
         </Grid>
 
         <!-- Divider 2 -->
-        <Border Grid.Column="6" Width="1" Height="24" Margin="12,0"
+        <Border Grid.Column="6" Width="1" Height="24" Margin="16,0"
                 Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
 
         <!-- Undo Button -->
