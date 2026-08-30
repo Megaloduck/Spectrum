@@ -94,29 +94,29 @@ namespace Spectrum.ViewModels
             }
         }
 
-        // ---- Gradient track backgrounds for the four sliders. Hue,
-        // ---- Brightness and Temperature are fixed; Saturation's end color
-        // ---- depends on the current Hue, so it's recomputed whenever that changes.
-        public IBrush HueTrackBrush { get; } = CreateHorizontalGradient(
-            (Color.FromRgb(255, 0, 0), 0.0),
-            (Color.FromRgb(255, 255, 0), 1.0 / 6),
-            (Color.FromRgb(0, 255, 0), 2.0 / 6),
-            (Color.FromRgb(0, 255, 255), 3.0 / 6),
-            (Color.FromRgb(0, 0, 255), 4.0 / 6),
-            (Color.FromRgb(255, 0, 255), 5.0 / 6),
-            (Color.FromRgb(255, 0, 0), 1.0));
+            // ---- Gradient track backgrounds for the four sliders. Hue,
+            // ---- Brightness and Temperature are fixed; Saturation's end color
+            // ---- depends on the current Hue, so it's recomputed whenever that changes.
+            public IBrush HueTrackBrush { get; } = CreateHorizontalGradient(
+                (Color.FromRgb(255, 0, 0), 0.0),
+                (Color.FromRgb(255, 255, 0), 1.0 / 6),
+                (Color.FromRgb(0, 255, 0), 2.0 / 6),
+                (Color.FromRgb(0, 255, 255), 3.0 / 6),
+                (Color.FromRgb(0, 0, 255), 4.0 / 6),
+                (Color.FromRgb(255, 0, 255), 5.0 / 6),
+                (Color.FromRgb(255, 0, 0), 1.0));
 
-        public IBrush SaturationTrackBrush => CreateHorizontalGradient(
-            (Colors.White, 0.0),
-            (ColorHarmonyService.FromHsl(Hue, 1.0, 0.5), 1.0));
+            public IBrush SaturationTrackBrush => CreateHorizontalGradient(
+                (Colors.White, 0.0),
+                (ColorHarmonyService.FromHsl(Hue, 1.0, 0.5), 1.0));
 
-        public IBrush BrightnessTrackBrush { get; } = CreateHorizontalGradient(
-            (Colors.Black, 0.0),
-            (Colors.White, 1.0));
+            public IBrush BrightnessTrackBrush { get; } = CreateHorizontalGradient(
+                (Colors.Black, 0.0),
+                (Colors.White, 1.0));
 
-        public IBrush TemperatureTrackBrush { get; } = CreateHorizontalGradient(
-            (Color.FromRgb(0x4A, 0x90, 0xE2), 0.0),
-            (Color.FromRgb(0xF5, 0xA6, 0x23), 1.0));
+            public IBrush TemperatureTrackBrush { get; } = CreateHorizontalGradient(
+                (Color.FromRgb(0x4A, 0x90, 0xE2), 0.0),
+                (Color.FromRgb(0xF5, 0xA6, 0x23), 1.0));
 
         // ---- Undo/redo history (covers add/remove/clear/generate/extract —
         // ---- see PushHistory call sites. In-place edits like renaming or
