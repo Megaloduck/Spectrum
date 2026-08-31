@@ -22,7 +22,8 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
   Suggested path: docs/demo.gif
 -->
 <p align="center">
-  <img src="docs/screenshot.png" alt="Spectrum app screenshot" width="850"/>
+  <img src="docs/screenshot1.png" alt="Spectrum app screenshot" width="850"/>
+  <img src="docs/screenshot2.png" alt="Spectrum app screenshot" width="850"/>
 </p>
 
 <br/>
