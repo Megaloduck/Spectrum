@@ -21,11 +21,7 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
   single best piece of marketing this README can have.
   Suggested path: docs/demo.gif
 -->
-<p align="center">
-  
-  <img src="docs/screenshot1.png" alt="Spectrum app screenshot" width="49%"/>
-  <img src="docs/screenshot2.png" alt="Spectrum app screenshot" width="49%"/>
-</p>
+
 <br/>
 
 ## ✨ Features
