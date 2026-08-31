@@ -2,7 +2,7 @@
 
 # 🎨 Spectrum
 
-**A fast, keyboard-driven color palette generator for the desktop — built with Avalonia UI.**
+**an intuitive color palette editor built with Avalonia UI. Create, generate, and export beautiful color palettes for your design projects.**
 
 Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C# desktop app.
 
