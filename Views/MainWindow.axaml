@@ -9,9 +9,10 @@
         mc:Ignorable="d" d:DesignWidth="1360" d:DesignHeight="700"
         x:Class="Spectrum.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Color Palette"
-        Width="1080" Height="720">
+        Icon="/Assets/Spectrum.ico"
+        Title="Spectrum"
+        Width="1200" Height="675"
+        WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
