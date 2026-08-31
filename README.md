@@ -42,16 +42,6 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
 - **Light / dark theme toggle**
 - **Studio-style monochrome UI** driven entirely by a design-token stylesheet (`Styles/Theme.axaml`)
 
-## 🗺️ Roadmap
-
-- [ ] Alpha channel support in the color panel
-- [ ] Palette save/load to disk (file-picker plumbing already exists, UI wiring pending)
-- [ ] WCAG contrast checking surfaced in the UI (contrast-ratio engine already exists)
-- [ ] Dedicated color picker control
-- [ ] Visual feedback for invalid hex input
-- [ ] Accessibility labels on icon-only buttons
-- [ ] `CanExecute` guards on more commands
-- [ ] Unit tests (harmony + export services) and a CI pipeline
 
 ## 🛠️ Tech Stack
 
