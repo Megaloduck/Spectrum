@@ -10,7 +10,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Spectrum.ViewModels
@@ -40,6 +42,9 @@ namespace Spectrum.ViewModels
         private double _temperature; // -100 (cool) .. 100 (warm), 0 = neutral
 
         [ObservableProperty]
+        private double _alpha = 100; // 0 (transparent) .. 100 (opaque), applied to BaseColor
+
+        [ObservableProperty]
         private HarmonyType _selectedHarmony = HarmonyType.Random;
 
         [ObservableProperty]
@@ -66,7 +71,8 @@ namespace Spectrum.ViewModels
             get
             {
                 var hslColor = ColorHarmonyService.FromHsl(Hue, Saturation / 100.0, Lightness / 100.0);
-                return ApplyTemperature(hslColor, Temperature);
+                var tinted = ApplyTemperature(hslColor, Temperature);
+                return Color.FromArgb(ToByte(Alpha / 100.0 * 255.0), tinted.R, tinted.G, tinted.B);
             }
         }
 
@@ -94,6 +100,9 @@ namespace Spectrum.ViewModels
             }
         }
 
+        // Percentage label for the Opacity slider's caption (e.g. "72%").
+        public string AlphaLabel => $"{Alpha:N0}%";
+
             // ---- Gradient track backgrounds for the four sliders. Hue,
             // ---- Brightness and Temperature are fixed; Saturation's end color
             // ---- depends on the current Hue, so it's recomputed whenever that changes.
@@ -118,7 +127,16 @@ namespace Spectrum.ViewModels
                 (Color.FromRgb(0x4A, 0x90, 0xE2), 0.0),
                 (Color.FromRgb(0xF5, 0xA6, 0x23), 1.0));
 
-        // ---- Undo/redo history (covers add/remove/clear/generate/extract —
+            // Unlike the other tracks, this one depends on the live base
+            // color (so the gradient always fades *that* hue from
+            // transparent to opaque) rather than a fixed set of stops, so
+            // it's a plain computed property kept in sync via
+            // RaiseColorPropertiesChanged instead of a field initializer.
+            public IBrush AlphaTrackBrush => CreateHorizontalGradient(
+                (Color.FromArgb(0, BaseColor.R, BaseColor.G, BaseColor.B), 0.0),
+                (Color.FromArgb(255, BaseColor.R, BaseColor.G, BaseColor.B), 1.0));
+
+        // ---- Undo/redo history (covers add/remove/clear/generate/extract/load —
         // ---- see PushHistory call sites. In-place edits like renaming or
         // ---- toggling a lock aren't tracked.)
         private readonly Stack<List<SwatchSnapshot>> _undoStack = new();
@@ -146,6 +164,12 @@ namespace Spectrum.ViewModels
         partial void OnLightnessChanged(double value) => RaiseColorPropertiesChanged();
         partial void OnTemperatureChanged(double value) => RaiseColorPropertiesChanged();
 
+        partial void OnAlphaChanged(double value)
+        {
+            OnPropertyChanged(nameof(AlphaLabel));
+            RaiseColorPropertiesChanged();
+        }
+
         partial void OnSelectedColorBlindModeChanged(ColorBlindMode value)
         {
             foreach (var swatch in Palette)
@@ -161,6 +185,7 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(BaseColorName));
             OnPropertyChanged(nameof(BaseForegroundBrush));
             OnPropertyChanged(nameof(BaseHex));
+            OnPropertyChanged(nameof(AlphaTrackBrush));
         }
 
         private static Color ApplyTemperature(Color c, double temperature)
@@ -472,6 +497,77 @@ namespace Spectrum.ViewModels
             if (string.IsNullOrEmpty(ExportPreview)) BuildExportPreview();
             await ClipboardHelper.SetTextAsync(ExportPreview);
             StatusMessage = "Copied export text to clipboard.";
+        }
+
+        // ---------------- Palette persistence ----------------
+
+        [RelayCommand]
+        private async Task SavePaletteAsync()
+        {
+            var suggestedName = $"palette-{DateTime.Now:yyyyMMdd-HHmmss}";
+            var path = await PaletteFileService.PickSaveFileAsync(suggestedName);
+            if (string.IsNullOrEmpty(path))
+            {
+                StatusMessage = "Save cancelled.";
+                return;
+            }
+
+            var dtos = Palette
+                .Select(s => new PaletteSwatchDto(s.Name, s.Color.A, s.Color.R, s.Color.G, s.Color.B, s.IsLocked))
+                .ToList();
+
+            try
+            {
+                var json = JsonSerializer.Serialize(dtos, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(path, json);
+                StatusMessage = $"Palette saved to {Path.GetFileName(path)}.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Couldn't save palette: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
+        private async Task LoadPaletteAsync()
+        {
+            var path = await PaletteFileService.PickOpenFileAsync();
+            if (string.IsNullOrEmpty(path))
+            {
+                StatusMessage = "Load cancelled.";
+                return;
+            }
+
+            List<PaletteSwatchDto>? dtos;
+            try
+            {
+                var json = await File.ReadAllTextAsync(path);
+                dtos = JsonSerializer.Deserialize<List<PaletteSwatchDto>>(json);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Couldn't load palette: {ex.Message}";
+                return;
+            }
+
+            if (dtos is null)
+            {
+                StatusMessage = "That file didn't contain a usable palette.";
+                return;
+            }
+
+            PushHistory();
+            Palette.Clear();
+
+            foreach (var dto in dtos)
+            {
+                var color = Color.FromArgb(dto.A, dto.R, dto.G, dto.B);
+                var swatch = CreateSwatch(color, dto.Name);
+                swatch.IsLocked = dto.IsLocked;
+                Palette.Add(swatch);
+            }
+
+            StatusMessage = $"Loaded {Palette.Count} color{(Palette.Count == 1 ? "" : "s")} from {Path.GetFileName(path)}.";
         }
     }
 }

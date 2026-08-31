@@ -57,7 +57,9 @@ namespace Spectrum.Services
                     return color;
             }
 
-            return Color.FromRgb(Clamp(nr), Clamp(ng), Clamp(nb));
+            // Preserve the original alpha — previously this used Color.FromRgb,
+            // which silently forced every simulated color to fully opaque.
+            return Color.FromArgb(color.A, Clamp(nr), Clamp(ng), Clamp(nb));
         }
 
         private static byte Clamp(double v) => (byte)Math.Clamp(Math.Round(v), 0, 255);

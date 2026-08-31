@@ -39,10 +39,22 @@ namespace Spectrum.Models
         // Picks readable black or white text/icons against whatever is
         // actually being displayed (post color-blind simulation), using the
         // standard relative-luminance formula.
-        public IBrush ForegroundBrush =>
+        private Color ForegroundColor =>
             (0.2126 * DisplayColor.R + 0.7152 * DisplayColor.G + 0.0722 * DisplayColor.B) / 255.0 > 0.6
-                ? new SolidColorBrush(Color.FromRgb(0x1E, 0x20, 0x25))
-                : Brushes.White;
+                ? Color.FromRgb(0x1E, 0x20, 0x25)
+                : Colors.White;
+
+        public IBrush ForegroundBrush => new SolidColorBrush(ForegroundColor);
+
+        // WCAG 2.x contrast of this card's own label text (ForegroundColor)
+        // against whatever color is actually displayed — lets each swatch
+        // flag whether its own Name/Hex text would actually be legible,
+        // including under color-blind simulation.
+        public double ContrastRatio => ContrastService.ContrastRatio(DisplayColor, ForegroundColor);
+
+        public string ContrastRating => ContrastService.Rate(ContrastRatio);
+
+        public string ContrastLabel => $"{ContrastRatio:N1}:1 · {ContrastRating}";
 
         public ICommand? CopyCommand { get; set; }
         public ICommand? RemoveCommand { get; set; }
@@ -55,6 +67,9 @@ namespace Spectrum.Models
             OnPropertyChanged(nameof(DisplayColor));
             OnPropertyChanged(nameof(Brush));
             OnPropertyChanged(nameof(ForegroundBrush));
+            OnPropertyChanged(nameof(ContrastRatio));
+            OnPropertyChanged(nameof(ContrastRating));
+            OnPropertyChanged(nameof(ContrastLabel));
         }
 
         partial void OnColorBlindModeChanged(ColorBlindMode value)
@@ -62,6 +77,9 @@ namespace Spectrum.Models
             OnPropertyChanged(nameof(DisplayColor));
             OnPropertyChanged(nameof(Brush));
             OnPropertyChanged(nameof(ForegroundBrush));
+            OnPropertyChanged(nameof(ContrastRatio));
+            OnPropertyChanged(nameof(ContrastRating));
+            OnPropertyChanged(nameof(ContrastLabel));
         }
 
         public ColorSwatch()

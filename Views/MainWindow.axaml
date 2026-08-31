@@ -135,6 +135,24 @@
 
     </Grid>
 
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+                                    <TextBlock Text="Opacity" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding AlphaLabel}" Classes="caption"/>
+                                </Grid>
+                                <Grid Height="40">
+
+        <Border Height="8"
+                VerticalAlignment="Center"
+                CornerRadius="4"
+                Background="{Binding AlphaTrackBrush}"/>
+
+        <Slider Minimum="0"
+                Maximum="100"
+                Value="{Binding Alpha}"
+                Background="Transparent"/>
+
+    </Grid>
+
                             </StackPanel>
 
                     </StackPanel>
@@ -158,7 +176,7 @@
                 <!-- Toolbar: contained in a single panel card with generation controls on the left,
      history and theme controls on the right, with thin dividers between groups -->
 <Border Grid.Row="1" Classes="panel" Padding="16,12" Margin="0,0,0,14">
-    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
+    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
 
         <!-- Harmony Type ComboBox -->
         <ComboBox Grid.Column="0" MinWidth="150" Height="38"
@@ -232,6 +250,22 @@
             <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="16" Height="16"/>
         </Button>
 
+        <!-- Divider 3 -->
+        <Border Grid.Column="10" Width="1" Height="24" Margin="16,0"
+                Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
+
+        <!-- Save Palette Button -->
+        <Button Grid.Column="11" Classes="iconOnly" Width="38" Height="38" Margin="12,0,0,0"
+                Command="{Binding SavePaletteCommand}" ToolTip.Tip="Save palette to a file">
+            <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16"/>
+        </Button>
+
+        <!-- Load Palette Button -->
+        <Button Grid.Column="12" Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding LoadPaletteCommand}" ToolTip.Tip="Load palette from a file">
+            <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="16" Height="16"/>
+        </Button>
+
     </Grid>
 </Border>   
 
@@ -297,6 +331,9 @@
                                             <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
                                             <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
                                                        Classes="mono" Foreground="{Binding ForegroundBrush}"/>
+                                            <TextBlock Text="{Binding ContrastLabel}" FontSize="10" Opacity="0.75"
+                                                       Foreground="{Binding ForegroundBrush}"
+                                                       ToolTip.Tip="WCAG contrast of this card's own text against its background"/>
                                         </StackPanel>
 
                                     </Grid>

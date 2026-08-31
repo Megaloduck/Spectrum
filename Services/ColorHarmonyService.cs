@@ -14,35 +14,38 @@ namespace Spectrum.Services
         public static List<Color> Generate(Color baseColor, HarmonyType type)
         {
             var (h, s, l) = ToHsl(baseColor);
+            // Harmony-derived colors inherit the base color's alpha, so the
+            // Opacity slider affects the whole generated set consistently.
+            var a = baseColor.A;
             var result = new List<Color> { baseColor };
 
             switch (type)
             {
                 case HarmonyType.Complementary:
-                    result.Add(FromHsl(h + 180, s, l));
+                    result.Add(FromHsl(h + 180, s, l, a));
                     break;
 
                 case HarmonyType.Analogous:
-                    result.Add(FromHsl(h - 30, s, l));
-                    result.Add(FromHsl(h + 30, s, l));
-                    result.Add(FromHsl(h - 60, s, l));
-                    result.Add(FromHsl(h + 60, s, l));
+                    result.Add(FromHsl(h - 30, s, l, a));
+                    result.Add(FromHsl(h + 30, s, l, a));
+                    result.Add(FromHsl(h - 60, s, l, a));
+                    result.Add(FromHsl(h + 60, s, l, a));
                     break;
 
                 case HarmonyType.Triadic:
-                    result.Add(FromHsl(h + 120, s, l));
-                    result.Add(FromHsl(h + 240, s, l));
+                    result.Add(FromHsl(h + 120, s, l, a));
+                    result.Add(FromHsl(h + 240, s, l, a));
                     break;
 
                 case HarmonyType.SplitComplementary:
-                    result.Add(FromHsl(h + 150, s, l));
-                    result.Add(FromHsl(h + 210, s, l));
+                    result.Add(FromHsl(h + 150, s, l, a));
+                    result.Add(FromHsl(h + 210, s, l, a));
                     break;
 
                 case HarmonyType.Tetradic:
-                    result.Add(FromHsl(h + 90, s, l));
-                    result.Add(FromHsl(h + 180, s, l));
-                    result.Add(FromHsl(h + 270, s, l));
+                    result.Add(FromHsl(h + 90, s, l, a));
+                    result.Add(FromHsl(h + 180, s, l, a));
+                    result.Add(FromHsl(h + 270, s, l, a));
                     break;
 
                 case HarmonyType.Monochromatic:
@@ -50,7 +53,7 @@ namespace Spectrum.Services
                     for (var i = 0; i < 5; i++)
                     {
                         var lightness = Math.Clamp(l - 0.4 + i * 0.2, 0.05, 0.95);
-                        result.Add(FromHsl(h, s, lightness));
+                        result.Add(FromHsl(h, s, lightness, a));
                     }
                     break;
 
@@ -68,7 +71,8 @@ namespace Spectrum.Services
         /// bands (vivid without being oversaturated, and never near-black or near-white).
         /// Used by the Coolors-style "press Space to generate" palette generator, where
         /// each unlocked swatch is rerolled independently rather than derived from one
-        /// base color + harmony rule.
+        /// base color + harmony rule. Always fully opaque — it isn't derived from the
+        /// base color, so there's no alpha value to inherit.
         /// </summary>
         public static Color RandomPleasant(Random rng)
         {
@@ -114,8 +118,12 @@ namespace Spectrum.Services
             return (h, s, l);
         }
 
-        /// <summary>Converts (Hue 0-360, Saturation 0-1, Lightness 0-1) back to an RGB color.</summary>
-        public static Color FromHsl(double h, double s, double l)
+        /// <summary>
+        /// Converts (Hue 0-360, Saturation 0-1, Lightness 0-1) back to an RGB color.
+        /// <paramref name="a"/> defaults to fully opaque so existing call sites that
+        /// don't care about alpha don't need to change.
+        /// </summary>
+        public static Color FromHsl(double h, double s, double l, byte a = 255)
         {
             h = ((h % 360) + 360) % 360;
             double r, g, b;
@@ -134,7 +142,7 @@ namespace Spectrum.Services
             }
 
             return new Color(
-                255,
+                a,
                 (byte)Math.Round(Math.Clamp(r, 0, 1) * 255),
                 (byte)Math.Round(Math.Clamp(g, 0, 1) * 255),
                 (byte)Math.Round(Math.Clamp(b, 0, 1) * 255));
