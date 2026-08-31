@@ -46,6 +46,13 @@ namespace Spectrum.Services
                     nb = 0.475 * g + 0.525 * b;
                     break;
 
+                case ColorBlindMode.Achromatopsia:                  
+                    double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                    nr = luminance;
+                    ng = luminance;
+                    nb = luminance;
+                    break;
+
                 default:
                     return color;
             }

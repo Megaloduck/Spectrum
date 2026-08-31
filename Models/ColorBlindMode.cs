@@ -11,6 +11,7 @@ namespace Spectrum.Models
         None,
         Protanopia,
         Deuteranopia,
-        Tritanopia
+        Tritanopia,
+        Achromatopsia
     }
 }
