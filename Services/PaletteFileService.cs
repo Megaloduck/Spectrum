@@ -13,43 +13,84 @@ namespace Spectrum.Services
     /// </summary>
     public static class PaletteFileService
     {
-        private const string FileTypeName = "Spectrum Palette (*.json)";
-
-        public static async Task<string?> PickSaveFileAsync(string suggestedFileName)
+        public static async Task<string?> PickSaveFileAsync(
+            string suggestedFileName,
+            string extension = "json",
+            string fileTypeLabel = "Spectrum Palette (*.json)")
         {
             var storage = GetStorageProvider();
             if (storage is null) return null;
 
             var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Save Palette",
+                Title = "Save",
                 SuggestedFileName = suggestedFileName,
-                DefaultExtension = "json",
+                DefaultExtension = extension,
                 FileTypeChoices = new List<FilePickerFileType>
                 {
-                    new(FileTypeName) { Patterns = new[] { "*.json" } }
+                    new(fileTypeLabel) { Patterns = new[] { "*." + extension } }
                 }
             });
 
             return file?.Path.LocalPath;
         }
 
-        public static async Task<string?> PickOpenFileAsync()
+        public static async Task<string?> PickOpenFileAsync(
+            string fileTypeLabel = "Spectrum Palette (*.json)",
+            string pattern = "*.json",
+            string title = "Open Palette")
         {
             var storage = GetStorageProvider();
             if (storage is null) return null;
 
             var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Open Palette",
+                Title = title,
                 AllowMultiple = false,
                 FileTypeFilter = new List<FilePickerFileType>
                 {
-                    new(FileTypeName) { Patterns = new[] { "*.json" } }
+                    new(fileTypeLabel) { Patterns = new[] { pattern } }
                 }
             });
 
             return files.Count > 0 ? files[0].Path.LocalPath : null;
+        }
+
+        public static async Task<string?> PickOpenFileAsync(
+            string fileTypeLabel,
+            string[] patterns,
+            string title)
+        {
+            var storage = GetStorageProvider();
+            if (storage is null) return null;
+
+            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = title,
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
+                {
+                    new(fileTypeLabel) { Patterns = patterns }
+                }
+            });
+
+            return files.Count > 0 ? files[0].Path.LocalPath : null;
+        }
+
+        /// <summary>Native save dialog for any file type list (PNG/SVG export, etc.).</summary>
+        public static async Task<string?> PickSaveFileAsync(string suggestedFileName, params FilePickerFileType[] types)
+        {
+            var storage = GetStorageProvider();
+            if (storage is null) return null;
+
+            var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Export",
+                SuggestedFileName = suggestedFileName,
+                FileTypeChoices = types.Length > 0 ? types : null,
+            });
+
+            return file?.Path.LocalPath;
         }
 
         private static IStorageProvider? GetStorageProvider()

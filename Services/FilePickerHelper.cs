@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -36,7 +30,7 @@ namespace Spectrum.Services
 
             var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Extract colors from image",
+                Title = "Pick an image",
                 AllowMultiple = false,
                 FileTypeFilter = new List<FilePickerFileType>
                 {

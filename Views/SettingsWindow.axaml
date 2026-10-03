@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Spectrum.ViewModels"
+        xmlns:conv="using:Spectrum.Converters"
+        x:Class="Spectrum.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings"
+        Width="660" SizeToContent="Height" CanResize="False" MaxHeight="760"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Icon="/Assets/Spectrum.ico">
+
+    <StackPanel Margin="22" Spacing="12">
+
+        <TextBlock Text="SETTINGS" Classes="eyebrow"/>
+        <TextBlock Text="Everything here is stored locally and applies immediately." Classes="subtitle"/>
+
+        <!-- Appearance -->
+        <Border Classes="panel" Padding="16">
+            <StackPanel Spacing="10">
+                <TextBlock Text="APPEARANCE" Classes="eyebrow"/>
+
+                <TextBlock Text="Theme" Classes="caption"/>
+                <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.Themes}"
+                          SelectedItem="{Binding Theme}" HorizontalAlignment="Stretch"/>
+
+                <TextBlock Text="Accent color" Classes="caption" Margin="0,4,0,0"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Pick accent…" Click="OnPickAccent"/>
+                    <Button Content="Reset" Classes="ghost" Click="OnResetAccent"/>
+                    <Border Width="34" Height="30" CornerRadius="8" BorderThickness="1.3"
+                            BorderBrush="{DynamicResource OutlineBrush}"
+                            Background="{DynamicResource AccentBrush}"/>
+                    <TextBlock Text="{Binding AccentLabel}" Classes="caption" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <TextBlock Text="Density" Classes="caption" Margin="0,4,0,0"/>
+                <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.Densities}"
+                          SelectedItem="{Binding Density}" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Defaults -->
+        <Border Classes="panel" Padding="16">
+            <StackPanel Spacing="10">
+                <TextBlock Text="COPY &amp; EXPORT DEFAULTS" Classes="eyebrow"/>
+
+                <TextBlock Text="Default color format on copy" Classes="caption"/>
+                <ComboBox ItemsSource="{Binding CopyFormats}" SelectedItem="{Binding DefaultCopyFormat}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={x:Static conv:EnumSpacedConverter.Instance}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Text="Default export format" Classes="caption" Margin="0,4,0,0"/>
+                <ComboBox ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding DefaultExportFormat}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={x:Static conv:EnumSpacedConverter.Instance}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </Border>
+
+        <!-- Hotkey -->
+        <Border Classes="panel" Padding="16">
+            <StackPanel Spacing="10">
+                <TextBlock Text="GLOBAL HOTKEY (SCREEN EYEDROPPER)" Classes="eyebrow"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                    <CheckBox Content="Ctrl" IsChecked="{Binding HotkeyCtrl}"/>
+                    <CheckBox Content="Alt" IsChecked="{Binding HotkeyAlt}"/>
+                    <CheckBox Content="Shift" IsChecked="{Binding HotkeyShift}"/>
+                    <CheckBox Content="Win" IsChecked="{Binding HotkeyMeta}"/>
+                    <ComboBox MinWidth="90" ItemsSource="{x:Static vm:SettingsViewModel.HotkeyKeys}"
+                              SelectedItem="{Binding HotkeyKey}"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding HotkeyPreview}" Classes="caption mono" FontSize="11"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Storage -->
+        <Border Classes="panel" Padding="16">
+            <StackPanel Spacing="10">
+                <TextBlock Text="STORAGE" Classes="eyebrow"/>
+
+                <TextBlock Text="Storage location" Classes="caption"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" IsReadOnly="True" Text="{Binding StorageLocationLabel}"
+                             Classes="mono" FontSize="12"/>
+                    <Button Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Click="OnBrowseStorage"/>
+                </Grid>
+
+                <TextBlock Text="Storage location setting — autosave, backups and version history all live here."
+                           Classes="caption" FontSize="11" TextWrapping="Wrap"/>
+
+                <TextBlock Text="Provider" Classes="caption" Margin="0,4,0,0"/>
+                <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.StorageProviders}"
+                          SelectedItem="{Binding StorageProvider}" HorizontalAlignment="Stretch"
+                          ToolTip.Tip="json = flat file library · sqlite = local database (§9)"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Danger zone -->
+        <Border BorderThickness="1.3" BorderBrush="#E5484D" CornerRadius="18" Padding="16">
+            <StackPanel Spacing="8">
+                <TextBlock Text="RESET / CLEAR DATA" Classes="eyebrow" Foreground="#E5484D"/>
+                <TextBlock Classes="caption" TextWrapping="Wrap"
+                           Text="Deletes every palette, version and backup from this app's storage folder. Settings are kept."/>
+                <Button x:Name="ResetButton" Content="Clear all palettes…" HorizontalAlignment="Left"
+                        Click="OnResetData" Foreground="#E5484D" BorderBrush="#E5484D"/>
+            </StackPanel>
+        </Border>
+
+        <!-- About / updates (§11 auto-update, offline-first) -->
+        <Border Classes="panel" Padding="16">
+            <StackPanel Spacing="8">
+                <TextBlock Text="ABOUT &amp; UPDATES" Classes="eyebrow"/>
+                <TextBlock x:Name="VersionText" Classes="caption mono" FontSize="11"/>
+                <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap"
+                           Text="Offline-first: Spectrum makes no network calls in the background."/>
+                <Button Content="Check for updates…" HorizontalAlignment="Left" Click="OnCheckUpdates"
+                        ToolTip.Tip="Runs only when clicked — fetches a tiny version manifest"/>
+            </StackPanel>
+        </Border>
+
+        <Button Content="Done" Classes="primary" HorizontalAlignment="Stretch" Click="OnDone"
+                FontWeight="SemiBold"/>
+
+    </StackPanel>
+</Window>

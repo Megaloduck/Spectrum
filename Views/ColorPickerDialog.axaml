@@ -1,0 +1,121 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Spectrum.ViewModels"
+        xmlns:materialIcons="using:Material.Icons.Avalonia"
+        x:Class="Spectrum.Views.ColorPickerDialog"
+        x:DataType="vm:ColorPickerViewModel"
+        Title="Pick a color"
+        Width="430" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Icon="/Assets/Spectrum.ico">
+
+    <StackPanel Margin="20" Spacing="10">
+
+        <TextBlock Text="PICK A COLOR" Classes="eyebrow"/>
+
+        <!-- Inline large preview + auto-name (§2) -->
+        <Border Background="{Binding PreviewBrush}" Height="74" CornerRadius="12"
+                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+            <Grid Margin="14" VerticalAlignment="Bottom">
+                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
+                           Foreground="{Binding ForegroundBrush}"/>
+                <TextBlock Text="{Binding AlphaLabel}" FontSize="11" Opacity="0.8" HorizontalAlignment="Right"
+                           Foreground="{Binding ForegroundBrush}"/>
+            </Grid>
+        </Border>
+
+        <!-- Saturation / value spectrum plane -->
+        <Border x:Name="Plane" Height="170" CornerRadius="12" Cursor="Hand"
+                Background="{Binding PlaneHueBrush}"
+                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3"
+                PointerPressed="OnPlanePressed" PointerMoved="OnPlaneMoved" PointerReleased="OnPlaneReleased">
+            <Panel>
+                <Border>
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#00000000" Offset="0"/>
+                            <GradientStop Color="#FF000000" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Canvas x:Name="MarkerCanvas" IsHitTestVisible="False">
+                    <Border x:Name="Marker" Width="16" Height="16" CornerRadius="8"
+                            BorderThickness="2.5" BorderBrush="White" Background="Transparent"
+                            BoxShadow="0 0 3 1 #90000000"/>
+                </Canvas>
+            </Panel>
+        </Border>
+
+        <!-- Hue -->
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="Hue" FontWeight="SemiBold" FontSize="13"/>
+            <TextBlock Grid.Column="1" Text="{Binding Hue, StringFormat={}{0:N0}°}" Classes="caption"/>
+        </Grid>
+        <Grid Height="36">
+            <Border Height="8" VerticalAlignment="Center" CornerRadius="4">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                        <GradientStop Color="#FFFF0000" Offset="0"/>
+                        <GradientStop Color="#FFFFFF00" Offset="0.1667"/>
+                        <GradientStop Color="#FF00FF00" Offset="0.3333"/>
+                        <GradientStop Color="#FF00FFFF" Offset="0.5"/>
+                        <GradientStop Color="#FF0000FF" Offset="0.6667"/>
+                        <GradientStop Color="#FFFF00FF" Offset="0.8333"/>
+                        <GradientStop Color="#FFFF0000" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            <Slider Minimum="0" Maximum="360" Value="{Binding Hue}" Background="Transparent"/>
+        </Grid>
+
+        <!-- Opacity -->
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="Opacity" FontWeight="SemiBold" FontSize="13"/>
+            <TextBlock Grid.Column="1" Text="{Binding AlphaLabel}" Classes="caption"/>
+        </Grid>
+        <Grid Height="36">
+            <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                    Background="{Binding AlphaTrackBrush}"/>
+            <Slider Minimum="0" Maximum="100" Value="{Binding Alpha}" Background="Transparent"/>
+        </Grid>
+
+        <!-- Manual inputs: HEX / RGB / HSL / HSV (§2) -->
+        <Grid ColumnDefinitions="52,*" RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Grid.Row="0" Text="HEX" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="HexBox" Grid.Row="0" Grid.Column="1" Classes="mono" FontSize="12" Margin="0,0,0,8"
+                     Text="{Binding Hex, Mode=OneWay}" Watermark="#RRGGBB or #RRGGBBAA"
+                     KeyDown="OnInputKeyDown" LostFocus="OnInputLostFocus"/>
+
+            <TextBlock Grid.Row="1" Text="RGB" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="RgbBox" Grid.Row="1" Grid.Column="1" Classes="mono" FontSize="12" Margin="0,0,0,8"
+                     Text="{Binding RgbText, Mode=OneWay}" Watermark="255, 128, 0"
+                     KeyDown="OnInputKeyDown" LostFocus="OnInputLostFocus"/>
+
+            <TextBlock Grid.Row="2" Text="HSL" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="HslBox" Grid.Row="2" Grid.Column="1" Classes="mono" FontSize="12" Margin="0,0,0,8"
+                     Text="{Binding HslText, Mode=OneWay}" Watermark="210, 60%, 50%"
+                     KeyDown="OnInputKeyDown" LostFocus="OnInputLostFocus"/>
+
+            <TextBlock Grid.Row="3" Text="HSV" Classes="caption" VerticalAlignment="Center"/>
+            <TextBox x:Name="HsvBox" Grid.Row="3" Grid.Column="1" Classes="mono" FontSize="12"
+                     Text="{Binding HsvText, Mode=OneWay}" Watermark="210, 60%, 70%"
+                     KeyDown="OnInputKeyDown" LostFocus="OnInputLostFocus"/>
+        </Grid>
+
+        <!-- LAB / LCH / OKLCH live readout (§4) -->
+        <StackPanel Spacing="2">
+            <TextBlock Text="{Binding LabText}" Classes="caption mono"/>
+            <TextBlock Text="{Binding OklchText}" Classes="caption mono"/>
+        </StackPanel>
+
+        <TextBlock Text="{Binding InputFeedback}" Foreground="#E5484D" FontSize="11"
+                   IsVisible="{Binding InputFeedback, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+        <Grid ColumnDefinitions="*,*">
+            <Button Grid.Column="0" Content="Cancel" Click="OnCancel" HorizontalAlignment="Stretch"/>
+            <Button Grid.Column="1" Content="Use color" Classes="primary" Click="OnConfirm"
+                    HorizontalAlignment="Stretch" FontWeight="SemiBold" Margin="10,0,0,0"/>
+        </Grid>
+
+    </StackPanel>
+</Window>

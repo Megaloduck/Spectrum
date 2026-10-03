@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Spectrum.Views.ScreenPickerWindow"
+        Title="Pick a color from the screen"
+        Width="240" SizeToContent="Height" CanResize="False"
+        SystemDecorations="None" ShowInTaskbar="False" Topmost="True"
+        WindowStartupLocation="Manual"
+        Background="{DynamicResource SurfaceBrush}"
+        KeyDown="OnKeyDown">
+
+    <StackPanel Margin="12" Spacing="8">
+
+        <!-- Live pixel-grid magnifier (samples the real screen, 12×12 px) -->
+        <Border CornerRadius="10" BorderThickness="1.3"
+                BorderBrush="{DynamicResource OutlineBrush}" Padding="3">
+            <UniformGrid x:Name="Magnifier" Columns="12" Rows="12" Width="168" Height="168"/>
+        </Border>
+
+        <!-- Big sample + hex readout -->
+        <Border x:Name="Swatch" Height="44" CornerRadius="8"
+                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+            <TextBlock x:Name="HexLabel" Text="#000000" Classes="mono" FontSize="15" FontWeight="Bold"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <TextBlock Text="Click anywhere to pick · Esc to cancel"
+                   Classes="caption" TextWrapping="Wrap" TextAlignment="Center"/>
+
+    </StackPanel>
+</Window>

@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:anim="using:Avalonia.Animation">
 
   <!-- ===================== Design tokens ===================== -->
   <Styles.Resources>
@@ -29,8 +30,27 @@
         </ResourceDictionary>
 
       </ResourceDictionary.ThemeDictionaries>
+
+      <!-- Accent (Settings â†’ "Accent color" overrides this at runtime; see
+           SettingsService.ApplyAccent). Used for active tabs and other
+           "you are here" affordances. -->
+      <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
     </ResourceDictionary>
   </Styles.Resources>
+
+  <!-- ===================== Density (Â§10 "accent / density settings") =====================
+       Settings â†’ Density: Compact adds this class to the window. -->
+  <Style Selector="Window.compact">
+    <Setter Property="FontSize" Value="12"/>
+  </Style>
+
+  <Style Selector="Window.compact Grid#RootGrid">
+    <Setter Property="Margin" Value="10"/>
+  </Style>
+
+  <Style Selector="Window.compact TextBlock.h1">
+    <Setter Property="FontSize" Value="24"/>
+  </Style>
 
   <!-- ===================== Base ===================== -->
   <Style Selector="Window">
@@ -82,7 +102,7 @@
 
   <!-- ===================== Buttons ===================== -->
   <!-- Every button in the reference design is the same flat white /
-       black-outline look — no filled "primary" style — so Button and
+       black-outline look ï¿½ no filled "primary" style ï¿½ so Button and
        Button.primary render identically. Keeping both classes means
        existing bindings that reference Classes="primary" don't need
        to change. -->
@@ -152,6 +172,51 @@
     <Setter Property="Background" Value="#22000000"/>
   </Style>
 
+  <!-- ===================== Workspace nav (app bar) ===================== -->
+  <!-- Segment switch for Studio / Preview / Analyze / Export. The active
+       segment is bound through Classes.active (see MainWindow.axaml). -->
+  <Style Selector="Button.wsTab">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="Padding" Value="18,7"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+  </Style>
+
+  <Style Selector="Button.wsTab:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+  </Style>
+
+  <Style Selector="Button.wsTab.active">
+    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+
+  <!-- ===================== Swatch action rails =====================
+       The per-swatch buttons fade out at rest so a card reads as pure color
+       + name + hex, and fade back in on hover. Opacity (not IsVisible) is used
+       on purpose so the card never reflows under the pointer. The lock toggle
+       sits outside the rail so its state stays readable at rest. -->
+  <Style Selector="Border.swatchCard StackPanel.swatchRail">
+    <Setter Property="Opacity" Value="0"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <anim:DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <Style Selector="Border.swatchCard:pointerover StackPanel.swatchRail">
+    <Setter Property="Opacity" Value="1"/>
+    <Setter Property="IsHitTestVisible" Value="True"/>
+  </Style>
+
   <!-- Borderless inline name field on a swatch card -->
   <Style Selector="TextBox.swatchName">
     <Setter Property="Background" Value="Transparent"/>
@@ -189,7 +254,7 @@
   <!-- ===================== Sliders ===================== -->
   <!-- Background carries the always-visible gradient track (bound per-slider
        from the ViewModel, e.g. HueTrackBrush). Foreground is the "filled"
-       portion Avalonia normally draws up to the thumb — set to transparent
+       portion Avalonia normally draws up to the thumb ï¿½ set to transparent
        so the full gradient reads uniformly, like the reference design,
        instead of looking like a progress bar. -->
 

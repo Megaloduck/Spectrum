@@ -11,7 +11,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/Spectrum.ico"
         Title="Spectrum"
-        Width="1200" Height="675"
+        Width="1500" Height="760"
         WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
@@ -20,42 +20,497 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*" Margin="24">
+    <Window.Resources>
+        <!-- Board card templates for the four view modes (§8 grid/list/compact).
+             The mode switch is applied in code-behind (MainWindow.ApplyViewMode). -->
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,20">
-            <TextBlock Text="Color Palette" Classes="h1"/>
-            <TextBlock Text="Build, Generate and Export beautiful palettes" Classes="subtitle"/>
-        </StackPanel>
+        <!-- Row: the classic Coolors-style full-height card (also reused by Grid mode). -->
+        <DataTemplate x:Key="RowCardTemplate" x:DataType="models:ColorSwatch">
+            <Border Classes="swatchCard" Background="{Binding Brush}" CornerRadius="14" Margin="4" Cursor="Hand" MinHeight="250"
+                    AutomationProperties.Name="{Binding Name}"
+                    AutomationProperties.AutomationId="{Binding Hex}"
+                    PointerPressed="OnSwatchPointerPressed"
+                    PointerMoved="OnSwatchPointerMoved"
+                    PointerReleased="OnSwatchPointerReleased">
+                <ToolTip.Tip>
+                    <StackPanel x:DataType="models:ColorSwatch" Width="220" Spacing="3" Margin="6">
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
+                        <TextBlock Text="{Binding Hex}" Classes="mono" FontSize="12"/>
+                        <TextBlock Text="{Binding RgbLabel}" Classes="mono caption" FontSize="11"/>
+                        <TextBlock Text="{Binding HslLabel}" Classes="mono caption" FontSize="11"/>
+                        <Separator/>
+                        <TextBlock Text="{Binding ContrastLabel}" Classes="caption" FontSize="11"/>
+                        <TextBlock Text="{Binding SimulatedNote}" Classes="caption" FontSize="11"/>
+                        <TextBlock Text="Drag to reorder · click to select · Del removes"
+                                   Classes="caption" FontSize="11"/>
+                    </StackPanel>
+                </ToolTip.Tip>
+                <Grid RowDefinitions="Auto,*,Auto" Margin="14">
 
-        <!-- Body: color panel docked left, tools + board on the right -->
-        <Grid Grid.Row="1" ColumnDefinitions="300,20,*">
+                    <!-- Icon stack: lock stays put, the rest fades in on hover -->
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="6">
+                        <ToggleButton Classes="iconOnly"
+                                      IsChecked="{Binding IsLocked, Mode=TwoWay}"
+                                      ToolTip.Tip="Keep this color when generating">
+                            <materialIcons:MaterialIcon
+                                Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
+                                Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </ToggleButton>
+                        <StackPanel Classes="swatchRail" Spacing="6">
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Move left">
+                            <materialIcons:MaterialIcon Kind="ArrowUp" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Move right">
+                            <materialIcons:MaterialIcon Kind="ArrowDown" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}" ToolTip.Tip="Zoom view (§8)">
+                            <materialIcons:MaterialIcon Kind="Magnify" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                            <Button.Flyout>
+                                <Flyout Placement="Right">
+                                    <StackPanel x:DataType="models:ColorSwatch" Width="270" Spacing="7" Margin="6">
+                                        <Border Height="120" CornerRadius="10" Background="{Binding Brush}"
+                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16"/>
+                                        <TextBlock Text="{Binding Hex}" Classes="mono" FontSize="14"/>
+                                        <TextBlock Text="{Binding RgbLabel}" Classes="mono caption" FontSize="11"/>
+                                        <TextBlock Text="{Binding HslLabel}" Classes="mono caption" FontSize="11"/>
+                                        <TextBlock Text="{Binding LabLabel}" Classes="mono caption" FontSize="11"/>
+                                        <TextBlock Text="{Binding OklchLabel}" Classes="mono caption" FontSize="11"/>
+                                        <Separator/>
+                                        <TextBlock Text="{Binding ContrastLabel}" Classes="caption" FontSize="11"/>
+                                        <TextBlock Text="{Binding WhiteTextBadge}" Classes="caption" FontSize="11"/>
+                                        <TextBlock Text="{Binding BlackTextBadge}" Classes="caption" FontSize="11"/>
+                                        <Button Content="Edit color…" HorizontalAlignment="Stretch"
+                                                Command="{Binding EditColorCommand}" CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding EditColorCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Edit color (spectrum picker)">
+                            <materialIcons:MaterialIcon Kind="Palette" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}">
+                            <materialIcons:MaterialIcon Kind="Pencil" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                            <Button.Flyout>
+                                <Flyout>
+                                    <StackPanel x:DataType="models:ColorSwatch" Width="180" Spacing="8" Margin="4">
+                                        <TextBlock Text="RENAME" Classes="eyebrow"/>
+                                        <TextBox Text="{Binding Name}" Watermark="Name"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding DuplicateCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="Duplicate swatch">
+                            <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding CopyCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Copy in the selected format">
+                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding RemoveCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Remove swatch">
+                            <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        </StackPanel>
+                    </StackPanel>
 
-            <!-- ============ COLOR PANEL ============ -->
-            <Border Grid.Column="0" Classes="panel">
-                 <Grid RowDefinitions="*,Auto">
-                    <ScrollViewer>
-                         <StackPanel Spacing="12"  Margin="20" >
+                    <!-- Name + hex label anchored to the bottom of the bar -->
+                    <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Spacing="2">
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"
+                                   TextWrapping="Wrap" Foreground="{Binding ForegroundBrush}"/>
+                        <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
+                        <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
+                                   Classes="mono" Foreground="{Binding ForegroundBrush}"/>
+                        <TextBlock Text="{Binding ContrastLabel}" FontSize="10" Opacity="0.75"
+                                   Foreground="{Binding ForegroundBrush}"/>
+                        <!-- §8 contrast overlay badges -->
+                        <TextBlock Text="{Binding WhiteTextBadge}" FontSize="10" Opacity="0.85"
+                                   Foreground="{Binding ForegroundBrush}"
+                                   IsVisible="{Binding ShowContrastOverlay}"/>
+                        <TextBlock Text="{Binding BlackTextBadge}" FontSize="10" Opacity="0.85"
+                                   Foreground="{Binding ForegroundBrush}"
+                                   IsVisible="{Binding ShowContrastOverlay}"/>
+                    </StackPanel>
 
-                        <TextBlock Text="COLOR PANEL" Classes="eyebrow"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
 
-                        <!-- Base color swatch with its auto-name overlaid, bottom-left -->
+        <!-- Grid: wrapped fixed-size cards, same content as Row. -->
+        <DataTemplate x:Key="GridCardTemplate" x:DataType="models:ColorSwatch">
+            <Border Width="196" Height="252">
+                <ContentControl Content="{Binding}"
+                                ContentTemplate="{StaticResource RowCardTemplate}"/>
+            </Border>
+        </DataTemplate>
+
+        <!-- List: one wide row per swatch with its data (§8 list view). -->
+        <DataTemplate x:Key="ListCardTemplate" x:DataType="models:ColorSwatch">
+            <Border Classes="swatchCard" Background="{Binding Brush}" CornerRadius="12" Margin="4" Height="74" Cursor="Hand"
+                    AutomationProperties.Name="{Binding Name}"
+                    AutomationProperties.AutomationId="{Binding Hex}"
+                    PointerPressed="OnSwatchPointerPressed"
+                    PointerMoved="OnSwatchPointerMoved"
+                    PointerReleased="OnSwatchPointerReleased">
+                <Grid ColumnDefinitions="*,Auto" Margin="16,0">
+                    <StackPanel VerticalAlignment="Center" Spacing="3">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
+                                       Foreground="{Binding ForegroundBrush}"/>
+                            <TextBlock Text="{Binding Hex}" Classes="mono" FontSize="13"
+                                       Foreground="{Binding ForegroundBrush}"/>
+                            <TextBlock Text="{Binding RgbLabel}" Classes="mono caption" FontSize="11"
+                                       Foreground="{Binding ForegroundBrush}"/>
+                            <TextBlock Text="{Binding HslLabel}" Classes="mono caption" FontSize="11"
+                                       Foreground="{Binding ForegroundBrush}"/>
+                            <TextBlock Text="{Binding ContrastLabel}" FontSize="11"
+                                       Foreground="{Binding ForegroundBrush}" Opacity="0.85"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="{Binding WhiteTextBadge}" FontSize="10"
+                                       Foreground="{Binding ForegroundBrush}"
+                                       IsVisible="{Binding ShowContrastOverlay}"/>
+                            <TextBlock Text="{Binding BlackTextBadge}" FontSize="10"
+                                       Foreground="{Binding ForegroundBrush}"
+                                       IsVisible="{Binding ShowContrastOverlay}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <ToggleButton Classes="iconOnly" IsChecked="{Binding IsLocked, Mode=TwoWay}"
+                                      ToolTip.Tip="Keep this color when generating">
+                            <materialIcons:MaterialIcon
+                                Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
+                                Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </ToggleButton>
+                        <StackPanel Classes="swatchRail" Orientation="Horizontal" Spacing="8">
+                        <Button Classes="iconOnly" Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Move up">
+                            <materialIcons:MaterialIcon Kind="ArrowUp" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Move down">
+                            <materialIcons:MaterialIcon Kind="ArrowDown" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding EditColorCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Edit color (spectrum picker)">
+                            <materialIcons:MaterialIcon Kind="Palette" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding DuplicateCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Duplicate swatch">
+                            <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding CopyCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Copy in the selected format">
+                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding RemoveCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Remove swatch">
+                            <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Compact: small chips, as many as possible (§8 compact view). -->
+        <DataTemplate x:Key="CompactCardTemplate" x:DataType="models:ColorSwatch">
+            <Border Background="{Binding Brush}" CornerRadius="10" Margin="4" Width="108" Height="92"
+                    Cursor="Hand"
+                    AutomationProperties.Name="{Binding Name}"
+                    AutomationProperties.AutomationId="{Binding Hex}"
+                    PointerPressed="OnSwatchPointerPressed"
+                    PointerMoved="OnSwatchPointerMoved"
+                    PointerReleased="OnSwatchPointerReleased"
+                    ToolTip.Tip="{Binding Hex}">
+                <Grid RowDefinitions="Auto,*" Margin="9">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ToggleButton Classes="iconOnly" IsChecked="{Binding IsLocked, Mode=TwoWay}"
+                                      ToolTip.Tip="Keep this color when generating">
+                            <materialIcons:MaterialIcon
+                                Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
+                                Width="12" Height="12" Foreground="{Binding ForegroundBrush}"/>
+                        </ToggleButton>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Spacing="1">
+                        <TextBlock Text="{Binding Name}" FontSize="10" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis" Foreground="{Binding ForegroundBrush}"/>
+                        <TextBlock Text="{Binding Hex}" FontSize="10" Classes="mono" Opacity="0.85"
+                                   Foreground="{Binding ForegroundBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="RowPanel"><UniformGrid Rows="1"/></ItemsPanelTemplate>
+        <ItemsPanelTemplate x:Key="GridPanel"><WrapPanel/></ItemsPanelTemplate>
+        <ItemsPanelTemplate x:Key="ListPanel"><StackPanel/></ItemsPanelTemplate>
+        <ItemsPanelTemplate x:Key="CompactPanel"><WrapPanel/></ItemsPanelTemplate>
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*" Margin="24">
+
+        <!-- App bar: brand · workspace segments · quick actions -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,18">
+
+            <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                <Border Width="36" Height="36" CornerRadius="11"
+                        Background="{DynamicResource SurfaceRaisedBrush}"
+                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                    <materialIcons:MaterialIcon Kind="Palette" Width="19" Height="19"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentBrush}"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="Spectrum" FontWeight="Bold" FontSize="16"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Library.SelectedPalette.Name}"
+                                   Classes="caption" FontSize="11" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+                        <TextBlock Text="{Binding PaletteCountLabel}" Classes="caption" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Workspace segments: each one shows only the panels its task needs -->
+            <Border Grid.Column="1" Classes="panel" Padding="4" CornerRadius="14"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    ToolTip.Tip="Switch workspace — Ctrl+1 Studio · Ctrl+2 Preview · Ctrl+3 Analyze · Ctrl+4 Export">
+                <StackPanel Orientation="Horizontal" Spacing="2">
+                    <Button Classes="wsTab" Classes.active="{Binding IsStudioMode}" Content="Studio"
+                            Command="{Binding SetWorkspaceCommand}"
+                            CommandParameter="{x:Static models:WorkspaceMode.Studio}"/>
+                    <Button Classes="wsTab" Classes.active="{Binding IsPreviewMode}" Content="Preview"
+                            Command="{Binding SetWorkspaceCommand}"
+                            CommandParameter="{x:Static models:WorkspaceMode.Preview}"/>
+                    <Button Classes="wsTab" Classes.active="{Binding IsAnalyzeMode}" Content="Analyze"
+                            Command="{Binding SetWorkspaceCommand}"
+                            CommandParameter="{x:Static models:WorkspaceMode.Analyze}"/>
+                    <Button Classes="wsTab" Classes.active="{Binding IsExportMode}" Content="Export"
+                            Command="{Binding SetWorkspaceCommand}"
+                            CommandParameter="{x:Static models:WorkspaceMode.Export}"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Button Classes="ghost" Padding="6,4" Command="{Binding ToggleLibraryPanelCommand}"
+                        ToolTip.Tip="Show / hide the palette library (Ctrl+B)">
+                    <materialIcons:MaterialIcon Kind="ChevronLeft" Width="16" Height="16"/>
+                </Button>
+                <Button Classes="ghost" Padding="6,4" Command="{Binding ToggleInspectorCommand}"
+                        ToolTip.Tip="Show / hide the workspace dock (Ctrl+I)">
+                    <materialIcons:MaterialIcon Kind="ChevronRight" Width="16" Height="16"/>
+                </Button>
+                <Button Classes="iconOnly" Width="34" Height="34" Command="{Binding ToggleThemeCommand}"
+                        ToolTip.Tip="Toggle light / dark">
+                    <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="17" Height="17"/>
+                </Button>
+                <Button Classes="iconOnly" Width="34" Height="34" Command="{Binding OpenSettingsCommand}"
+                        ToolTip.Tip="Settings (Ctrl+,)">
+                    <materialIcons:MaterialIcon Kind="CogOutline" Width="17" Height="17"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Body: library · workspace · contextual dock. Columns are separated by
+             GridSplitters so every panel is resizable (§7). -->
+        <Grid Grid.Row="1" x:Name="BodyGrid" ColumnDefinitions="264,12,*,12,330">
+
+            <GridSplitter Grid.Column="1" x:Name="LibrarySplitter" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                          Background="Transparent" Width="12" ToolTip.Tip="Drag to resize the library"/>
+            <!-- ============ PALETTE LIBRARY SIDEBAR ============ -->
+            <Border Grid.Column="0" x:Name="LibraryPanel" Classes="panel" Padding="14">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Text="PALETTES" Classes="eyebrow" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Classes="ghost" Command="{Binding Library.NewPaletteCommand}"
+                                Padding="6,4" ToolTip.Tip="New palette (Ctrl+N)">
+                            <materialIcons:MaterialIcon Kind="Plus" Width="17" Height="17"/>
+                        </Button>
+                        <Button Grid.Column="2" Classes="ghost" Click="OnToggleLibraryClick"
+                                Padding="6,4" ToolTip.Tip="Collapse the library panel (Ctrl+B)">
+                            <materialIcons:MaterialIcon Kind="ChevronLeft" Width="17" Height="17"/>
+                        </Button>
+                    </Grid>
+
+                    <TextBox Grid.Row="1" Text="{Binding Library.SearchText}" Watermark="Search palettes…"
+                             Margin="0,10,0,0" FontSize="12" Padding="8,6"/>
+
+                    <ComboBox Grid.Row="2" ItemsSource="{Binding Library.Filters}"
+                              SelectedItem="{Binding Library.SelectedFilter}"
+                              Margin="0,8,0,0" Height="34" HorizontalAlignment="Stretch"
+                              ToolTip.Tip="All / Pinned / Recent palettes">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ListBox Grid.Row="3" ItemsSource="{Binding Library.VisiblePalettes}"
+                             SelectedItem="{Binding Library.SelectedPalette}"
+                             Background="Transparent" Margin="0,8,0,0"
+                             AutoScrollToSelectedItem="True">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PaletteItemViewModel">
+                                <Grid ColumnDefinitions="8,*,Auto" Margin="0,5">
+                                <Border Grid.Column="0" Width="8" Height="44" CornerRadius="4"
+                                        Background="{Binding PreviewBrush}"
+                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
+                                        AutomationProperties.Name="{Binding Name} palette preview"
+                                        ToolTip.Tip="Palette preview"/>
+
+                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="3">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding CountLabel}" Classes="caption"/>
+                                    </StackPanel>
+
+                                    <ToggleButton Grid.Column="2" Classes="iconOnly" Padding="4"
+                                                  IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                                  VerticalAlignment="Center" HorizontalAlignment="Right"
+                                                  ToolTip.Tip="Pin this palette (stays at the top)">
+                                        <materialIcons:MaterialIcon Kind="PinOutline" Width="14" Height="14"/>
+                                    </ToggleButton>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Save state + library menu -->
+                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                        <TextBlock Grid.Column="0" Text="{Binding Library.SaveStateLabel}" Classes="caption"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,6,0"
+                                   ToolTip.Tip="Autosaved locally — no cloud, no account"/>
+                        <Button Grid.Column="1" Classes="ghost" Padding="6,4"
+                                ToolTip.Tip="Library options (versions, import/export)">
+                            <materialIcons:MaterialIcon Kind="DotsVertical" Width="16" Height="16"/>
+                            <Button.Flyout>
+                                <Flyout>
+                                    <StackPanel x:DataType="vm:MainWindowViewModel" Width="260" Spacing="8" Margin="4">
+                                        <TextBlock Text="PALETTE VERSIONS" Classes="eyebrow"/>
+                                        <TextBlock Text="{Binding Library.SelectedPalette.VersionsLabel}"
+                                                   Classes="caption"
+                                                   IsVisible="{Binding Library.SelectedPalette, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                        <ItemsControl ItemsSource="{Binding Library.SelectedPalette.Dto.Versions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="models:PaletteVersionDto">
+                                                    <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                                        <TextBlock FontSize="12" VerticalAlignment="Center"
+                                                                   Text="{Binding SavedUtc, Converter={x:Static converters:VersionTimeConverter.Instance}}"/>
+                                                        <Button Grid.Column="1" Classes="ghost" Padding="8,3"
+                                                                FontSize="11"
+                                                                Command="{Binding $parent[ItemsControl].((vm:PaletteLibraryViewModel)DataContext).RestoreVersionCommand}"
+                                                                CommandParameter="{Binding}">Restore</Button>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Separator/>
+                                        <Separator/>
+                                        <TextBlock Text="FILES" Classes="eyebrow"/>
+                                        <Button Content="Import palette file… (CSS / GPL / ASE / ACO)"
+                                                Command="{Binding Library.ImportPaletteFileCommand}"
+                                                HorizontalAlignment="Stretch"/>
+                                        <Button Content="Export whole library…"
+                                                Command="{Binding Library.ExportLibraryCommand}"
+                                                HorizontalAlignment="Stretch"/>
+                                        <Button Content="Import library…"
+                                                Command="{Binding Library.ImportLibraryCommand}"
+                                                HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+
+                </Grid>
+            </Border>
+
+            <!-- ============ DOCK · STUDIO: edit the base color ============ -->
+            <Border Grid.Column="4" x:Name="EditDock" Classes="panel">
+                 <Grid RowDefinitions="Auto,*,Auto">
+                    <Grid ColumnDefinitions="*,Auto" Margin="20,16,20,4">
+                        <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding WorkspaceTitle}" Classes="eyebrow"/>
+                            <TextBlock Text="{Binding WorkspaceBlurb}" Classes="caption" FontSize="11"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="ghost" Click="OnToggleInspectorClick"
+                                Padding="6,4" ToolTip.Tip="Collapse the dock (Ctrl+I)">
+                            <materialIcons:MaterialIcon Kind="ChevronRight" Width="17" Height="17"/>
+                        </Button>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1">
+                         <StackPanel Spacing="12"  Margin="20,8,20,20" >
+
+                        <!-- Base color swatch with its auto-name overlaid, bottom-left.
+                             Click opens the spectrum picker (§2 color wheel/spectrum). -->
                         <Border Background="{Binding BaseColorBrush}" Height="150" CornerRadius="14"
-                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3"
+                                Cursor="Hand" PointerPressed="OnBasePreviewPressed"
+                                ToolTip.Tip="Click to open the full color picker (spectrum, RGB/HSL/HSV input)">
                             <TextBlock Text="{Binding BaseColorName}" Foreground="{Binding BaseForegroundBrush}"
                                        FontWeight="Bold" FontSize="14"
                                        Margin="14" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
                         </Border>
 
-                        <Grid ColumnDefinitions="88,*">
-                            <ComboBox Grid.Column="0" SelectedIndex="0" Margin="0,0,8,0" HorizontalAlignment="Stretch">
+                        <Grid ColumnDefinitions="88,*,Auto">
+                            <ComboBox Grid.Column="0" SelectedIndex="0" Margin="0,0,8,0" HorizontalAlignment="Stretch"
+                                      ToolTip.Tip="Manual input format (HEX entry)">
                                 <ComboBoxItem Content="HEX"/>
                             </ComboBox>
-                            <TextBox Grid.Column="1" Text="{Binding BaseHex}" Classes="mono" Watermark="#RRGGBB"/>
-                        </Grid>
+                            <TextBox Grid.Column="1" Text="{Binding BaseHex}" Classes="mono" Watermark="#RRGGBB"
+                                     Margin="0,0,8,0"/>
+                            <Button Grid.Column="2" Classes="iconOnly" Height="34" Padding="8,6"
+                                    Command="{Binding PasteColorCommand}"
+                                    ToolTip.Tip="Paste a color from the clipboard (HEX / RGB / HSL)">
+                                <materialIcons:MaterialIcon Kind="ClipboardArrowDownOutline" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>                            <Button Content="Add to Palette" Command="{Binding AddCurrentColorCommand}"
+                                    HorizontalAlignment="Stretch"/>
 
-                        <Button Content="Add to Palette" Command="{Binding AddCurrentColorCommand}"
-                                HorizontalAlignment="Stretch"/>
+                        <!-- Picked-color history (§3): click to reload into the color panel -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="RECENT PICKS" Classes="eyebrow"/>
+                            <TextBlock Classes="caption" FontSize="11"
+                                       Text="Screen eyedropper: Ctrl+Alt+P · click a swatch to reuse"
+                                       TextWrapping="Wrap"/>
+                            <ItemsControl ItemsSource="{Binding RecentPicks}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:RecentPick">
+                                        <Button Margin="0,0,6,6" Padding="0"
+                                                Background="Transparent" BorderThickness="0"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).ApplyRecentPickCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{Binding Name}">
+                                            <Border Width="32" Height="32" CornerRadius="8"
+                                                    Background="{Binding Brush}"
+                                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
 
 
                                  <!-- Color Generator Slider -->
@@ -159,7 +614,7 @@
                 </ScrollViewer>
 
                      <!-- Harmonize Button -->
-                     <StackPanel Grid.Row="1" Margin="20,10"  Spacing="10">
+                     <StackPanel Grid.Row="2" Margin="20,14,20,16"  Spacing="10">
                          <Separator VerticalAlignment="Center"/>
                          <Button Content="Press Space to Harmonize" Command="{Binding GeneratePaletteCommand}"
                                 HorizontalAlignment="Stretch" ToolTip.Tip="Regenerates every unlocked color — using the Harmonize tool if one is selected"/>
@@ -168,18 +623,18 @@
                 </Grid>
             </Border>
 
-            <!-- ============ TOOLS + palette board ============ -->
-            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,*,Auto">
-
-                <TextBlock Grid.Row="0" Text="TOOLS" Classes="eyebrow" Margin="2,0,0,10"/>
+            <!-- ============ WORKSPACE: toolbar + palette board ============ -->
+            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,*,Auto">
 
                 <!-- Toolbar: contained in a single panel card with generation controls on the left,
      history and theme controls on the right, with thin dividers between groups -->
-<Border Grid.Row="1" Classes="panel" Padding="16,12" Margin="0,0,0,14">
-    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
+<Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
+    <Grid ColumnDefinitions="*,Auto">
+    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
 
-        <!-- Harmony Type ComboBox -->
-        <ComboBox Grid.Column="0" MinWidth="150" Height="38"
+        <!-- Harmony Type ComboBox (Studio) -->
+        <ComboBox MinWidth="150" Height="38" Margin="0,0,4,0"
+                  IsVisible="{Binding IsStudioMode}"
                   ItemsSource="{Binding HarmonyTypes}" SelectedItem="{Binding SelectedHarmony}"
                   ToolTip.Tip="Rule Generate/Space uses for unlocked colors">
             <ComboBox.ItemTemplate>
@@ -189,8 +644,9 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
 
-        <!-- Color Blind Mode ComboBox -->
-        <ComboBox Grid.Column="1" MinWidth="150" Height="38" Margin="8,0,0,0"
+        <!-- Color Blind Mode ComboBox (Analyze) -->
+        <ComboBox MinWidth="150" Height="38" Margin="0,0,4,0"
+                  IsVisible="{Binding IsAnalyzeMode}"
                   ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
                   ToolTip.Tip="Preview the board as someone with this color vision would see it">
             <ComboBox.ItemTemplate>
@@ -200,23 +656,80 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
 
-        <!-- Divider 1 -->
-        <Border Grid.Column="2" Width="1" Height="24" Margin="16,0"
+        <!-- Divider 1 (Studio: rule | picking) -->
+        <Border Width="1" Height="24" Margin="12,0"
+                IsVisible="{Binding IsStudioMode}"
                 Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
 
-        <!-- Extract from Image Button -->
-        <Button Grid.Column="3" Height="38" Command="{Binding ExtractFromImageCommand}">
+        <!-- Extract from Image Button (Studio) -->
+        <Button Height="38" Margin="0,0,4,0" IsVisible="{Binding IsStudioMode}"
+                Command="{Binding ExtractFromImageCommand}">
             <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                 <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
                 <TextBlock Text="Extract from Image" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
 
-        <!-- Flexible Spacer -->
-        <Grid Grid.Column="4"/>
+        <!-- Screen eyedropper (§3) -->
+        <Button Height="38" Margin="0,0,4,0" IsVisible="{Binding IsStudioMode}"
+                Command="{Binding PickFromScreenCommand}"
+                ToolTip.Tip="Pick a color from anywhere on screen — global hotkey Ctrl+Alt+P (local only)">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="Eyedropper" Width="16" Height="16"/>
+                <TextBlock Text="Screen" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+
+        <!-- In-app image eyedropper (§3) -->
+        <Button Height="38" Margin="0,0,4,0" IsVisible="{Binding IsStudioMode}"
+                Command="{Binding PickFromImageCommand}"
+                ToolTip.Tip="Pick a color from a specific pixel of an image">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="Crosshairs" Width="16" Height="16"/>
+                <TextBlock Text="Image" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+
+        <!-- View mode (§8 grid / list / compact) — Preview workspace -->
+        <ComboBox MinWidth="110" Height="38" Margin="0,0,4,0"
+                  IsVisible="{Binding IsPreviewMode}"
+                  ItemsSource="{Binding ViewModes}" SelectedItem="{Binding ViewMode}"
+                  ToolTip.Tip="Board layout: Row / Grid / List / Compact">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <!-- Contrast overlay on swatches (§8) — Analyze workspace -->
+        <ToggleButton Height="38" Margin="0,0,4,0" Padding="12,0"
+                      IsVisible="{Binding IsAnalyzeMode}"
+                      IsChecked="{Binding ShowContrastOverlay}"
+                      ToolTip.Tip="Overlay every swatch with its WCAG + APCA contrast verdicts">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="ScaleBalance" Width="16" Height="16"/>
+                <TextBlock Text="Aa overlay" VerticalAlignment="Center"/>
+            </StackPanel>
+        </ToggleButton>
+
+        <!-- Side-by-side comparison (§8) — Preview workspace -->
+        <Button Height="38" Margin="0,0,4,0" IsVisible="{Binding IsPreviewMode}"
+                Command="{Binding ComparePalettesCommand}"
+                ToolTip.Tip="Compare this palette side-by-side with another one">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="ViewColumn" Width="16" Height="16"/>
+                <TextBlock Text="Compare" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+
+    </WrapPanel>
+
+    <!-- Always-on actions, pinned to the right -->
+    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
 
         <!-- Palette Count + Clear Button -->
-        <Grid Grid.Column="5" ColumnDefinitions="Auto,Auto" Margin="0,0,12,0">
+        <Grid ColumnDefinitions="Auto,Auto" Margin="0,0,8,0">
             <TextBlock Grid.Column="0" Text="{Binding PaletteCountLabel}" Classes="caption"
                        FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
             <Button Grid.Column="1" Classes="ghost" Command="{Binding ClearPaletteCommand}"
@@ -229,122 +742,180 @@
         </Grid>
 
         <!-- Divider 2 -->
-        <Border Grid.Column="6" Width="1" Height="24" Margin="16,0"
+        <Border Width="1" Height="24" Margin="6,0"
                 Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
 
         <!-- Undo Button -->
-        <Button Grid.Column="7" Classes="iconOnly" Width="38" Height="38" Margin="12,0,0,0"
-                Command="{Binding UndoCommand}" ToolTip.Tip="Undo">
+        <Button Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding UndoCommand}" ToolTip.Tip="Undo (Ctrl+Z)">
             <materialIcons:MaterialIcon Kind="Undo" Width="16" Height="16"/>
         </Button>
 
         <!-- Redo Button -->
-        <Button Grid.Column="8" Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
-                Command="{Binding RedoCommand}" ToolTip.Tip="Redo">
+        <Button Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding RedoCommand}" ToolTip.Tip="Redo (Ctrl+Y)">
             <materialIcons:MaterialIcon Kind="Redo" Width="16" Height="16"/>
         </Button>
 
-        <!-- Theme Toggle Button -->
-        <Button Grid.Column="9" Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
-                Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Toggle light / dark">
-            <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="16" Height="16"/>
-        </Button>
-
         <!-- Divider 3 -->
-        <Border Grid.Column="10" Width="1" Height="24" Margin="16,0"
+        <Border Width="1" Height="24" Margin="6,0"
                 Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
 
         <!-- Save Palette Button -->
-        <Button Grid.Column="11" Classes="iconOnly" Width="38" Height="38" Margin="12,0,0,0"
-                Command="{Binding SavePaletteCommand}" ToolTip.Tip="Save palette to a file">
+        <Button Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding SavePaletteCommand}" ToolTip.Tip="Save palette to a file (Ctrl+S)">
             <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16"/>
         </Button>
 
         <!-- Load Palette Button -->
-        <Button Grid.Column="12" Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
-                Command="{Binding LoadPaletteCommand}" ToolTip.Tip="Load palette from a file">
+        <Button Classes="iconOnly" Width="38" Height="38" Margin="4,0,0,0"
+                Command="{Binding LoadPaletteCommand}" ToolTip.Tip="Load palette from a file (Ctrl+O)">
             <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="16" Height="16"/>
         </Button>
 
+    </StackPanel>
     </Grid>
 </Border>   
 
-                <!-- THE PALETTE -->
-                <Border Grid.Row="3" Classes="panel" Padding="14">
-                    <ItemsControl ItemsSource="{Binding Palette}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Rows="1"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:ColorSwatch">
-                                <Border Background="{Binding Brush}" CornerRadius="14" Margin="4" Cursor="Hand"
-                                        PointerPressed="OnSwatchPointerPressed"
-                                        PointerMoved="OnSwatchPointerMoved"
-                                        PointerReleased="OnSwatchPointerReleased"
-                                        ToolTip.Tip="Drag to reorder">
-                                    <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+                <!-- Open palettes as tabs (§7 "Tabs for open palettes") -->
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,4,0,10"
+                      IsVisible="{Binding IsBoardMode}">
+                    <ScrollViewer Grid.Column="0"
+                                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ItemsControl ItemsSource="{Binding Library.OpenTabs}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PaletteItemViewModel">
+                                        <Border Classes="panel" CornerRadius="10" Padding="10,5,6,3"
+                                                BorderThickness="1.2" Cursor="Hand"
+                                                PointerPressed="OnTabPressed"
+                                                Background="{DynamicResource SurfaceRaisedBrush}">
+                                            <Grid RowDefinitions="Auto,2">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Border Width="14" Height="14" CornerRadius="4"
+                                                            Background="{Binding PreviewBrush}"
+                                                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
+                                                               VerticalAlignment="Center" MaxWidth="140"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <Button Classes="iconOnly" Padding="2" VerticalAlignment="Center"
+                                                            Click="OnTabClose"
+                                                            ToolTip.Tip="Close tab">
+                                                        <materialIcons:MaterialIcon Kind="Close" Width="12" Height="12"/>
+                                                    </Button>
+                                                </StackPanel>
+                                                <Border Grid.Row="1" Height="3" CornerRadius="1.5"
+                                                        Background="{DynamicResource AccentBrush}"
+                                                        IsVisible="{Binding IsSelected}" Margin="0,3,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
 
-                                        <!-- Icon stack: lock, reorder, rename, copy, remove -->
-                                        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="6">
-                                            <ToggleButton Classes="iconOnly"
-                                                          IsChecked="{Binding IsLocked, Mode=TwoWay}"   
-                                                          ToolTip.Tip="Keep this color when generating">
-                                                <materialIcons:MaterialIcon
-                                                    Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
-                                                    Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                                            </ToggleButton>
-                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding MoveUpCommand}" CommandParameter="{Binding}">
-                                                <materialIcons:MaterialIcon Kind="ArrowUp" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                                            </Button>
-                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding MoveDownCommand}" CommandParameter="{Binding}">
-                                                <materialIcons:MaterialIcon Kind="ArrowDown" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                                            </Button>
-                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}">
-                                                <materialIcons:MaterialIcon Kind="Pencil" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                                                <Button.Flyout>
-                                                    <Flyout>
-                                                        <StackPanel x:DataType="models:ColorSwatch" Width="180" Spacing="8" Margin="4">
-                                                            <TextBlock Text="RENAME" Classes="eyebrow"/>
-                                                            <TextBox Text="{Binding Name}" Watermark="Name"/>
-                                                        </StackPanel>
-                                                    </Flyout>
-                                                </Button.Flyout>
-                                            </Button>
-                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding CopyCommand}" CommandParameter="{Binding}">
-                                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                                            </Button>
-                                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                                    Command="{Binding RemoveCommand}" CommandParameter="{Binding}">
-                                                <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                                            </Button>
-                                        </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                        <Button Classes="ghost" FontSize="11" Padding="10,5"
+                                Command="{Binding DetachWindowCommand}"
+                                ToolTip.Tip="Open this palette in a separate window (§7 multi-window)">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <materialIcons:MaterialIcon Kind="WindowRestore" Width="14" Height="14"/>
+                                <TextBlock Text="Detach" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
 
-                                        <!-- Name + hex label anchored to the bottom of the bar -->
-                                        <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Spacing="2">
-                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"
-                                                       TextWrapping="Wrap" Foreground="{Binding ForegroundBrush}"/>
-                                            <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
-                                            <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
-                                                       Classes="mono" Foreground="{Binding ForegroundBrush}"/>
-                                            <TextBlock Text="{Binding ContrastLabel}" FontSize="10" Opacity="0.75"
-                                                       Foreground="{Binding ForegroundBrush}"
-                                                       ToolTip.Tip="WCAG contrast of this card's own text against its background"/>
-                                        </StackPanel>
-
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                <!-- THE PALETTE (templates swapped by view mode — see ApplyViewMode) -->
+                <Border Grid.Row="2" Classes="panel" Padding="14" IsVisible="{Binding IsBoardMode}">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="Board" ItemsSource="{Binding Palette}"/>
+                    </ScrollViewer>
                 </Border>
 
+                <!-- ============ EXPORT WORKSPACE (§5 import / §6 export) ============ -->
+                <Grid Grid.Row="2" ColumnDefinitions="*,14,*" IsVisible="{Binding IsExportMode}">
+
+                    <Border Classes="panel" Padding="22">
+                        <Grid RowDefinitions="Auto,Auto,*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="EXPORT PALETTE" Classes="eyebrow"/>
+                                <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                           Text="Text formats build a preview you can copy; ASE / ACO and the PNG sheet write straight to a file."/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto" Margin="0,14,0,0">
+                                <ComboBox MinWidth="160" Height="38"
+                                          ItemsSource="{Binding ExportFormats}"
+                                          SelectedItem="{Binding SelectedExportFormat}"
+                                          ToolTip.Tip="Format used by Build preview / Save / Copy">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Grid.Column="1" Margin="8,0,0,0" Height="38"
+                                        Command="{Binding BuildExportPreviewCommand}">
+                                    Build preview
+                                </Button>
+                            </Grid>
+
+                            <TextBox Grid.Row="2" Text="{Binding ExportPreview}" AcceptsReturn="True"
+                                     IsReadOnly="True" Margin="0,12,0,0" MinHeight="140"
+                                     TextWrapping="Wrap" Classes="mono" FontSize="12"
+                                     Watermark="Press Build preview to see the generated source"/>
+
+                            <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                                <Button Content="Copy export" Command="{Binding CopyExportCommand}"/>
+                                <Button Content="Save to file…" Command="{Binding ExportToFileCommand}"
+                                        ToolTip.Tip="ASE / ACO and other binary formats always write to disk (Ctrl+E)"/>
+                                <Button Content="PNG sheet…" Command="{Binding ExportPngCommand}"
+                                        ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Classes="panel" Padding="22">
+                        <Grid RowDefinitions="Auto,*">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="IMPORT" Classes="eyebrow"/>
+                                <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                           Text="Bring palettes in, or move the whole library between machines."/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Spacing="10" Margin="0,14,0,0">
+                                <Button Content="Import palette file…  (CSS / GPL / ASE / ACO)"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding Library.ImportPaletteFileCommand}"/>
+                                <Button Content="Load palette from file…  (Ctrl+O)"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding LoadPaletteCommand}"/>
+
+                                <Separator Margin="0,8,0,0"/>
+                                <TextBlock Text="WHOLE LIBRARY" Classes="eyebrow"/>
+                                <Button Content="Export whole library…" HorizontalAlignment="Stretch"
+                                        Command="{Binding Library.ExportLibraryCommand}"/>
+                                <Button Content="Import library…" HorizontalAlignment="Stretch"
+                                        Command="{Binding Library.ImportLibraryCommand}"/>
+
+                                <Separator Margin="0,8,0,0"/>
+                                <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                           Text="Everything is stored locally — JSON or SQLite, switchable in Settings. No account, no cloud."/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
                 <!-- Footer -->
-                <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,16,0,0">
+                <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,14,0,0">
 
                     <Button Grid.Column="0" Classes="ghost" Command="{Binding CopyAllHexCommand}" Margin="0,0,12,0">
                         <StackPanel Orientation="Horizontal" Spacing="6">
@@ -353,10 +924,10 @@
                         </StackPanel>
                     </Button>
 
-                    <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center"/>
-
-                    <ComboBox Grid.Column="2" ItemsSource="{Binding ExportFormats}" SelectedItem="{Binding SelectedExportFormat}"
-                              Margin="0,0,8,0" Height="38">
+                    <!-- Copy individual colors in this notation (§2 multi-format copy, §10 default) -->
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding CopyFormats}" SelectedItem="{Binding SelectedCopyFormat}"
+                              Margin="0,0,12,0" Height="38" MinWidth="96"
+                              ToolTip.Tip="Format used when copying a single color">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
@@ -364,25 +935,214 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <Button Grid.Column="3" Content="Export Palette">
-                        <Button.Flyout>
-                            <Flyout>
-                                <StackPanel x:DataType="vm:MainWindowViewModel" Width="260" Spacing="10" Margin="4">
-                                    <TextBlock Text="EXPORT" Classes="eyebrow"/>
-                                    <Button Content="Build Preview" Command="{Binding BuildExportPreviewCommand}"
-                                            HorizontalAlignment="Stretch"/>
-                                    <TextBox Text="{Binding ExportPreview}" AcceptsReturn="True" IsReadOnly="True"
-                                             Height="120" TextWrapping="Wrap" Classes="mono"/>
-                                    <Button Content="Copy Export" Command="{Binding CopyExportCommand}"
-                                            HorizontalAlignment="Stretch"/>
-                                </StackPanel>
-                            </Flyout>
-                        </Button.Flyout>
+                    <TextBlock Grid.Column="2" Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="3" Classes="ghost" Padding="14,8"
+                            Command="{Binding SetWorkspaceCommand}"
+                            CommandParameter="{x:Static models:WorkspaceMode.Export}"
+                            ToolTip.Tip="Open the Export workspace (Ctrl+4)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="TrayArrowDown" Width="15" Height="15"/>
+                            <TextBlock Text="Export…" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
 
                 </Grid>
 
             </Grid>
+
+            <!-- ============ DOCK · PREVIEW: mockup, variants ============ -->
+            <Border Grid.Column="4" x:Name="PreviewDock" Classes="panel">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid ColumnDefinitions="*,Auto" Margin="20,16,20,10">
+                        <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding WorkspaceTitle}" Classes="eyebrow"/>
+                            <TextBlock Text="{Binding WorkspaceBlurb}" Classes="caption" FontSize="11"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="ghost" Click="OnToggleInspectorClick"
+                                Padding="6,4" ToolTip.Tip="Collapse the dock (Ctrl+I)">
+                            <materialIcons:MaterialIcon Kind="ChevronRight" Width="17" Height="17"/>
+                        </Button>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1">
+                <Grid ColumnDefinitions="*,Auto" Margin="20,0,20,20">
+
+                    <Border Classes="panel" Padding="16">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="LIVE UI MOCKUP" Classes="eyebrow"/>
+                                <TextBlock Grid.Column="1" Classes="caption"
+                                           Text="buttons, cards &amp; text in your palette"/>
+                            </Grid>
+
+                            <Border Background="{Binding MockupBackgroundBrush}" CornerRadius="12" Padding="18"
+                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="Project dashboard" FontWeight="Bold" FontSize="17"
+                                                   Foreground="{Binding MockupTextBrush}"/>
+                                        <Border Grid.Column="1" Background="{Binding MockupAccentBrush}"
+                                                CornerRadius="10" Padding="10,4">
+                                            <TextBlock Text="Beta" FontSize="11" FontWeight="Bold"
+                                                       Foreground="{Binding MockupAccentForegroundBrush}"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock FontSize="13" TextWrapping="Wrap"
+                                               Foreground="{Binding MockupTextBrush}"
+                                               Text="Body copy set in your palette's own most-readable color, so you can judge contrast at a glance."/>
+
+                                    <Border Background="{Binding MockupSurfaceBrush}" CornerRadius="10" Padding="14"
+                                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="Card title" FontWeight="SemiBold"
+                                                       Foreground="{Binding MockupTextBrush}"/>
+                                            <TextBlock FontSize="12" TextWrapping="Wrap" Opacity="0.8"
+                                                       Foreground="{Binding MockupTextBrush}"
+                                                       Text="Secondary surfaces use lighter tints derived from the last color in your palette."/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Button Content="Primary action" FontWeight="SemiBold" BorderThickness="0"
+                                                Background="{Binding MockupPrimaryBrush}"
+                                                Foreground="{Binding MockupPrimaryForegroundBrush}"/>
+                                        <Button Content="Secondary"
+                                                Foreground="{Binding MockupTextBrush}"
+                                                Background="Transparent"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Dark / light mode variant generator (§8) -->
+                    <StackPanel Grid.Column="1" Spacing="8" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="VARIANTS" Classes="eyebrow" HorizontalAlignment="Center"/>
+                        <Button Content="Light mode" Command="{Binding GenerateLightVariantCommand}"
+                                ToolTip.Tip="Create a lighter sibling palette from these colors"/>
+                        <Button Content="Dark mode" Command="{Binding GenerateDarkVariantCommand}"
+                                ToolTip.Tip="Create a darker sibling palette from these colors"/>
+                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap" Width="118"
+                                   TextAlignment="Center"
+                                   Text="Generates derived palettes and opens them as a new tab"/>
+                    </StackPanel>
+                </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="3" x:Name="InspectorSplitter" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                          Background="Transparent" Width="12" ToolTip.Tip="Drag to resize the workspace dock"/>
+
+            <!-- ============ DOCK · ANALYZE: color science + contrast (§4) ============ -->
+            <Border Grid.Column="4" x:Name="AnalyzeDock" Classes="panel" Padding="16">
+                <ScrollViewer>
+                    <StackPanel Spacing="8">
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding WorkspaceTitle}" Classes="eyebrow"/>
+                                <TextBlock Text="{Binding WorkspaceBlurb}" Classes="caption"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="ghost" Click="OnToggleInspectorClick"
+                                    Padding="6,4" ToolTip.Tip="Collapse the dock (Ctrl+I)">
+                                <materialIcons:MaterialIcon Kind="ChevronRight" Width="17" Height="17"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Conversion readouts: HEX / RGB / HSL / HSV / LAB / OKLCH -->
+                        <Grid ColumnDefinitions="58,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Text="HEX" Classes="caption" VerticalAlignment="Center" Margin="0,2,0,6"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ScienceHex}" Classes="mono" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,2,0,6"/>
+
+                            <TextBlock Grid.Row="1" Text="RGB" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ScienceRgb}" Classes="mono" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="2" Text="HSL" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ScienceHsl}" Classes="mono" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="3" Text="HSV" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ScienceHsv}" Classes="mono" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="4" Text="LAB" Classes="caption" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ScienceLab}" Classes="mono" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="5" Text="OKLCH" Classes="caption" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ScienceOklch}" Classes="mono" FontSize="12"
+                                       TextWrapping="Wrap"/>
+                        </Grid>
+
+                        <!-- Tints / shades / tones generators -->
+                        <Separator/>
+                        <TextBlock Text="GENERATE FROM BASE" Classes="eyebrow"/>
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Button Grid.Column="0" Content="Tints" Command="{Binding AddTintsCommand}"
+                                    Margin="0,0,5,0" FontSize="12" Padding="8,8"
+                                    ToolTip.Tip="Add lighter steps (mix toward white) to the palette"/>
+                            <Button Grid.Column="1" Content="Shades" Command="{Binding AddShadesCommand}"
+                                    Margin="0,0,5,0" FontSize="12" Padding="8,8"
+                                    ToolTip.Tip="Add darker steps (mix toward black) to the palette"/>
+                            <Button Grid.Column="2" Content="Tones" Command="{Binding AddTonesCommand}"
+                                    FontSize="12" Padding="8,8"
+                                    ToolTip.Tip="Add desaturated steps (mix toward gray) to the palette"/>
+                        </Grid>
+
+                        <!-- Contrast checker: WCAG 2.x + APCA -->
+                        <Separator/>
+                        <TextBlock Text="CONTRAST CHECKER" Classes="eyebrow"/>
+                        <TextBlock Text="{Binding ContrastPairLabel}" Classes="caption mono" FontSize="11"/>
+
+                        <Border Background="{Binding ContrastBackgroundBrush}" CornerRadius="10" Height="54"
+                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
+                                <TextBlock Text="Aa — sample text" FontWeight="Bold" FontSize="15"
+                                           Foreground="{Binding BaseColorBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Small body copy 14px" FontSize="11"
+                                           Foreground="{Binding BaseColorBrush}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding ContrastRatioLabel}" FontWeight="Bold" FontSize="16"/>
+                                <TextBlock Classes="caption" FontSize="11"
+                                           Text="{Binding ContrastPairLabel}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="2" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding ContrastRatingLabel}" FontWeight="Bold" FontSize="13"
+                                           ToolTip.Tip="WCAG AA/AAA — normal text"/>
+                                <TextBlock Text="{Binding ContrastRatingLargeLabel}" Classes="caption" FontSize="11"
+                                           ToolTip.Tip="WCAG AA/AAA — large text (18pt+/14pt+bold)"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding ApcaLabel}" FontWeight="SemiBold" FontSize="13"
+                                       ToolTip.Tip="APCA lightness contrast (§4) — positive = dark on light"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ApcaRatingLabel}" FontWeight="Bold" FontSize="13"
+                                       ToolTip.Tip="APCA verdict: Lc 60 ≈ WCAG 4.5:1, Lc 75 ≈ 7:1"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button Content="White bg" Classes="ghost" Command="{Binding UseWhiteContrastBackgroundCommand}"
+                                    FontSize="11" Padding="10,6"/>
+                            <Button Content="Black bg" Classes="ghost" Command="{Binding UseBlackContrastBackgroundCommand}"
+                                    FontSize="11" Padding="10,6"/>
+                            <Button Content="Pick…" Classes="ghost" Command="{Binding PickContrastBackgroundCommand}"
+                                    FontSize="11" Padding="10,6"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
 
         </Grid>
 

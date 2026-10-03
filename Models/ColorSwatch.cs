@@ -32,6 +32,72 @@ namespace Spectrum.Models
 
         public string Hex => $"#{Color.R:X2}{Color.G:X2}{Color.B:X2}";
 
+        /// <summary>Rich tooltip readouts (§7 "Tooltips with color info").</summary>
+        public string RgbLabel =>
+            Color.A == 255
+                ? $"rgb({Color.R}, {Color.G}, {Color.B})"
+                : $"rgba({Color.R}, {Color.G}, {Color.B}, {System.Math.Round(Color.A / 255.0, 2)})";
+
+        public string HslLabel
+        {
+            get
+            {
+                var (h, s, l) = ColorHarmonyService.ToHsl(Color);
+                return $"hsl({h:N0}, {s * 100:N0}%, {l * 100:N0}%)";
+            }
+        }
+
+        public string SimulatedNote =>
+            ColorBlindMode == ColorBlindMode.None
+                ? string.Empty
+                : $" shown as {ColorBlindMode}";
+
+        // ---------------- §8 "Contrast overlay on swatches" ----------------
+
+        [ObservableProperty]
+        private bool _showContrastOverlay;
+
+        public string WhiteTextBadge
+        {
+            get
+            {
+                var ratio = ContrastService.ContrastRatio(DisplayColor, Colors.White);
+                var lc = ContrastService.Apca(Colors.White, DisplayColor);
+                return $"Aa white {ContrastService.Rate(ratio)} · {ratio:N1}:1 · Lc {lc:N0}";
+            }
+        }
+
+        public string BlackTextBadge
+        {
+            get
+            {
+                var ratio = ContrastService.ContrastRatio(DisplayColor, Colors.Black);
+                var lc = ContrastService.Apca(Colors.Black, DisplayColor);
+                return $"Aa black {ContrastService.Rate(ratio)} · {ratio:N1}:1 · Lc {lc:N0}";
+            }
+        }
+
+        // ---------------- §8 "Swatch zoom view" readouts ----------------
+
+        public string LabLabel
+        {
+            get
+            {
+                var lab = ColorMathService.RgbToLab(Color);
+                var lch = ColorMathService.LabToLch(lab);
+                return $"LAB {lab.L:N1}, {lab.A:N1}, {lab.B:N1} · LCH {lch.L:N1}, {lch.C:N1}, {lch.H:N0}°";
+            }
+        }
+
+        public string OklchLabel
+        {
+            get
+            {
+                var ok = ColorMathService.RgbToOklch(Color);
+                return $"OKLCH {ok.L:N3}, {ok.C:N3}, {ok.H:N0}°";
+            }
+        }
+
         public Color DisplayColor => ColorBlindnessService.Simulate(Color, ColorBlindMode);
 
         public IBrush Brush => new SolidColorBrush(DisplayColor);
@@ -61,9 +127,22 @@ namespace Spectrum.Models
         public ICommand? MoveUpCommand { get; set; }
         public ICommand? MoveDownCommand { get; set; }
 
+        /// <summary>Opens the spectrum picker for this swatch (wired by the owning ViewModel).</summary>
+        public ICommand? EditColorCommand { get; set; }
+
+        /// <summary>Duplicates this swatch next to itself (wired by the owning ViewModel).</summary>
+        public ICommand? DuplicateCommand { get; set; }
+
         partial void OnColorChanged(Color value)
         {
             OnPropertyChanged(nameof(Hex));
+            OnPropertyChanged(nameof(RgbLabel));
+            OnPropertyChanged(nameof(HslLabel));
+            OnPropertyChanged(nameof(SimulatedNote));
+            OnPropertyChanged(nameof(WhiteTextBadge));
+            OnPropertyChanged(nameof(BlackTextBadge));
+            OnPropertyChanged(nameof(LabLabel));
+            OnPropertyChanged(nameof(OklchLabel));
             OnPropertyChanged(nameof(DisplayColor));
             OnPropertyChanged(nameof(Brush));
             OnPropertyChanged(nameof(ForegroundBrush));
@@ -80,6 +159,8 @@ namespace Spectrum.Models
             OnPropertyChanged(nameof(ContrastRatio));
             OnPropertyChanged(nameof(ContrastRating));
             OnPropertyChanged(nameof(ContrastLabel));
+            OnPropertyChanged(nameof(WhiteTextBadge));
+            OnPropertyChanged(nameof(BlackTextBadge));
         }
 
         public ColorSwatch()

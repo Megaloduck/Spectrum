@@ -9,6 +9,7 @@ using Spectrum.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -23,9 +24,197 @@ namespace Spectrum.ViewModels
 
         public ObservableCollection<ColorSwatch> Palette { get; } = new();
 
+        /// <summary>The sidebar palette library (§1): list, search, pin, versions.</summary>
+        public PaletteLibraryViewModel Library { get; }
+
+        private string? _activePaletteId;
+        private bool _isLoadingBoard;
+
         public Array HarmonyTypes { get; } = Enum.GetValues(typeof(HarmonyType));
         public Array ExportFormats { get; } = Enum.GetValues(typeof(ExportFormat));
         public Array ColorBlindModes { get; } = Enum.GetValues(typeof(ColorBlindMode));
+
+        /// <summary>Notations offered by the footer copy-format picker (§2/§10).</summary>
+        public Array CopyFormats { get; } = Enum.GetValues(typeof(CopyFormat));
+
+        [ObservableProperty]
+        private CopyFormat _selectedCopyFormat = CopyFormat.Hex;
+
+        /// <summary>The swatch most recently clicked on the board (§8 zoom, Delete/Ctrl+D shortcuts).</summary>
+        [ObservableProperty]
+        private ColorSwatch? _selectedSwatch;
+
+        // ---------------- §8 Preview & visualization ----------------
+
+        public Array ViewModes { get; } = Enum.GetValues(typeof(ViewMode));
+
+        [ObservableProperty]
+        private ViewMode _viewMode = ViewMode.Row;
+
+        /// <summary>Raised when the board layout must switch templates (handled in code-behind).</summary>
+        public event Action? ViewModeRequested;
+
+        partial void OnViewModeChanged(ViewMode value) => ViewModeRequested?.Invoke();
+
+        [ObservableProperty]
+        private bool _showContrastOverlay;
+
+        partial void OnShowContrastOverlayChanged(bool value)
+        {
+            foreach (var swatch in Palette)
+                swatch.ShowContrastOverlay = value;
+        }
+
+        // ---------------- Workspaces (§7 desktop UX) ----------------
+
+        [ObservableProperty]
+        private WorkspaceMode _workspaceMode = WorkspaceMode.Studio;
+
+        /// <summary>Raised when the shell must re-measure its columns (handled in code-behind).</summary>
+        public event Action? WorkspaceModeChanged;
+
+        partial void OnWorkspaceModeChanged(WorkspaceMode value)
+        {
+            OnPropertyChanged(nameof(IsStudioMode));
+            OnPropertyChanged(nameof(IsPreviewMode));
+            OnPropertyChanged(nameof(IsAnalyzeMode));
+            OnPropertyChanged(nameof(IsExportMode));
+            OnPropertyChanged(nameof(IsBoardMode));
+            OnPropertyChanged(nameof(WorkspaceTitle));
+            OnPropertyChanged(nameof(WorkspaceBlurb));
+            WorkspaceModeChanged?.Invoke();
+        }
+
+        public bool IsStudioMode => WorkspaceMode == WorkspaceMode.Studio;
+        public bool IsPreviewMode => WorkspaceMode == WorkspaceMode.Preview;
+        public bool IsAnalyzeMode => WorkspaceMode == WorkspaceMode.Analyze;
+        public bool IsExportMode => WorkspaceMode == WorkspaceMode.Export;
+
+        /// <summary>The palette board is on screen for every workspace except Export.</summary>
+        public bool IsBoardMode => WorkspaceMode != WorkspaceMode.Export;
+
+        public string WorkspaceTitle => WorkspaceMode switch
+        {
+            WorkspaceMode.Preview => "PREVIEW",
+            WorkspaceMode.Analyze => "COLOR SCIENCE",
+            _ => "EDIT COLOR",
+        };
+
+        public string WorkspaceBlurb => WorkspaceMode switch
+        {
+            WorkspaceMode.Studio => "Harmony, eyedroppers and sliders",
+            WorkspaceMode.Preview => "Mockup, variants and compare",
+            WorkspaceMode.Analyze => "Contrast, conversions and simulation",
+            _ => "Write files out, bring files in",
+        };
+
+        /// <summary>App-bar segment switch + Ctrl+1..4 + command palette.</summary>
+        [RelayCommand]
+        private void SetWorkspace(WorkspaceMode mode)
+        {
+            if (WorkspaceMode == mode) return;
+            WorkspaceMode = mode;
+
+            StatusMessage = mode switch
+            {
+                WorkspaceMode.Studio => "Studio — generate and edit the palette.",
+                WorkspaceMode.Preview => "Preview — mockup, variants and side-by-side compare.",
+                WorkspaceMode.Analyze => "Analyze — contrast, conversions and color-vision simulation.",
+                _ => "Export — send the palette out, or bring files in.",
+            };
+        }
+
+        // Live UI mockup brushes, derived from the current palette.
+        private Color PaletteAt(int index, Color fallback) =>
+            Palette.Count == 0
+                ? fallback
+                : Palette[Math.Clamp(index, 0, Palette.Count - 1)].Color;
+
+        private Color MockupBackground => ColorMathService.Mix(PaletteAt(-1, Colors.White), Colors.White, 0.92);
+        private Color MockupSurface => ColorMathService.Mix(PaletteAt(-1, Colors.White), Colors.White, 0.98);
+
+        public IBrush MockupPrimaryBrush => new SolidColorBrush(PaletteAt(0, Colors.Gray));
+        public IBrush MockupPrimaryForegroundBrush => new SolidColorBrush(ReadableOn(PaletteAt(0, Colors.Gray)));
+        public IBrush MockupAccentBrush => new SolidColorBrush(PaletteAt(-1, Colors.Gray));
+        public IBrush MockupAccentForegroundBrush => new SolidColorBrush(ReadableOn(PaletteAt(-1, Colors.Gray)));
+        public IBrush MockupBackgroundBrush => new SolidColorBrush(MockupBackground);
+        public IBrush MockupSurfaceBrush => new SolidColorBrush(MockupSurface);
+        public IBrush MockupTextBrush => new SolidColorBrush(BestContrastText());
+
+        private Color BestContrastText()
+        {
+            if (Palette.Count == 0) return Color.FromRgb(0x1E, 0x20, 0x25);
+
+            return Palette
+                .Select(s => s.Color)
+                .OrderByDescending(c => ContrastService.ContrastRatio(c, MockupBackground))
+                .First();
+        }
+
+        private static Color ReadableOn(Color color) =>
+            (0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B) / 255.0 > 0.6
+                ? Color.FromRgb(0x1E, 0x20, 0x25)
+                : Colors.White;
+
+        private void RaiseMockupPropertiesChanged()
+        {
+            OnPropertyChanged(nameof(MockupPrimaryBrush));
+            OnPropertyChanged(nameof(MockupPrimaryForegroundBrush));
+            OnPropertyChanged(nameof(MockupAccentBrush));
+            OnPropertyChanged(nameof(MockupAccentForegroundBrush));
+            OnPropertyChanged(nameof(MockupBackgroundBrush));
+            OnPropertyChanged(nameof(MockupSurfaceBrush));
+            OnPropertyChanged(nameof(MockupTextBrush));
+        }
+
+        /// <summary>§8 "Dark / light mode variant generator": derives a lighter or darker
+        /// sibling palette from the current one and opens it.</summary>
+        [RelayCommand]
+        private void GenerateLightVariant() => GenerateVariant(light: true);
+
+        [RelayCommand]
+        private void GenerateDarkVariant() => GenerateVariant(light: false);
+
+        private void GenerateVariant(bool light)
+        {
+            if (Palette.Count == 0)
+            {
+                StatusMessage = "Add some colors before generating a variant.";
+                return;
+            }
+
+            var baseName = PaletteLibraryService.FindPalette(_activePaletteId)?.Name ?? "Palette";
+            var suffix = light ? "Light" : "Dark";
+            var swatches = Palette.Select(s =>
+            {
+                var derived = light
+                    ? ColorMathService.Mix(s.Color, Colors.White, 0.30)
+                    : ColorMathService.Mix(s.Color, Colors.Black, 0.35);
+                return new PaletteSwatchDto(
+                    light ? $"{s.Name} tint" : $"{s.Name} shade",
+                    derived.A, derived.R, derived.G, derived.B, s.IsLocked);
+            }).ToList();
+
+            var dto = PaletteLibraryService.AddPalette($"{baseName} ({suffix})", swatches);
+            Library.AddAndSelect(dto);
+            StatusMessage = $"Generated {suffix.ToLowerInvariant()} mode variant with {swatches.Count} colors.";
+        }
+
+        /// <summary>§8 "Side-by-side palette comparison".</summary>
+        [RelayCommand]
+        private async Task ComparePalettesAsync()
+        {
+            if (GetOwnerWindow() is not { } owner) return;
+
+            var current = PaletteLibraryService.FindPalette(_activePaletteId)
+                          ?? PaletteLibraryService.Library.Palettes.FirstOrDefault();
+
+            var window = new Views.CompareWindow(current);
+            await window.ShowDialog(owner);
+        }
+
+        /// <summary>Prevents two windows' hotkey handlers opening two pickers at once.</summary>
+        private static bool ScreenPickerOpen;
 
         // ---- Base color, expressed as Hue/Saturation/Lightness + a
         // ---- Temperature tint applied on top, matching the "COLOR PANEL" sliders.
@@ -148,10 +337,280 @@ namespace Spectrum.ViewModels
         public MainWindowViewModel()
         {
             // Keep the header's "N colors" pill in sync no matter what
-            // caused the palette to change (add, remove, clear, generate...).
-            Palette.CollectionChanged += (_, _) => PaletteCount = Palette.Count;
+            // caused the palette to change (add, remove, clear, generate...),
+            // and mirror every edit into the library DTO so autosave can
+            // persist it (§1 auto-save / dirty state).
+            Palette.CollectionChanged += (_, _) =>
+            {
+                PaletteCount = Palette.Count;
+                RaiseMockupPropertiesChanged();
+                if (!_isLoadingBoard && !_isRestoringHistory) SyncActivePalette();
+            };
 
-            SeedInitialPalette();
+            Library = new PaletteLibraryViewModel();
+            Library.ActivePaletteChanged += OnActivePaletteChanged;
+
+            // System-wide hotkey for the screen eyedropper (§3). The binding
+            // itself is registered by SettingsService at startup so the user's
+            // configured combination is honoured from the first launch.
+            GlobalHotkeyService.HotkeyRaised += OnGlobalHotkeyRaised;
+
+            // §10 defaults + §3 picked-color history.
+            ApplyFormatDefaults();
+            RestoreRecentPicks();
+
+            if (PaletteLibraryService.Library.Palettes.Count == 0)
+            {
+                // Brand-new library: seed a first palette (selecting it loads the board).
+                Library.CreateDefaultPalette();
+            }
+            else
+            {
+                var activeId = PaletteLibraryService.Library.ActivePaletteId;
+                var active = PaletteLibraryService.Library.Palettes.FirstOrDefault(p => p.Id == activeId)
+                             ?? PaletteLibraryService.Library.Palettes[0];
+                Library.SelectPalette(active);
+            }
+        }
+
+        /// <summary>§10 defaults, read at startup and again whenever Settings changes.</summary>
+        public void ApplyFormatDefaults()
+        {
+            if (Enum.TryParse<CopyFormat>(SettingsService.Settings.DefaultCopyFormat, out var copy))
+                SelectedCopyFormat = copy;
+            if (Enum.TryParse<ExportFormat>(SettingsService.Settings.DefaultExportFormat, out var export))
+                SelectedExportFormat = export;
+        }
+
+        private void RestoreRecentPicks()
+        {
+            foreach (var hex in SettingsService.Settings.RecentPicks)
+            {
+                if (RecentPicks.Count >= MaxRecentPicks) break;
+                if (ColorMathService.TryParseHex(hex, out var color))
+                    RecentPicks.Add(new RecentPick(color));
+            }
+        }
+
+        private void PersistRecentPicks()
+        {
+            SettingsService.Settings.RecentPicks = RecentPicks.Select(p => p.Hex).ToList();
+            SettingsService.Save();
+        }
+
+        /// <summary>§10 Settings dialog (Ctrl+,).</summary>
+        [RelayCommand]
+        private async Task OpenSettingsAsync()
+        {
+            if (GetOwnerWindow() is not { } owner) return;
+
+            var window = new Views.SettingsWindow();
+            if (Library is not null) window.AttachLibrary(Library);
+            await window.ShowDialog(owner);
+            StatusMessage = "Settings saved.";
+        }
+
+        /// <summary>§7 "Command palette (Ctrl+K)": fuzzy-searchable list of every command.</summary>
+        private async void OpenCommandPalette()
+        {
+            if (GetOwnerWindow() is not { } owner) return;
+            var palette = new Views.CommandPaletteWindow(this);
+            await palette.ShowDialog(owner);
+        }
+
+        // ---------------- Picking (§3): screen, image, recent history ----------------
+
+        public ObservableCollection<RecentPick> RecentPicks { get; } = new();
+
+        private const int MaxRecentPicks = 20;
+
+        /// <summary>§3 "System-wide eyedropper" — click anywhere on screen to capture the color.</summary>
+        [RelayCommand]
+        private async Task PickFromScreenAsync()
+        {
+            if (ScreenPickerOpen) return;
+            if (!ScreenPickerService.IsSupported)
+            {
+                StatusMessage = "Screen picking uses native Windows interop — not available on this OS yet.";
+                return;
+            }
+
+            if (GetOwnerWindow() is not { } owner) return;
+
+            ScreenPickerOpen = true;
+            try
+            {
+                var picker = new Views.ScreenPickerWindow();
+                var color = await picker.ShowDialog<Color?>(owner);
+                if (color is null)
+                {
+                    StatusMessage = "Screen pick cancelled.";
+                    return;
+                }
+
+                ApplyPickedColor(color.Value, "screen");
+            }
+            finally
+            {
+                ScreenPickerOpen = false;
+            }
+        }
+
+        /// <summary>§3 "In-app eyedropper (pick from loaded image)".</summary>
+        [RelayCommand]
+        private async Task PickFromImageAsync()
+        {
+            var bitmap = await FilePickerHelper.PickImageAsync();
+            if (bitmap is null)
+            {
+                StatusMessage = "No image selected.";
+                return;
+            }
+
+            if (GetOwnerWindow() is not { } owner)
+            {
+                bitmap.Dispose();
+                return;
+            }
+
+            var picker = new Views.ImageEyedropperWindow(bitmap);
+            var color = await picker.ShowDialog<Color?>(owner);
+            if (color is null)
+            {
+                StatusMessage = "Eyedropper cancelled.";
+                return;
+            }
+
+            ApplyPickedColor(color.Value, "image");
+        }
+
+        /// <summary>Applies a picked color to the color panel and records it in the history.</summary>
+        private void ApplyPickedColor(Color color, string source)
+        {
+            ApplyToBaseColor(color);
+
+            // Newest first, no duplicates, capped at 20 (§3 history).
+            var existing = RecentPicks.FirstOrDefault(p => p.Color == color);
+            if (existing is not null) RecentPicks.Remove(existing);
+            RecentPicks.Insert(0, new RecentPick(color));
+            while (RecentPicks.Count > MaxRecentPicks)
+                RecentPicks.RemoveAt(RecentPicks.Count - 1);
+            PersistRecentPicks();
+
+            StatusMessage = $"Picked {ColorMathService.ToHex(color)} from {source} — add it to the palette when happy.";
+        }
+
+        // Panel collapse toggles (§7 "Resizable / collapsible panels") — the
+        // window code-behind subscribes and adjusts the grid columns.
+        public event Action? ToggleLibraryRequested;
+        public event Action? ToggleInspectorRequested;
+
+        [RelayCommand]
+        private void ToggleLibraryPanel() => ToggleLibraryRequested?.Invoke();
+
+        [RelayCommand]
+        private void ToggleInspector() => ToggleInspectorRequested?.Invoke();
+
+        /// <summary>§7 "Multi-window support": detach the current palette into its own window.</summary>
+        [RelayCommand]
+        private void DetachWindow()
+        {
+            if (GetOwnerWindow() is not { } owner) return;
+
+            var window = new Views.MainWindow
+            {
+                DataContext = new MainWindowViewModel(),
+            };
+            window.Show(owner);
+            StatusMessage = "Palette detached into a new window.";
+        }
+
+        [RelayCommand]
+        private void ApplyRecentPick(RecentPick? pick)
+        {
+            if (pick is null) return;
+            ApplyToBaseColor(pick.Color);
+            StatusMessage = $"Loaded {pick.Hex} ({pick.Name}) into the color panel.";
+        }
+
+        /// <summary>§3 "Global hotkey to trigger picker" — Ctrl+Alt+P by default (rebindable in Settings).</summary>
+        private void OnGlobalHotkeyRaised()
+        {
+            if (PickFromScreenCommand.CanExecute(null))
+                PickFromScreenCommand.Execute(null);
+        }
+
+        private static Avalonia.Controls.Window? GetOwnerWindow()
+        {
+            if (Application.Current?.ApplicationLifetime is
+                    Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return desktop.MainWindow;
+            }
+
+            return null;
+        }
+
+        /// <summary>Called by the window on close so the library can detach its service hooks.</summary>
+        public void Detach()
+        {
+            Library.Detach();
+            GlobalHotkeyService.HotkeyRaised -= OnGlobalHotkeyRaised;
+        }
+
+        // ---------------- Library ↔ board synchronization ----------------
+
+        /// <summary>Loads a library palette into the board (and clears undo history).</summary>
+        private void OnActivePaletteChanged(PaletteDto? dto)
+        {
+            _isLoadingBoard = true;
+            try
+            {
+                Palette.Clear();
+                _activePaletteId = dto?.Id;
+
+                if (dto is not null)
+                {
+                    foreach (var s in dto.Swatches)
+                    {
+                        var swatch = CreateSwatch(Color.FromArgb(s.A, s.R, s.G, s.B), s.Name);
+                        swatch.IsLocked = s.IsLocked;
+                        Palette.Add(swatch);
+                    }
+                }
+            }
+            finally
+            {
+                _isLoadingBoard = false;
+            }
+
+            ClearHistory();
+            StatusMessage = dto is null ? "No palette selected." : $"Opened \"{dto.Name}\".";
+        }
+
+        /// <summary>Writes the board back into the active palette's DTO and queues an autosave.</summary>
+        private void SyncActivePalette()
+        {
+            if (_isLoadingBoard || _activePaletteId is null) return;
+            var dto = PaletteLibraryService.FindPalette(_activePaletteId);
+            if (dto is null) return;
+
+            dto.Swatches = Palette
+                .Select(s => new PaletteSwatchDto(s.Name, s.Color.A, s.Color.R, s.Color.G, s.Color.B, s.IsLocked))
+                .ToList();
+
+            PaletteLibraryService.MarkDirty(dto);
+            Library.RefreshPreview(dto);
+        }
+
+        private void OnSwatchPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (_isLoadingBoard) return;
+            if (e.PropertyName is nameof(ColorSwatch.Color) or nameof(ColorSwatch.Name) or nameof(ColorSwatch.IsLocked))
+            {
+                SyncActivePalette();
+                RaiseMockupPropertiesChanged();
+            }
         }
 
         partial void OnHueChanged(double value)
@@ -178,6 +637,118 @@ namespace Spectrum.ViewModels
             }
         }
 
+        // ---------------- Inspector: color science (§4) ----------------
+
+        [ObservableProperty]
+        private Color _contrastBackground = Colors.White;
+
+        // Live conversion readouts for the base color.
+        public string ScienceHex =>
+            BaseColor.A == 255
+                ? ColorMathService.ToHex(BaseColor)
+                : $"{ColorMathService.ToHex(BaseColor)}{BaseColor.A:X2}";
+
+        public string ScienceRgb =>
+            BaseColor.A == 255
+                ? $"{BaseColor.R}, {BaseColor.G}, {BaseColor.B}"
+                : $"{BaseColor.R}, {BaseColor.G}, {BaseColor.B}, {Math.Round(BaseColor.A / 255.0, 2)}";
+
+        public string ScienceHsl
+        {
+            get
+            {
+                var (h, s, l) = ColorMathService.RgbToHsl(BaseColor);
+                return $"{h:N0}°, {s * 100:N0}%, {l * 100:N0}%";
+            }
+        }
+
+        public string ScienceHsv
+        {
+            get
+            {
+                var hsv = ColorMathService.RgbToHsv(BaseColor);
+                return $"{hsv.H:N0}°, {hsv.S * 100:N0}%, {hsv.V * 100:N0}%";
+            }
+        }
+
+        public string ScienceLab
+        {
+            get
+            {
+                var lab = ColorMathService.RgbToLab(BaseColor);
+                var lch = ColorMathService.LabToLch(lab);
+                return $"{lab.L:N1}, {lab.A:N1}, {lab.B:N1}\nLCH {lch.L:N1}, {lch.C:N1}, {lch.H:N0}°";
+            }
+        }
+
+        public string ScienceOklch
+        {
+            get
+            {
+                var ok = ColorMathService.RgbToOklch(BaseColor);
+                return $"{ok.L:N3}, {ok.C:N3}, {ok.H:N0}°";
+            }
+        }
+
+        // Contrast checker (WCAG + APCA) of the base color as text over ContrastBackground.
+        public IBrush ContrastBackgroundBrush => new SolidColorBrush(ContrastBackground);
+
+        public string ContrastPairLabel =>
+            $"{ColorMathService.ToHex(BaseColor)} text on {ColorMathService.ToHex(ContrastBackground)}";
+
+        public double ContrastRatioNow => ContrastService.ContrastRatio(BaseColor, ContrastBackground);
+
+        public string ContrastRatioLabel => $"{ContrastRatioNow:N2}:1";
+        public string ContrastRatingLabel => ContrastService.Rate(ContrastRatioNow);
+        public string ContrastRatingLargeLabel => ContrastService.Rate(ContrastRatioNow, largeText: true);
+
+        public double ApcaNow => ContrastService.Apca(BaseColor, ContrastBackground);
+        public string ApcaLabel => $"Lc {ApcaNow:N0}";
+        public string ApcaRatingLabel => ContrastService.RateApca(ApcaNow);
+
+        partial void OnContrastBackgroundChanged(Color value) => RaiseContrastPropertiesChanged();
+
+        private void RaiseContrastPropertiesChanged()
+        {
+            OnPropertyChanged(nameof(ContrastBackgroundBrush));
+            OnPropertyChanged(nameof(ContrastPairLabel));
+            OnPropertyChanged(nameof(ContrastRatioNow));
+            OnPropertyChanged(nameof(ContrastRatioLabel));
+            OnPropertyChanged(nameof(ContrastRatingLabel));
+            OnPropertyChanged(nameof(ContrastRatingLargeLabel));
+            OnPropertyChanged(nameof(ApcaNow));
+            OnPropertyChanged(nameof(ApcaLabel));
+            OnPropertyChanged(nameof(ApcaRatingLabel));
+        }
+
+        [RelayCommand]
+        private void UseWhiteContrastBackground() => ContrastBackground = Colors.White;
+
+        [RelayCommand]
+        private void UseBlackContrastBackground() => ContrastBackground = Colors.Black;
+
+        [RelayCommand]
+        private async Task PickContrastBackgroundAsync()
+        {
+            var picked = await PickColorAsync(ContrastBackground);
+            if (picked is null) return;
+            ContrastBackground = picked.Value;
+            StatusMessage = "Contrast background updated.";
+        }
+
+        // Tints / shades / tones generators (§4 "Generate tints / shades").
+        [RelayCommand] private void AddTints() => AppendGenerated(ColorMathService.Tints(BaseColor), "tint");
+        [RelayCommand] private void AddShades() => AppendGenerated(ColorMathService.Shades(BaseColor), "shade");
+        [RelayCommand] private void AddTones() => AppendGenerated(ColorMathService.Tones(BaseColor), "tone");
+
+        private void AppendGenerated(List<Color> colors, string kind)
+        {
+            PushHistory();
+            foreach (var c in colors)
+                Palette.Add(CreateSwatch(c, ColorNamingService.GetClosestName(c)));
+            StatusMessage = $"Added {colors.Count} {kind}s derived from {ColorMathService.ToHex(BaseColor)}.";
+        }
+
         private void RaiseColorPropertiesChanged()
         {
             OnPropertyChanged(nameof(BaseColor));
@@ -186,6 +757,13 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(BaseForegroundBrush));
             OnPropertyChanged(nameof(BaseHex));
             OnPropertyChanged(nameof(AlphaTrackBrush));
+            OnPropertyChanged(nameof(ScienceHex));
+            OnPropertyChanged(nameof(ScienceRgb));
+            OnPropertyChanged(nameof(ScienceHsl));
+            OnPropertyChanged(nameof(ScienceHsv));
+            OnPropertyChanged(nameof(ScienceLab));
+            OnPropertyChanged(nameof(ScienceOklch));
+            RaiseContrastPropertiesChanged();
         }
 
         private static Color ApplyTemperature(Color c, double temperature)
@@ -240,24 +818,20 @@ namespace Spectrum.ViewModels
         // so the UI never needs a reference back up to the parent DataContext.
         private ColorSwatch CreateSwatch(Color color, string name)
         {
-            return new ColorSwatch(color, name)
+            var swatch = new ColorSwatch(color, name)
             {
                 ColorBlindMode = SelectedColorBlindMode,
+                ShowContrastOverlay = ShowContrastOverlay,
                 CopyCommand = CopyHexCommand,
                 RemoveCommand = RemoveSwatchCommand,
                 MoveUpCommand = MoveSwatchUpCommand,
-                MoveDownCommand = MoveSwatchDownCommand
+                MoveDownCommand = MoveSwatchDownCommand,
+                EditColorCommand = EditSwatchColorCommand,
+                DuplicateCommand = DuplicateSwatchCommand
             };
-        }
 
-        private void SeedInitialPalette()
-        {
-            var rng = Random.Shared;
-            for (var i = 0; i < DefaultPaletteSize; i++)
-            {
-                var c = ColorHarmonyService.RandomPleasant(rng);
-                Palette.Add(CreateSwatch(c, ColorNamingService.GetClosestName(c)));
-            }
+            swatch.PropertyChanged += OnSwatchPropertyChanged;
+            return swatch;
         }
 
         // ---------------- Undo / redo ----------------
@@ -276,6 +850,7 @@ namespace Spectrum.ViewModels
         private void RestoreSnapshot(List<SwatchSnapshot> snapshot)
         {
             _isRestoringHistory = true;
+            _isLoadingBoard = true;
             Palette.Clear();
             foreach (var s in snapshot)
             {
@@ -284,6 +859,15 @@ namespace Spectrum.ViewModels
                 Palette.Add(swatch);
             }
             _isRestoringHistory = false;
+            _isLoadingBoard = false;
+            SyncActivePalette();
+        }
+
+        private void ClearHistory()
+        {
+            _undoStack.Clear();
+            _redoStack.Clear();
+            NotifyHistoryChanged();
         }
 
         private void NotifyHistoryChanged()
@@ -472,8 +1056,99 @@ namespace Spectrum.ViewModels
         private async Task CopyHexAsync(ColorSwatch? swatch)
         {
             if (swatch is null) return;
-            await ClipboardHelper.SetTextAsync(swatch.Hex);
-            StatusMessage = $"Copied {swatch.Hex} to clipboard.";
+            var text = ColorFormatService.Format(swatch.Color, SelectedCopyFormat);
+            await ClipboardHelper.SetTextAsync(text);
+            StatusMessage = $"Copied {text} ({SelectedCopyFormat}) to clipboard.";
+        }
+
+        /// <summary>§2 "Paste color from clipboard" — reads any supported notation into the color panel.</summary>
+        [RelayCommand]
+        private async Task PasteColorAsync()
+        {
+            var text = await ClipboardHelper.GetTextAsync();
+            if (!ColorFormatService.TryParse(text, out var color))
+            {
+                StatusMessage = string.IsNullOrWhiteSpace(text)
+                    ? "Clipboard is empty."
+                    : "Couldn't read a color from the clipboard.";
+                return;
+            }
+
+            ApplyToBaseColor(color);
+            StatusMessage = $"Pasted {ColorMathService.ToHex(color)} from clipboard.";
+        }
+
+        /// <summary>§2 "Duplicate individual swatch".</summary>
+        [RelayCommand]
+        private void DuplicateSwatch(ColorSwatch? swatch)
+        {
+            if (swatch is null) return;
+            PushHistory();
+
+            var index = Palette.IndexOf(swatch);
+            if (index < 0) index = Palette.Count - 1;
+
+            var copy = CreateSwatch(swatch.Color, swatch.Name + " copy");
+            copy.IsLocked = swatch.IsLocked;
+            Palette.Insert(Math.Clamp(index + 1, 0, Palette.Count), copy);
+            StatusMessage = $"Duplicated \"{swatch.Name}\".";
+        }
+
+        /// <summary>§2 "Edit swatch color (picker)" — opens the spectrum dialog for the base color.</summary>
+        [RelayCommand]
+        private async Task OpenColorPickerAsync()
+        {
+            var picked = await PickColorAsync(BaseColor);
+            if (picked is null)
+            {
+                StatusMessage = "Color pick cancelled.";
+                return;
+            }
+
+            ApplyToBaseColor(picked.Value);
+            StatusMessage = $"Base color set to {ColorNamingService.GetClosestName(picked.Value)}.";
+        }
+
+        /// <summary>Opens the spectrum dialog and applies the result to a swatch card.</summary>
+        [RelayCommand]
+        private async Task EditSwatchColorAsync(ColorSwatch? swatch)
+        {
+            if (swatch is null) return;
+
+            var picked = await PickColorAsync(swatch.Color);
+            if (picked is null)
+            {
+                StatusMessage = "Color pick cancelled.";
+                return;
+            }
+
+            PushHistory();
+            swatch.Color = picked.Value;
+            swatch.Name = ColorNamingService.GetClosestName(picked.Value);
+            StatusMessage = $"Updated swatch to {swatch.Name}.";
+        }
+
+        private void ApplyToBaseColor(Color color)
+        {
+            var (h, s, l) = ColorHarmonyService.ToHsl(color);
+            Hue = h;
+            Saturation = s * 100.0;
+            Lightness = l * 100.0;
+            Temperature = 0;
+            Alpha = color.A / 255.0 * 100.0;
+        }
+
+        private static async Task<Color?> PickColorAsync(Color initial)
+        {
+            if (Application.Current?.ApplicationLifetime is
+                    Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                && desktop.MainWindow is { } owner)
+            {
+                var dialog = new Views.ColorPickerDialog(initial);
+                return await dialog.ShowDialog<Color?>(owner);
+            }
+
+            return null;
         }
 
         [RelayCommand]
@@ -497,6 +1172,67 @@ namespace Spectrum.ViewModels
             if (string.IsNullOrEmpty(ExportPreview)) BuildExportPreview();
             await ClipboardHelper.SetTextAsync(ExportPreview);
             StatusMessage = "Copied export text to clipboard.";
+        }
+
+        /// <summary>§6 "Export presets": writes the selected format straight to a local file
+        /// (text formats directly, ASE/ACO as their binary encodings).</summary>
+        [RelayCommand]
+        private async Task ExportToFileAsync()
+        {
+            var format = SelectedExportFormat;
+            var extension = PaletteExportService.ExtensionFor(format);
+            var path = await PaletteFileService.PickSaveFileAsync(
+                $"palette-{DateTime.Now:yyyyMMdd-HHmmss}", extension, $"{format} (*.{extension})");
+            if (string.IsNullOrEmpty(path))
+            {
+                StatusMessage = "Export cancelled.";
+                return;
+            }
+
+            try
+            {
+                switch (format)
+                {
+                    case ExportFormat.Ase:
+                        await System.IO.File.WriteAllBytesAsync(path, PaletteBinaryExportService.WriteAse(Palette));
+                        break;
+                    case ExportFormat.Aco:
+                        await System.IO.File.WriteAllBytesAsync(path, PaletteBinaryExportService.WriteAco(Palette));
+                        break;
+                    default:
+                        await System.IO.File.WriteAllTextAsync(path, PaletteExportService.Export(Palette, format));
+                        break;
+                }
+
+                StatusMessage = $"Exported {Palette.Count} color{(Palette.Count == 1 ? "" : "s")} to {System.IO.Path.GetFileName(path)}.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Couldn't export: {ex.Message}";
+            }
+        }
+
+        /// <summary>§6 "Export as PNG (swatch sheet)".</summary>
+        [RelayCommand]
+        private async Task ExportPngAsync()
+        {
+            var path = await PaletteFileService.PickSaveFileAsync(
+                $"palette-{DateTime.Now:yyyyMMdd-HHmmss}", "png", "PNG swatch sheet (*.png)");
+            if (string.IsNullOrEmpty(path))
+            {
+                StatusMessage = "Export cancelled.";
+                return;
+            }
+
+            try
+            {
+                PngExportService.Export(Palette, path);
+                StatusMessage = $"PNG swatch sheet saved to {System.IO.Path.GetFileName(path)}.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Couldn't render PNG: {ex.Message}";
+            }
         }
 
         // ---------------- Palette persistence ----------------

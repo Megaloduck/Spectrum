@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:Spectrum.Views"
+        xmlns:materialIcons="using:Material.Icons.Avalonia"
+        x:Class="Spectrum.Views.CommandPaletteWindow"
+        x:CompileBindings="True"
+        Title="Command palette"
+        Width="620" SizeToContent="Height" CanResize="False"
+        MaxHeight="560"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Icon="/Assets/Spectrum.ico"
+        Background="{DynamicResource SurfaceBrush}">
+
+    <StackPanel Margin="16" Spacing="10">
+
+        <Grid ColumnDefinitions="Auto,*">
+            <materialIcons:MaterialIcon Kind="Magnify" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="SearchBox" Grid.Column="1" FontSize="15" Padding="12,10"
+                     Watermark="Type a command… (Esc closes)"
+                     TextChanged="OnSearchChanged"/>
+        </Grid>
+
+        <ListBox x:Name="ResultsList" Background="Transparent" MaxHeight="380"
+                 DoubleTapped="OnResultActivated">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="views:CommandEntry">
+                    <Grid ColumnDefinitions="*,Auto" Margin="4,6">
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Hint}" Classes="caption"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <TextBlock Text="↑ ↓ to navigate · Enter to run · Esc to close"
+                   Classes="caption" FontSize="11"/>
+
+    </StackPanel>
+</Window>

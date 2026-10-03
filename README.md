@@ -30,18 +30,48 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
 
 ## ✨ Features
 
-- **Spacebar palette generation** — press `Space` anywhere in the window to regenerate every unlocked swatch, Coolors-style
-- **Color harmony engine** — generate from Complementary, Analogous, Triadic, Split-Complementary, Tetradic, or Monochromatic rules, or roll fully random colors
-- **Automatic color naming** — every swatch is matched against a curated CSS/X11 + extended color-name database using a redmean-weighted RGB distance (the same approach behind ntc.js)
-- **HSL + Temperature color panel** — live gradient-backed sliders for Hue, Saturation, Brightness, and warm/cool Temperature tinting
-- **Lock & shuffle** — lock swatches you want to keep, then shuffle the rest
-- **Drag-to-reorder** — rearrange swatches directly on the board
-- **Undo / redo** — full history across generate, add, remove, clear, and image-extract actions
-- **Color blindness simulation** — preview the whole board under Protanopia, Deuteranopia, Tritanopia, or Achromatopsia
-- **Extract palette from image** — histogram-based dominant color extraction from any image file
-- **Export** — JSON, CSS custom properties, SCSS variables, Tailwind config, or plain text, with one-click clipboard copy
-- **Light / dark theme toggle**
-- **Studio-style monochrome UI** driven entirely by a design-token stylesheet (`Styles/Theme.axaml`)
+**Palette management (§1)**
+- Palette **library sidebar**: create, inline-rename, duplicate, delete, **pin/favorite**, **search**, and filter (All / Pinned / Recent)
+- **Autosave with dirty state** (750 ms debounce), atomic writes, **crash-recovery journal**, rotating **backups**, and **per-palette version history** with one-click restore
+- **Tabs for open palettes**, whole-library import/export, and **detach a palette into its own window**
+
+**Swatch & color editing (§2)**
+- Full **spectrum picker dialog** (saturation/value plane + hue & opacity sliders) with **HEX / RGB / HSL / HSV input**, plus live **LAB/LCH/OKLCH readouts**
+- Manual hex entry, alpha control, **copy in 9 formats**, **paste from clipboard** (any notation), swatch labels, duplicate, inline large preview
+
+**Color picking (§3)**
+- **System-wide eyedropper** with pixel-grid magnifier and **global hotkey** (default `Ctrl+Alt+P`, rebindable) — Windows native interop, fully local
+- **In-app eyedropper** for exact pixels of any image, plus histogram-based extraction from images
+- **Recent-picked-colors history** (persisted, click to reuse)
+
+**Color science (§4)**
+- Conversions: HEX, RGB, HSL, HSV, **LAB, LCH, OKLCH** — live in the inspector
+- Harmonies: complementary, analogous, triadic, tetradic, split-complementary, monochromatic + random-with-lock
+- **Tints / shades / tones** generators, palette-from-base, palette-from-image
+- **WCAG AA/AAA** contrast checker *and* **APCA (Lc)** verdicts, live for the base color
+- **Color blindness simulation** (Protanopia, Deuteranopia, Tritanopia, Achromatopsia)
+
+**Import / export (§5–6, local files only)**
+- Import: JSON, **CSS variables**, **GPL (GIMP)**, **ASE (Adobe)**, **ACO (Photoshop)**, image extraction
+- Export: JSON, CSS, SCSS, **LESS**, Tailwind, **SVG**, **PNG swatch sheet**, **ASE / GPL / ACO**, plain text — copy to clipboard or save to file (the **Export workspace** holds the presets and preview)
+
+**Desktop UX (§7)**
+- **Four workspaces — Studio · Preview · Analyze · Export** (`Ctrl+1…4`): the top app bar switches the shell so each task only shows the panels it needs, instead of everything at once
+- Sidebar + resizable/collapsible panels (splitters everywhere), **Ctrl+K command palette**, full keyboard-shortcut map, **tabs**, **system tray** with quick access, multi-window detach, rich **tooltips with color info**
+
+**Preview & visualization (§8)**
+- **Live UI mockup** (buttons, cards, body text) rendered in your palette
+- **Side-by-side comparison** with any palette in the library, **swatch zoom view**, **contrast overlay badges** (WCAG + APCA) on every card
+- **Row / Grid / List / Compact view modes**, **dark/light variant generator**
+- Swatch cards read as **color + name + hex at rest**; the per-swatch action rail fades in on hover (lock stays visible)
+
+**Storage & settings (§9–10)**
+- **JSON file storage** (default) and **SQLite** storage behind one interface, with migration between them; autosave, backups, version history, whole-library import/export
+- Settings: theme, **accent color**, **density**, default copy/export formats, **hotkey configuration**, **storage location**, **reset / clear data**
+
+**Technical (§11)**
+- Cross-platform Avalonia UI (.NET 9), **MVVM** (CommunityToolkit), offline-first (**no background network calls**; update check runs only when you click it), accessibility labels on swatches, light/dark themes
+- Studio-style monochrome UI driven entirely by a design-token stylesheet (`Styles/Theme.axaml`), with a runtime accent override
 
 
 ## 🛠️ Tech Stack
@@ -67,16 +97,36 @@ dotnet run --project Spectrum.csproj
 
 Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) and hit run.
 
-## ⌨️ Usage
+## ⌨️ Usage & shortcuts
+
+The window has one **app bar** across the top: brand · workspace segments · quick actions. Switching a workspace only changes what the shell shows — the library and the board stay put.
+
+| Workspace | Shows |
+|---|---|
+| `Ctrl+1` **Studio** | Library · board · **Edit** dock (hex entry, sliders, harmonize, recent picks) + harmony / eyedropper toolbar |
+| `Ctrl+2` **Preview** | Library · board · **Preview** dock (live mockup, light/dark variants) + layout / compare toolbar |
+| `Ctrl+3` **Analyze** | Library · board · **Color science** dock (conversions, tints/shades/tones, WCAG + APCA) + color-blind / contrast-overlay toolbar |
+| `Ctrl+4` **Export** | Library · full-width **Export** (preview, copy, save, PNG sheet) and **Import** (CSS/GPL/ASE/ACO, library) — the dock steps aside |
 
 | Action | How |
 |---|---|
 | Generate a new palette | Press `Space`, or click **Press Space to Harmonize** |
 | Lock a color | Click the lock icon on a swatch |
-| Reorder colors | Drag a swatch card |
-| Simulate color blindness | **Color Blind** dropdown in the toolbar |
+| Reorder colors | Drag a swatch card (any view mode) |
+| Simulate color blindness | **Analyze** workspace (`Ctrl+3`) → **Color Blind** dropdown in the toolbar |
 | Extract colors from an image | **Extract from Image** in the toolbar |
-| Export a palette | **Export Palette** in the footer, pick a format, copy |
+| Screen eyedropper | **Screen** button or `Ctrl+Alt+P` (click anywhere to pick) |
+| Export a palette | **Export** workspace (`Ctrl+4`) → build a preview, copy, **Save to file…** or **PNG sheet…** |
+| Command palette | `Ctrl+K` |
+| Switch workspace | `Ctrl+1` Studio · `Ctrl+2` Preview · `Ctrl+3` Analyze · `Ctrl+4` Export |
+| Undo / redo | `Ctrl+Z` / `Ctrl+Y` |
+| Save / load a palette file | `Ctrl+S` / `Ctrl+O` |
+| New palette | `Ctrl+N` |
+| Duplicate / delete selected swatch | `Ctrl+D` / `Delete` |
+| Open color picker | Click the big base-color preview, or the palette icon on a swatch |
+| Collapse library / inspector | `Ctrl+B` / `Ctrl+I` |
+| Settings | `Ctrl+,` |
+| Export to file / PNG sheet | `Ctrl+E` / `Ctrl+J` |
 
 ## 🤝 Contributing
 

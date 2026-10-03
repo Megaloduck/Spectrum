@@ -30,6 +30,8 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <!-- §9 SQLite storage backend (kept next to the JSON file store) -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.1" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.1.9" />
 	  <PackageReference Include="Material.Icons" Version="3.0.2" />
   </ItemGroup>

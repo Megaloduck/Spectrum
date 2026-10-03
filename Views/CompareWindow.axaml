@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Spectrum.Views.CompareWindow"
+        x:CompileBindings="False"
+        Title="Compare palettes"
+        Width="900" Height="640"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/Spectrum.ico"
+        Background="{DynamicResource CanvasBrush}">
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="20">
+
+        <StackPanel Spacing="2">
+            <TextBlock Text="COMPARE PALETTES" Classes="eyebrow"/>
+            <TextBlock Text="Current palette on the left, pick another one on the right (§8)."
+                       Classes="subtitle"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,16,320" Margin="0,14,0,12">
+            <Border Grid.Column="0" Classes="panel" Padding="14">
+                <StackPanel Spacing="6">
+                    <TextBlock x:Name="LeftTitle" Text="Current" FontWeight="Bold" FontSize="15"/>
+                    <TextBlock x:Name="LeftCount" Classes="caption"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="2" Spacing="6">
+                <TextBlock Text="COMPARE WITH" Classes="eyebrow"/>
+                <ComboBox x:Name="PalettePicker" HorizontalAlignment="Stretch"
+                          DisplayMemberBinding="{Binding Name}"
+                          SelectionChanged="OnPickerChanged"
+                          ToolTip.Tip="Pick a palette from your library"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,16,*">
+            <Border Grid.Column="0" Classes="panel" Padding="14">
+                <ScrollViewer>
+                    <ItemsControl x:Name="LeftColumn">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="46,*,Auto" Margin="0,5">
+                                    <Border Width="46" Height="34" CornerRadius="8" Background="{Binding Brush}"
+                                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="{Binding Hex}" Classes="mono caption"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding Contrast}" Classes="caption"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <Border Grid.Column="2" Classes="panel" Padding="14">
+                <ScrollViewer>
+                    <ItemsControl x:Name="RightColumn">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="46,*,Auto" Margin="0,5">
+                                    <Border Width="46" Height="34" CornerRadius="8" Background="{Binding Brush}"
+                                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="{Binding Hex}" Classes="mono caption"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding Contrast}" Classes="caption"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+    </Grid>
+</Window>
