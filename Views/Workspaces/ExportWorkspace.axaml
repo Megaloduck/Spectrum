@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Spectrum.ViewModels"
+             xmlns:converters="using:Spectrum.Converters"
+             xmlns:local="using:Spectrum.Views"
+             x:Class="Spectrum.Views.Workspaces.ExportWorkspace"
+             x:DataType="vm:MainWindowViewModel">
+
+    <!-- Ctrl+4 — Move files in and out: export presets, PNG sheet, imports.
+         The board steps aside here, so this workspace fills the whole column. -->
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Toolbar: no workspace-specific controls — only the shared actions. -->
+        <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                <local:ToolbarGlobalsView Grid.Column="1"/>
+            </Grid>
+        </Border>
+
+        <!-- ============ EXPORT WORKSPACE (§5 import / §6 export) ============ -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,14,*">
+
+            <Border Classes="panel" Padding="22">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="EXPORT PALETTE" Classes="eyebrow"/>
+                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                   Text="Text formats build a preview you can copy; ASE / ACO and the PNG sheet write straight to a file."/>
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto" Margin="0,14,0,0">
+                        <ComboBox MinWidth="160" Height="38"
+                                  ItemsSource="{Binding ExportFormats}"
+                                  SelectedItem="{Binding SelectedExportFormat}"
+                                  ToolTip.Tip="Format used by Build preview / Save / Copy">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Grid.Column="1" Margin="8,0,0,0" Height="38"
+                                Command="{Binding BuildExportPreviewCommand}">
+                            Build preview
+                        </Button>
+                    </Grid>
+
+                    <TextBox Grid.Row="2" Text="{Binding ExportPreview}" AcceptsReturn="True"
+                             IsReadOnly="True" Margin="0,12,0,0" MinHeight="140"
+                             TextWrapping="Wrap" Classes="mono" FontSize="12"
+                             Watermark="Press Build preview to see the generated source"/>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                        <Button Content="Copy export" Command="{Binding CopyExportCommand}"/>
+                        <Button Content="Save to file…" Command="{Binding ExportToFileCommand}"
+                                ToolTip.Tip="ASE / ACO and other binary formats always write to disk (Ctrl+E)"/>
+                        <Button Content="PNG sheet…" Command="{Binding ExportPngCommand}"
+                                ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Classes="panel" Padding="22">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="IMPORT" Classes="eyebrow"/>
+                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                   Text="Bring palettes in, or move the whole library between machines."/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Spacing="10" Margin="0,14,0,0">
+                        <Button Content="Import palette file…  (CSS / GPL / ASE / ACO)"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding Library.ImportPaletteFileCommand}"/>
+                        <Button Content="Load palette from file…  (Ctrl+O)"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding LoadPaletteCommand}"/>
+
+                        <Separator Margin="0,8,0,0"/>
+                        <TextBlock Text="WHOLE LIBRARY" Classes="eyebrow"/>
+                        <Button Content="Export whole library…" HorizontalAlignment="Stretch"
+                                Command="{Binding Library.ExportLibraryCommand}"/>
+                        <Button Content="Import library…" HorizontalAlignment="Stretch"
+                                Command="{Binding Library.ImportLibraryCommand}"/>
+
+                        <Separator Margin="0,8,0,0"/>
+                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                   Text="Everything is stored locally — JSON or SQLite, switchable in Settings. No account, no cloud."/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+
+        <local:StatusBarView Grid.Row="2"/>
+
+    </Grid>
+</UserControl>

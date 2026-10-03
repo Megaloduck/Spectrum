@@ -1,0 +1,141 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Spectrum.ViewModels"
+             xmlns:converters="using:Spectrum.Converters"
+             xmlns:materialIcons="using:Material.Icons.Avalonia"
+             xmlns:local="using:Spectrum.Views"
+             x:Class="Spectrum.Views.Workspaces.PreviewWorkspace"
+             x:DataType="vm:MainWindowViewModel">
+
+    <!-- Ctrl+2 — See the palette: layout, live mockup, variants, side-by-side compare. -->
+
+    <Grid x:Name="WorkspaceRoot" ColumnDefinitions="*,12,330">
+
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                      Background="Transparent" Width="12"
+                      IsVisible="{Binding InspectorVisible}"
+                      ToolTip.Tip="Drag to resize the workspace dock"/>
+
+        <!-- ============ DOCK · PREVIEW: mockup, variants ============ -->
+        <Border Grid.Column="2" Classes="panel" IsVisible="{Binding InspectorVisible}">
+            <Grid RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,Auto" Margin="20,16,20,10">
+                    <StackPanel Spacing="1">
+                        <TextBlock Text="PREVIEW" Classes="eyebrow"/>
+                        <TextBlock Text="Mockup, variants and compare" Classes="caption" FontSize="11"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="ghost" Command="{Binding ToggleInspectorCommand}"
+                            Padding="6,4" ToolTip.Tip="Collapse the dock (Ctrl+I)">
+                        <materialIcons:MaterialIcon Kind="ChevronRight" Width="17" Height="17"/>
+                    </Button>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1">
+            <Grid ColumnDefinitions="*,Auto" Margin="20,0,20,20">
+
+                <Border Classes="panel" Padding="16">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="LIVE UI MOCKUP" Classes="eyebrow"/>
+                            <TextBlock Grid.Column="1" Classes="caption"
+                                       Text="buttons, cards &amp; text in your palette"/>
+                        </Grid>
+
+                        <Border Background="{Binding MockupBackgroundBrush}" CornerRadius="12" Padding="18"
+                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Project dashboard" FontWeight="Bold" FontSize="17"
+                                               Foreground="{Binding MockupTextBrush}"/>
+                                    <Border Grid.Column="1" Background="{Binding MockupAccentBrush}"
+                                            CornerRadius="10" Padding="10,4">
+                                        <TextBlock Text="Beta" FontSize="11" FontWeight="Bold"
+                                                   Foreground="{Binding MockupAccentForegroundBrush}"/>
+                                    </Border>
+                                </Grid>
+
+                                <TextBlock FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{Binding MockupTextBrush}"
+                                           Text="Body copy set in your palette's own most-readable color, so you can judge contrast at a glance."/>
+
+                                <Border Background="{Binding MockupSurfaceBrush}" CornerRadius="10" Padding="14"
+                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Card title" FontWeight="SemiBold"
+                                                   Foreground="{Binding MockupTextBrush}"/>
+                                        <TextBlock FontSize="12" TextWrapping="Wrap" Opacity="0.8"
+                                                   Foreground="{Binding MockupTextBrush}"
+                                                   Text="Secondary surfaces use lighter tints derived from the last color in your palette."/>
+                                    </StackPanel>
+                                </Border>
+
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button Content="Primary action" FontWeight="SemiBold" BorderThickness="0"
+                                            Background="{Binding MockupPrimaryBrush}"
+                                            Foreground="{Binding MockupPrimaryForegroundBrush}"/>
+                                    <Button Content="Secondary"
+                                            Foreground="{Binding MockupTextBrush}"
+                                            Background="Transparent"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Dark / light mode variant generator (§8) -->
+                <StackPanel Grid.Column="1" Spacing="8" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="VARIANTS" Classes="eyebrow" HorizontalAlignment="Center"/>
+                    <Button Content="Light mode" Command="{Binding GenerateLightVariantCommand}"
+                            ToolTip.Tip="Create a lighter sibling palette from these colors"/>
+                    <Button Content="Dark mode" Command="{Binding GenerateDarkVariantCommand}"
+                            ToolTip.Tip="Create a darker sibling palette from these colors"/>
+                    <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap" Width="118"
+                               TextAlignment="Center"
+                               Text="Generates derived palettes and opens them as a new tab"/>
+                </StackPanel>
+            </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ============ CENTER: toolbar + palette board ============ -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
+
+            <!-- Toolbar: Preview's own controls on the left, shared actions right. -->
+            <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
+                <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                    <!-- View mode (§8 grid / list / compact) -->
+                    <ComboBox MinWidth="110" Height="38" Margin="0,0,4,0"
+                              ItemsSource="{Binding ViewModes}" SelectedItem="{Binding ViewMode}"
+                              ToolTip.Tip="Board layout: Row / Grid / List / Compact">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Side-by-side comparison (§8) -->
+                    <Button Height="38" Margin="0,0,4,0"
+                            Command="{Binding ComparePalettesCommand}"
+                            ToolTip.Tip="Compare this palette side-by-side with another one">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="ViewColumn" Width="16" Height="16"/>
+                            <TextBlock Text="Compare" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                </WrapPanel>
+
+                <local:ToolbarGlobalsView Grid.Column="1"/>
+                </Grid>
+            </Border>
+
+            <local:PaletteBoardView Grid.Row="1"/>
+
+        </Grid>
+
+    </Grid>
+</UserControl>

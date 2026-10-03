@@ -1,0 +1,167 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Spectrum.ViewModels"
+             xmlns:converters="using:Spectrum.Converters"
+             xmlns:materialIcons="using:Material.Icons.Avalonia"
+             xmlns:local="using:Spectrum.Views"
+             x:Class="Spectrum.Views.Workspaces.AnalyzeWorkspace"
+             x:DataType="vm:MainWindowViewModel">
+
+    <!-- Ctrl+3 — Measure the palette: conversions, contrast, color-vision simulation. -->
+
+    <Grid x:Name="WorkspaceRoot" ColumnDefinitions="*,12,330">
+
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                      Background="Transparent" Width="12"
+                      IsVisible="{Binding InspectorVisible}"
+                      ToolTip.Tip="Drag to resize the workspace dock"/>
+
+        <!-- ============ DOCK · ANALYZE: color science + contrast (§4) ============ -->
+        <Border Grid.Column="2" Classes="panel" Padding="16" IsVisible="{Binding InspectorVisible}">
+            <ScrollViewer>
+                <StackPanel Spacing="8">
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="COLOR SCIENCE" Classes="eyebrow"/>
+                            <TextBlock Text="Contrast, conversions and simulation" Classes="caption"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="ghost" Command="{Binding ToggleInspectorCommand}"
+                                Padding="6,4" ToolTip.Tip="Collapse the dock (Ctrl+I)">
+                            <materialIcons:MaterialIcon Kind="ChevronRight" Width="17" Height="17"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Conversion readouts: HEX / RGB / HSL / HSV / LAB / OKLCH -->
+                    <Grid ColumnDefinitions="58,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                        <TextBlock Text="HEX" Classes="caption" VerticalAlignment="Center" Margin="0,2,0,6"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ScienceHex}" Classes="mono" FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,2,0,6"/>
+
+                        <TextBlock Grid.Row="1" Text="RGB" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ScienceRgb}" Classes="mono" FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                        <TextBlock Grid.Row="2" Text="HSL" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ScienceHsl}" Classes="mono" FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                        <TextBlock Grid.Row="3" Text="HSV" Classes="caption" VerticalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ScienceHsv}" Classes="mono" FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                        <TextBlock Grid.Row="4" Text="LAB" Classes="caption" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ScienceLab}" Classes="mono" FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                        <TextBlock Grid.Row="5" Text="OKLCH" Classes="caption" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ScienceOklch}" Classes="mono" FontSize="12"
+                                   TextWrapping="Wrap"/>
+                    </Grid>
+
+                    <!-- Tints / shades / tones generators -->
+                    <Separator/>
+                    <TextBlock Text="GENERATE FROM BASE" Classes="eyebrow"/>
+                    <Grid ColumnDefinitions="*,*,*">
+                        <Button Grid.Column="0" Content="Tints" Command="{Binding AddTintsCommand}"
+                                Margin="0,0,5,0" FontSize="12" Padding="8,8"
+                                ToolTip.Tip="Add lighter steps (mix toward white) to the palette"/>
+                        <Button Grid.Column="1" Content="Shades" Command="{Binding AddShadesCommand}"
+                                Margin="0,0,5,0" FontSize="12" Padding="8,8"
+                                ToolTip.Tip="Add darker steps (mix toward black) to the palette"/>
+                        <Button Grid.Column="2" Content="Tones" Command="{Binding AddTonesCommand}"
+                                FontSize="12" Padding="8,8"
+                                ToolTip.Tip="Add desaturated steps (mix toward gray) to the palette"/>
+                    </Grid>
+
+                    <!-- Contrast checker: WCAG 2.x + APCA -->
+                    <Separator/>
+                    <TextBlock Text="CONTRAST CHECKER" Classes="eyebrow"/>
+                    <TextBlock Text="{Binding ContrastPairLabel}" Classes="caption mono" FontSize="11"/>
+
+                    <Border Background="{Binding ContrastBackgroundBrush}" CornerRadius="10" Height="54"
+                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
+                            <TextBlock Text="Aa — sample text" FontWeight="Bold" FontSize="15"
+                                       Foreground="{Binding BaseColorBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Small body copy 14px" FontSize="11"
+                                       Foreground="{Binding BaseColorBrush}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding ContrastRatioLabel}" FontWeight="Bold" FontSize="16"/>
+                            <TextBlock Classes="caption" FontSize="11"
+                                       Text="{Binding ContrastPairLabel}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="2" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding ContrastRatingLabel}" FontWeight="Bold" FontSize="13"
+                                       ToolTip.Tip="WCAG AA/AAA — normal text"/>
+                            <TextBlock Text="{Binding ContrastRatingLargeLabel}" Classes="caption" FontSize="11"
+                                       ToolTip.Tip="WCAG AA/AAA — large text (18pt+/14pt+bold)"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding ApcaLabel}" FontWeight="SemiBold" FontSize="13"
+                                   ToolTip.Tip="APCA lightness contrast (§4) — positive = dark on light"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ApcaRatingLabel}" FontWeight="Bold" FontSize="13"
+                                   ToolTip.Tip="APCA verdict: Lc 60 ≈ WCAG 4.5:1, Lc 75 ≈ 7:1"/>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Content="White bg" Classes="ghost" Command="{Binding UseWhiteContrastBackgroundCommand}"
+                                FontSize="11" Padding="10,6"/>
+                        <Button Content="Black bg" Classes="ghost" Command="{Binding UseBlackContrastBackgroundCommand}"
+                                FontSize="11" Padding="10,6"/>
+                        <Button Content="Pick…" Classes="ghost" Command="{Binding PickContrastBackgroundCommand}"
+                                FontSize="11" Padding="10,6"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ============ CENTER: toolbar + palette board ============ -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
+
+            <!-- Toolbar: Analyze's own controls on the left, shared actions right. -->
+            <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
+                <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                    <!-- Color Blind Mode -->
+                    <ComboBox MinWidth="150" Height="38" Margin="0,0,4,0"
+                              ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
+                              ToolTip.Tip="Preview the board as someone with this color vision would see it">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Contrast overlay on swatches (§8) -->
+                    <ToggleButton Height="38" Margin="0,0,4,0" Padding="12,0"
+                                  IsChecked="{Binding ShowContrastOverlay}"
+                                  ToolTip.Tip="Overlay every swatch with its WCAG + APCA contrast verdicts">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="ScaleBalance" Width="16" Height="16"/>
+                            <TextBlock Text="Aa overlay" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
+
+                </WrapPanel>
+
+                <local:ToolbarGlobalsView Grid.Column="1"/>
+                </Grid>
+            </Border>
+
+            <local:PaletteBoardView Grid.Row="1"/>
+
+        </Grid>
+
+    </Grid>
+</UserControl>

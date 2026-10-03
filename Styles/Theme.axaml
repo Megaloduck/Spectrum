@@ -217,6 +217,26 @@
     <Setter Property="IsHitTestVisible" Value="True"/>
   </Style>
 
+  <!-- ===================== Library palette row rails =====================
+       Same idea as the swatch rails above, for the sidebar: the delete action
+       fades in on hover so a row reads as color + name + count at rest, while
+       the pin toggle stays visible. Opacity (not IsVisible) is used on purpose
+       so the row never reflows under the pointer. -->
+  <Style Selector="ListBox.paletteList ListBoxItem Button.paletteRail">
+    <Setter Property="Opacity" Value="0"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <anim:DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <Style Selector="ListBox.paletteList ListBoxItem:pointerover Button.paletteRail">
+    <Setter Property="Opacity" Value="1"/>
+    <Setter Property="IsHitTestVisible" Value="True"/>
+  </Style>
+
   <!-- Borderless inline name field on a swatch card -->
   <Style Selector="TextBox.swatchName">
     <Setter Property="Background" Value="Transparent"/>

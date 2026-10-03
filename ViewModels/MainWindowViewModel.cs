@@ -70,43 +70,20 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private WorkspaceMode _workspaceMode = WorkspaceMode.Studio;
 
-        /// <summary>Raised when the shell must re-measure its columns (handled in code-behind).</summary>
-        public event Action? WorkspaceModeChanged;
-
         partial void OnWorkspaceModeChanged(WorkspaceMode value)
         {
+            // Each workspace is a dedicated view that the shell shows/hides from
+            // these flags, so switching only has to refresh them.
             OnPropertyChanged(nameof(IsStudioMode));
             OnPropertyChanged(nameof(IsPreviewMode));
             OnPropertyChanged(nameof(IsAnalyzeMode));
             OnPropertyChanged(nameof(IsExportMode));
-            OnPropertyChanged(nameof(IsBoardMode));
-            OnPropertyChanged(nameof(WorkspaceTitle));
-            OnPropertyChanged(nameof(WorkspaceBlurb));
-            WorkspaceModeChanged?.Invoke();
         }
 
         public bool IsStudioMode => WorkspaceMode == WorkspaceMode.Studio;
         public bool IsPreviewMode => WorkspaceMode == WorkspaceMode.Preview;
         public bool IsAnalyzeMode => WorkspaceMode == WorkspaceMode.Analyze;
         public bool IsExportMode => WorkspaceMode == WorkspaceMode.Export;
-
-        /// <summary>The palette board is on screen for every workspace except Export.</summary>
-        public bool IsBoardMode => WorkspaceMode != WorkspaceMode.Export;
-
-        public string WorkspaceTitle => WorkspaceMode switch
-        {
-            WorkspaceMode.Preview => "PREVIEW",
-            WorkspaceMode.Analyze => "COLOR SCIENCE",
-            _ => "EDIT COLOR",
-        };
-
-        public string WorkspaceBlurb => WorkspaceMode switch
-        {
-            WorkspaceMode.Studio => "Harmony, eyedroppers and sliders",
-            WorkspaceMode.Preview => "Mockup, variants and compare",
-            WorkspaceMode.Analyze => "Contrast, conversions and simulation",
-            _ => "Write files out, bring files in",
-        };
 
         /// <summary>App-bar segment switch + Ctrl+1..4 + command palette.</summary>
         [RelayCommand]
@@ -500,16 +477,21 @@ namespace Spectrum.ViewModels
             StatusMessage = $"Picked {ColorMathService.ToHex(color)} from {source} — add it to the palette when happy.";
         }
 
-        // Panel collapse toggles (§7 "Resizable / collapsible panels") — the
-        // window code-behind subscribes and adjusts the grid columns.
-        public event Action? ToggleLibraryRequested;
-        public event Action? ToggleInspectorRequested;
+        // Panel collapse toggles (§7 "Resizable / collapsible panels"). Plain
+        // bindable flags: the shell binds the library column to LibraryVisible and
+        // every workspace binds its own dock to InspectorVisible, so no view has to
+        // subscribe to an event to know when a panel closed.
+        [ObservableProperty]
+        private bool _libraryVisible = true;
+
+        [ObservableProperty]
+        private bool _inspectorVisible = true;
 
         [RelayCommand]
-        private void ToggleLibraryPanel() => ToggleLibraryRequested?.Invoke();
+        private void ToggleLibraryPanel() => LibraryVisible = !LibraryVisible;
 
         [RelayCommand]
-        private void ToggleInspector() => ToggleInspectorRequested?.Invoke();
+        private void ToggleInspector() => InspectorVisible = !InspectorVisible;
 
         /// <summary>§7 "Multi-window support": detach the current palette into its own window.</summary>
         [RelayCommand]
