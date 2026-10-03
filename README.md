@@ -2,14 +2,16 @@
 
 # 🎨 Spectrum
 
-**an intuitive color palette editor built with Avalonia UI. Create, generate, and export beautiful color palettes for your design projects.**
+**An intuitive color palette editor built with Avalonia UI. Create, generate, and export beautiful color palettes for your design projects.**
 
-Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C# desktop app.
-
-![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)
-![Avalonia](https://img.shields.io/badge/Avalonia%20UI-11-6f2dbd?logo=avalonia&logoColor=white)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Avalonia](https://img.shields.io/badge/Avalonia%20UI-11.2-6f2dbd?logo=avalonia&logoColor=white)](https://avaloniaui.net/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational)](https://github.com/Megaloduck/Spectrum)
+[![License](https://img.shields.io/github/license/Megaloduck/Spectrum?color=green)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/Megaloduck/Spectrum?logo=github)](https://github.com/Megaloduck/Spectrum/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Megaloduck/Spectrum/total?color=blue)](https://github.com/Megaloduck/Spectrum/releases)
+[![Stars](https://img.shields.io/github/stars/Megaloduck/Spectrum?style=social)](https://github.com/Megaloduck/Spectrum)
+[![Issues](https://img.shields.io/github/issues/Megaloduck/Spectrum)](https://github.com/Megaloduck/Spectrum/issues)
 
 </div>
 
@@ -22,10 +24,10 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
   Suggested path: docs/demo.gif
 -->
 <p align="center">
-  
   <img src="docs/screenshot1.png" alt="Spectrum app screenshot" width="49%"/>
   <img src="docs/screenshot2.png" alt="Spectrum app screenshot" width="49%"/>
 </p>
+
 <br/>
 
 ## ✨ Features
@@ -73,7 +75,6 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
 - Cross-platform Avalonia UI (.NET 9), **MVVM** (CommunityToolkit), offline-first (**no background network calls**; update check runs only when you click it), accessibility labels on swatches, light/dark themes
 - Studio-style monochrome UI driven entirely by a design-token stylesheet (`Styles/Theme.axaml`), with a runtime accent override
 
-
 ## 🛠️ Tech Stack
 
 - [Avalonia UI](https://avaloniaui.net/) 11 (.NET 9, cross-platform desktop)
@@ -89,24 +90,15 @@ Inspired by [Coolors.co](https://coolors.co), reimagined as a native, offline C#
 ### Run it
 
 ```bash
-git clone https://github.com/<your-username>/spectrum.git
-cd spectrum
+git clone https://github.com/Megaloduck/Spectrum.git
+cd Spectrum
 dotnet restore
 dotnet run --project Spectrum.csproj
 ```
 
 Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) and hit run.
 
-## ⌨️ Usage & shortcuts
-
-The window has one **app bar** across the top: brand · workspace segments · quick actions. Switching a workspace only changes what the shell shows — the library and the board stay put.
-
-| Workspace | Shows |
-|---|---|
-| `Ctrl+1` **Studio** | Library · board · **Edit** dock (hex entry, sliders, harmonize, recent picks) + harmony / eyedropper toolbar |
-| `Ctrl+2` **Preview** | Library · board · **Preview** dock (live mockup, light/dark variants) + layout / compare toolbar |
-| `Ctrl+3` **Analyze** | Library · board · **Color science** dock (conversions, tints/shades/tones, WCAG + APCA) + color-blind / contrast-overlay toolbar |
-| `Ctrl+4` **Export** | Library · full-width **Export** (preview, copy, save, PNG sheet) and **Import** (CSS/GPL/ASE/ACO, library) — the dock steps aside |
+## ⌨️ Usage
 
 | Action | How |
 |---|---|
@@ -130,8 +122,14 @@ The window has one **app bar** across the top: brand · workspace segments · qu
 
 ## 🤝 Contributing
 
-This started as a personal project, but issues and PRs are welcome — especially around the roadmap items above.
+Contributions are welcome! Feel free to open an [issue](https://github.com/Megaloduck/Spectrum/issues) or submit a [pull request](https://github.com/Megaloduck/Spectrum/pulls).
 
 ## 📄 License
 
-[MIT](LICENSE) — replace with your actual license of choice if different.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+  Made by @Megaloduck with ❤️ using Avalonia UI
+</div>
