@@ -19,14 +19,11 @@ namespace Spectrum.Views
         private const double MarkerSize = 16;
 
         private readonly ColorPickerViewModel _vm;
+        private bool _draggingPlane;
 
         /// <summary>Design-time only — the real dialog is created with an initial color.</summary>
         public ColorPickerDialog() : this(Colors.Black)
         {
-            // The designer (and compiled bindings) need a live DataContext; the runtime
-            // constructor always sets one, but the parameterless constructor historically did
-            // not, which left every {Binding} on the dialog blank in the designer.
-            DataContext = _vm;
         }
 
         public ColorPickerDialog(Color initial)
@@ -56,6 +53,9 @@ namespace Spectrum.Views
         private void OnPlanePressed(object? sender, PointerPressedEventArgs e)
         {
             if (sender is not Border plane) return;
+            if (!e.GetCurrentPoint(plane).Properties.IsLeftButtonPressed) return;
+
+            _draggingPlane = true;
             UpdateFromPosition(plane, e.GetPosition(plane));
             e.Pointer.Capture(plane);
             e.Handled = true;
@@ -63,18 +63,24 @@ namespace Spectrum.Views
 
         private void OnPlaneMoved(object? sender, PointerEventArgs e)
         {
-            if (sender is not Border plane) return;
-            if (!e.GetCurrentPoint(plane).Properties.IsLeftButtonPressed) return;
+            if (!_draggingPlane || sender is not Border plane) return;
             UpdateFromPosition(plane, e.GetPosition(plane));
         }
 
         private void OnPlaneReleased(object? sender, PointerReleasedEventArgs e)
         {
-            if (sender is Border plane) e.Pointer.Capture(null);
+            _draggingPlane = false;
+            e.Pointer.Capture(null);
+        }
+
+        private void OnPlaneCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+        {
+            _draggingPlane = false;
         }
 
         private void UpdateFromPosition(Border plane, Point p)
         {
+            // Use the inner content size so the border thickness doesn't skew the mapping.
             var w = plane.Bounds.Width;
             var h = plane.Bounds.Height;
             if (w <= 0 || h <= 0) return;

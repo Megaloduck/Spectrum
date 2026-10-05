@@ -34,6 +34,57 @@ namespace Spectrum.ViewModels
             _alpha = initial.A / 255.0 * 100;
         }
 
+        // ---------------- Static gradient brushes ----------------
+        // These are built in code with RelativeUnit.Relative on purpose. In XAML,
+        // StartPoint="0,0" / EndPoint="1,1" (no % sign) is parsed as ABSOLUTE
+        // pixels, so the gradient collapses to a 1px line and the plane renders
+        // solid black / the hue bar solid red. Relative points always span the
+        // full control, whatever its size.
+
+        /// <summary>Hue slider track: the full red → red rainbow.</summary>
+        public IBrush HueTrackBrush { get; } = CreateGradient(
+            new RelativePoint(0, 0.5, RelativeUnit.Relative),
+            new RelativePoint(1, 0.5, RelativeUnit.Relative),
+            (Color.FromRgb(255, 0, 0), 0.0),
+            (Color.FromRgb(255, 255, 0), 1.0 / 6),
+            (Color.FromRgb(0, 255, 0), 2.0 / 6),
+            (Color.FromRgb(0, 255, 255), 3.0 / 6),
+            (Color.FromRgb(0, 0, 255), 4.0 / 6),
+            (Color.FromRgb(255, 0, 255), 5.0 / 6),
+            (Color.FromRgb(255, 0, 0), 1.0));
+
+        /// <summary>
+        /// Plane overlay 1 (saturation): opaque white on the left fading to fully
+        /// transparent white on the right. Both stops use white RGB so the fade
+        /// never passes through a gray tint.
+        /// </summary>
+        public IBrush SaturationOverlayBrush { get; } = CreateGradient(
+            new RelativePoint(0, 0.5, RelativeUnit.Relative),
+            new RelativePoint(1, 0.5, RelativeUnit.Relative),
+            (Color.FromArgb(255, 255, 255, 255), 0.0),
+            (Color.FromArgb(0, 255, 255, 255), 1.0));
+
+        /// <summary>
+        /// Plane overlay 2 (value): fully transparent black on top fading to opaque
+        /// black at the bottom.
+        /// </summary>
+        public IBrush ValueOverlayBrush { get; } = CreateGradient(
+            new RelativePoint(0.5, 0, RelativeUnit.Relative),
+            new RelativePoint(0.5, 1, RelativeUnit.Relative),
+            (Color.FromArgb(0, 0, 0, 0), 0.0),
+            (Color.FromArgb(255, 0, 0, 0), 1.0));
+
+        private static LinearGradientBrush CreateGradient(
+            RelativePoint start, RelativePoint end, params (Color Color, double Offset)[] stops)
+        {
+            var brush = new LinearGradientBrush { StartPoint = start, EndPoint = end };
+            foreach (var (color, offset) in stops)
+                brush.GradientStops.Add(new GradientStop(color, offset));
+            return brush;
+        }
+
+        // ---------------- Derived colors ----------------
+
         /// <summary>The picked color including alpha.</summary>
         public Color CurrentColor =>
             ColorMathService.HsvToRgb(
@@ -61,22 +112,17 @@ namespace Spectrum.ViewModels
 
         /// <summary>
         /// Spectrum plane base layer: solid, fully-saturated hue.
-        /// The white→transparent (saturation) and transparent→black (value)
-        /// overlays are drawn as separate layers on top in XAML.
+        /// The saturation and value overlays are separate layers on top
+        /// (<see cref="SaturationOverlayBrush"/>, <see cref="ValueOverlayBrush"/>).
         /// </summary>
         public IBrush PlaneHueBrush => new SolidColorBrush(PureHueColor);
 
         /// <summary>Opacity slider track: transparent → current opaque color.</summary>
-        public IBrush AlphaTrackBrush => new LinearGradientBrush
-        {
-            StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
-            EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
-            GradientStops =
-            {
-                new GradientStop(Color.FromArgb(0, OpaqueColor.R, OpaqueColor.G, OpaqueColor.B), 0),
-                new GradientStop(OpaqueColor, 1),
-            },
-        };
+        public IBrush AlphaTrackBrush => CreateGradient(
+            new RelativePoint(0, 0.5, RelativeUnit.Relative),
+            new RelativePoint(1, 0.5, RelativeUnit.Relative),
+            (Color.FromArgb(0, OpaqueColor.R, OpaqueColor.G, OpaqueColor.B), 0.0),
+            (OpaqueColor, 1.0));
 
         public string Hex => ColorMathService.ToHex(OpaqueColor);
 
@@ -92,7 +138,7 @@ namespace Spectrum.ViewModels
                 var a = Alpha / 100.0;
                 return a >= 0.999
                     ? $"rgb({c.R}, {c.G}, {c.B})"
-                    : $"rgba({c.R}, {c.G}, {c.B}, {Math.Round(a, 2)})";
+                    : FormattableString.Invariant($"rgba({c.R}, {c.G}, {c.B}, {Math.Round(a, 2)})");
             }
         }
 
@@ -178,7 +224,7 @@ namespace Spectrum.ViewModels
             ApplyColor(color);
 
             // Only an 8-digit input (RRGGBBAA) carries meaningful alpha.
-            if (text.Trim().TrimStart('#').Length == 8)
+            if (text.Trim().TrimStart('#').Trim().Length == 8)
                 Alpha = color.A / 255.0 * 100;
 
             InputFeedback = string.Empty;
@@ -186,32 +232,25 @@ namespace Spectrum.ViewModels
         }
 
         public bool TryApplyRgb(string text) => ApplyTriplet(text, "RGB", parts =>
-        {
-            var a = OpaqueColor.A;
-            ApplyColor(Color.FromArgb(a, ToByte(parts[0]), ToByte(parts[1]), ToByte(parts[2])));
-        });
+            ApplyColor(Color.FromRgb(ToByte(parts[0]), ToByte(parts[1]), ToByte(parts[2]))));
 
         public bool TryApplyHsl(string text) => ApplyTriplet(text, "HSL", parts =>
         {
             // Values arrive as (hue 0-360, sat %, lightness %) as displayed.
-            var a = OpaqueColor.A;
             var color = ColorMathService.HslToRgb(
                 parts[0],
                 Math.Clamp(parts[1], 0, 100) / 100.0,
-                Math.Clamp(parts[2], 0, 100) / 100.0,
-                a);
+                Math.Clamp(parts[2], 0, 100) / 100.0);
             ApplyColor(color);
         });
 
         public bool TryApplyHsv(string text) => ApplyTriplet(text, "HSV", parts =>
         {
-            var a = OpaqueColor.A;
             var color = ColorMathService.HsvToRgb(
                 new HsvColor(
                     parts[0],
                     Math.Clamp(parts[1], 0, 100) / 100.0,
-                    Math.Clamp(parts[2], 0, 100) / 100.0),
-                a);
+                    Math.Clamp(parts[2], 0, 100) / 100.0));
             ApplyColor(color);
         });
 
@@ -232,7 +271,8 @@ namespace Spectrum.ViewModels
         }
 
         /// <summary>
-        /// Applies a picked color to the plane state.
+        /// Applies a picked color to the plane state (alpha is left untouched —
+        /// it is controlled by the Opacity slider or an 8-digit hex).
         /// Preserves the current hue when the incoming color has no chroma
         /// information (black, white, grays), so the hue slider doesn't snap
         /// to red when the user drags to the S=0 or V=0 corner.
