@@ -31,15 +31,25 @@
 
       </ResourceDictionary.ThemeDictionaries>
 
-      <!-- Accent (Settings → "Accent color" overrides this at runtime; see
-           SettingsService.ApplyAccent). Used for active tabs and other
-           "you are here" affordances. -->
-      <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
+      <!-- =====================================================================
+           §11 accented palette
+             - DangerBrush is deliberately NOT a theme dictionary entry: it is a
+               hard-coded foreground tint used only inside controlled warning /
+               confirmation surfaces (library delete button, Settings reset
+               panel, ColorPickerDialog input feedback). Giving it a token lets
+               grep verify the red #E5484D no longer leaks into chrome.
+             - AccentBrush keeps its monochrome ink default (#3B82F6 / #0F766E)
+               as an opt-in free-color accent that SettingsService.ApplyAccent
+               swaps in at runtime. No free-color ink in the default chrome.
+           ===================================================================== -->
+      <SolidColorBrush x:Key="DangerBrush" Color="#E5484D"/>
+
+      <SolidColorBrush x:Key="AccentBrush" Color="#0F766E"/>
+
     </ResourceDictionary>
   </Styles.Resources>
 
-  <!-- ===================== Density (§10 "accent / density settings") =====================
-       Settings → Density: Compact adds this class to the window. -->
+  <!-- ===================== Density ===================== -->
   <Style Selector="Window.compact">
     <Setter Property="FontSize" Value="12"/>
   </Style>
@@ -61,7 +71,6 @@
   <Style Selector="TextBlock">
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
-
 
 
   <!-- ===================== Typography ===================== -->
@@ -101,11 +110,9 @@
   </Style>
 
   <!-- ===================== Buttons ===================== -->
-  <!-- Every button in the reference design is the same flat white /
-       black-outline look � no filled "primary" style � so Button and
-       Button.primary render identically. Keeping both classes means
-       existing bindings that reference Classes="primary" don't need
-       to change. -->
+  <!-- Every button in the reference design is the same flat white / black-outline
+       look: no filled "primary" style. Both classes render identically, so
+       existing bindings that reference Classes="primary" keep working. -->
   <Style Selector="Button, Button.primary">
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -123,6 +130,15 @@
     <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
   </Style>
 
+  <Style Selector="Button:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource OutlineBrush}"/>
+  </Style>
+
+  <Style Selector="Button:focus-visible /template/ ContentPresenter">
+    <!-- BoxShadow is applied to the ContentPresenter; it doesn't move the button. -->
+    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E, inset 0 0 0 1 #FFFFFF"/>
+  </Style>
+
   <Style Selector="Button:disabled /template/ ContentPresenter">
     <Setter Property="Opacity" Value="0.4"/>
   </Style>
@@ -137,8 +153,8 @@
   </Style>
 
   <!-- Small overlay icon/text buttons on top of a colored swatch bar.
-       Foreground is bound per-item (see ForegroundBrush) so text/icons
-       stay readable against whatever color the bar is. -->
+       Foreground is bound per-item (see ForegroundBrush) so text/icons stay
+       readable against whatever color the bar is. -->
   <Style Selector="Button.iconOnly">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
@@ -151,6 +167,14 @@
 
   <Style Selector="Button.iconOnly:pointerover /template/ ContentPresenter">
     <Setter Property="Background" Value="#22000000"/>
+  </Style>
+
+  <Style Selector="Button.iconOnly:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#44000000"/>
+  </Style>
+
+  <Style Selector="Button.iconOnly:focus-visible /template/ ContentPresenter">
+    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
   </Style>
 
   <Style Selector="ToggleButton.iconOnly">
@@ -172,9 +196,15 @@
     <Setter Property="Background" Value="#22000000"/>
   </Style>
 
+  <Style Selector="ToggleButton.iconOnly:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#44000000"/>
+  </Style>
+
+  <Style Selector="ToggleButton.iconOnly:focus-visible /template/ ContentPresenter">
+    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
+  </Style>
+
   <!-- ===================== Workspace nav (app bar) ===================== -->
-  <!-- Segment switch for Studio / Preview / Analyze / Export. The active
-       segment is bound through Classes.active (see MainWindow.axaml). -->
   <Style Selector="Button.wsTab">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
@@ -191,17 +221,21 @@
     <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
   </Style>
 
+  <Style Selector="Button.wsTab:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource OutlineBrush}"/>
+  </Style>
+
+  <Style Selector="Button.wsTab:focus-visible /template/ ContentPresenter">
+    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
+  </Style>
+
   <Style Selector="Button.wsTab.active">
     <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
 
-  <!-- ===================== Swatch action rails =====================
-       The per-swatch buttons fade out at rest so a card reads as pure color
-       + name + hex, and fade back in on hover. Opacity (not IsVisible) is used
-       on purpose so the card never reflows under the pointer. The lock toggle
-       sits outside the rail so its state stays readable at rest. -->
+  <!-- ===================== Swatch & library row rails ===================== -->
   <Style Selector="Border.swatchCard StackPanel.swatchRail">
     <Setter Property="Opacity" Value="0"/>
     <Setter Property="IsHitTestVisible" Value="False"/>
@@ -217,11 +251,6 @@
     <Setter Property="IsHitTestVisible" Value="True"/>
   </Style>
 
-  <!-- ===================== Library palette row rails =====================
-       Same idea as the swatch rails above, for the sidebar: the delete action
-       fades in on hover so a row reads as color + name + count at rest, while
-       the pin toggle stays visible. Opacity (not IsVisible) is used on purpose
-       so the row never reflows under the pointer. -->
   <Style Selector="ListBox.paletteList ListBoxItem Button.paletteRail">
     <Setter Property="Opacity" Value="0"/>
     <Setter Property="IsHitTestVisible" Value="False"/>
@@ -237,7 +266,6 @@
     <Setter Property="IsHitTestVisible" Value="True"/>
   </Style>
 
-  <!-- Borderless inline name field on a swatch card -->
   <Style Selector="TextBox.swatchName">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
@@ -257,12 +285,29 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
+  <Style Selector="TextBox:focus-visible">
+    <!-- OutlineBrush is the border; on focus, pull the border aside and
+         paint a monochrome focus ring so the field is navigable without
+         any free-color accent. -->
+    <Setter Property="BorderBrush" Value="#0F766E"/>
+    <Setter Property="Background" Value="#FFFFFF"/>
+    <Setter Property="BorderThickness" Value="2"/>
+  </Style>
+
   <Style Selector="ComboBox">
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
     <Setter Property="BorderThickness" Value="1.3"/>
     <Setter Property="CornerRadius" Value="10"/>
     <Setter Property="Padding" Value="10,8"/>
+  </Style>
+
+  <Style Selector="ComboBox:focus-visible">
+    <!-- The ComboBox renders its own focus ring via BorderBrush;
+         on focus, pull the border aside and paint a monochrome ring. -->
+    <Setter Property="BorderBrush" Value="#0F766E"/>
+    <Setter Property="Background" Value="#FFFFFF"/>
+    <Setter Property="BorderThickness" Value="2"/>
   </Style>
 
   <Style Selector="Separator">
@@ -272,37 +317,21 @@
   </Style>
 
   <!-- ===================== Sliders ===================== -->
-  <!-- Background carries the always-visible gradient track (bound per-slider
-       from the ViewModel, e.g. HueTrackBrush). Foreground is the "filled"
-       portion Avalonia normally draws up to the thumb � set to transparent
-       so the full gradient reads uniformly, like the reference design,
-       instead of looking like a progress bar. -->
-
-    <Style Selector="Slider:horizontal">
-
+  <Style Selector="Slider:horizontal">
     <Setter Property="Height" Value="50"/>
-
     <!-- Hide the default slider track -->
     <Style Selector="^ Track RepeatButton">
-        <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Background" Value="Transparent"/>
     </Style>
+  </Style>
 
-</Style>
-
-
-<!-- CUSTOM THUMB -->
-<Style Selector="Slider:horizontal /template/ Thumb">
-
+  <!-- CUSTOM THUMB -->
+  <Style Selector="Slider:horizontal /template/ Thumb">
     <Setter Property="Width" Value="5"/>
     <Setter Property="Height" Value="20"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
     <Setter Property="Background" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="4"/>
-
-</Style>
-    
-        
-
-
+  </Style>
 </Styles>

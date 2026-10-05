@@ -192,6 +192,10 @@ namespace Spectrum.Views
             Add("Workspace: Analyze — contrast & science", "Ctrl+3", vm.SetWorkspaceCommand, WorkspaceMode.Analyze);
             Add("Workspace: Export — files in and out", "Ctrl+4", vm.SetWorkspaceCommand, WorkspaceMode.Export);
 
+            // Analyze & studio tools
+            Add("Open contrast matrix", "Analyze — every pair scored", vm.OpenContrastMatrixCommand);
+            Add("Open gradient studio", "build & export a gradient", vm.OpenGradientStudioCommand);
+
             // Window & view
             Add("Toggle light / dark theme", "appearance", vm.ToggleThemeCommand);
             Add("Toggle library panel", "Ctrl+B", vm.ToggleLibraryPanelCommand);

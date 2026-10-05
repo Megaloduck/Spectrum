@@ -64,15 +64,18 @@
                     <Separator/>
                     <TextBlock Text="GENERATE FROM BASE" Classes="eyebrow"/>
                     <Grid ColumnDefinitions="*,*,*">
-                        <Button Grid.Column="0" Content="Tints" Command="{Binding AddTintsCommand}"
-                                Margin="0,0,5,0" FontSize="12" Padding="8,8"
-                                ToolTip.Tip="Add lighter steps (mix toward white) to the palette"/>
-                        <Button Grid.Column="1" Content="Shades" Command="{Binding AddShadesCommand}"
-                                Margin="0,0,5,0" FontSize="12" Padding="8,8"
-                                ToolTip.Tip="Add darker steps (mix toward black) to the palette"/>
-                        <Button Grid.Column="2" Content="Tones" Command="{Binding AddTonesCommand}"
-                                FontSize="12" Padding="8,8"
-                                ToolTip.Tip="Add desaturated steps (mix toward gray) to the palette"/>
+                        <Button Grid.Column="0" Classes="iconOnly" Command="{Binding AddTintsCommand}"
+                                ToolTip.Tip="Add lighter steps (mix toward white) to the palette">
+                            <materialIcons:MaterialIcon Kind="Flashlight" Width="18" Height="18"/>
+                        </Button>
+                        <Button Grid.Column="1" Classes="iconOnly" Command="{Binding AddShadesCommand}"
+                                ToolTip.Tip="Add darker steps (mix toward black) to the palette">
+                            <materialIcons:MaterialIcon Kind="NightLight" Width="18" Height="18"/>
+                        </Button>
+                        <Button Grid.Column="2" Classes="iconOnly" Command="{Binding AddTonesCommand}"
+                                ToolTip.Tip="Add desaturated steps (mix toward gray) to the palette">
+                            <materialIcons:MaterialIcon Kind="Equalizer" Width="18" Height="18"/>
+                        </Button>
                     </Grid>
 
                     <!-- Contrast checker: WCAG 2.x + APCA -->
@@ -112,12 +115,18 @@
                     </Grid>
 
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Button Content="White bg" Classes="ghost" Command="{Binding UseWhiteContrastBackgroundCommand}"
-                                FontSize="11" Padding="10,6"/>
-                        <Button Content="Black bg" Classes="ghost" Command="{Binding UseBlackContrastBackgroundCommand}"
-                                FontSize="11" Padding="10,6"/>
-                        <Button Content="Pick…" Classes="ghost" Command="{Binding PickContrastBackgroundCommand}"
-                                FontSize="11" Padding="10,6"/>
+                        <Button Classes="iconOnly" Command="{Binding UseWhiteContrastBackgroundCommand}"
+                                ToolTip.Tip="Use white as the contrast background">
+                            <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="18" Height="18"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding UseBlackContrastBackgroundCommand}"
+                                ToolTip.Tip="Use black as the contrast background">
+                            <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="18" Height="18"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding PickContrastBackgroundCommand}"
+                                ToolTip.Tip="Pick a contrast background">
+                            <materialIcons:MaterialIcon Kind="Eye" Width="18" Height="18"/>
+                        </Button>
                     </StackPanel>
 
                 </StackPanel>
@@ -152,6 +161,16 @@
                             <TextBlock Text="Aa overlay" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ToggleButton>
+
+                    <!-- Contrast matrix (§4/§8): every pair at a glance -->
+                    <Button Height="38" Margin="0,0,4,0"
+                            Command="{Binding OpenContrastMatrixCommand}"
+                            ToolTip.Tip="Every text-on-background pair scored side by side (WCAG + APCA)">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="ViewGrid" Width="16" Height="16"/>
+                            <TextBlock Text="Matrix" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                 </WrapPanel>
 

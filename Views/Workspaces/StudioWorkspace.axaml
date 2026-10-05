@@ -5,6 +5,7 @@
              xmlns:converters="using:Spectrum.Converters"
              xmlns:materialIcons="using:Material.Icons.Avalonia"
              xmlns:local="using:Spectrum.Views"
+             xmlns:widgets="using:Spectrum.Views.Widgets"
              x:Class="Spectrum.Views.Workspaces.StudioWorkspace"
              x:DataType="vm:MainWindowViewModel">
 
@@ -58,8 +59,10 @@
                             <materialIcons:MaterialIcon Kind="ClipboardArrowDownOutline" Width="16" Height="16"/>
                         </Button>
                     </Grid>
-                        <Button Content="Add to Palette" Command="{Binding AddCurrentColorCommand}"
-                                HorizontalAlignment="Stretch"/>
+                        <Button Classes="iconOnly" Command="{Binding AddCurrentColorCommand}"
+                                ToolTip.Tip="Add the base color to the palette">
+                            <materialIcons:MaterialIcon Kind="AddBox" Width="18" Height="18"/>
+                        </Button>
 
                     <!-- Picked-color history (§3): click to reload into the color panel -->
                     <StackPanel Spacing="6">
@@ -92,7 +95,7 @@
 
 
                          <!-- Color Generator Slider -->
-                    <StackPanel         >
+                    <widgets:SliderRow/>
 
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Text="Hue" FontWeight="SemiBold" FontSize="13"/>
@@ -188,14 +191,15 @@
 
                     </StackPanel>
 
-                </StackPanel>
-            </ScrollViewer>
+                </ScrollViewer>
 
                  <!-- Harmonize Button -->
                  <StackPanel Grid.Row="2" Margin="20,14,20,16"  Spacing="10">
                      <Separator VerticalAlignment="Center"/>
-                     <Button Content="Press Space to Harmonize" Command="{Binding GeneratePaletteCommand}"
-                            HorizontalAlignment="Stretch" ToolTip.Tip="Regenerates every unlocked color — using the Harmonize tool if one is selected"/>
+                     <Button Classes="iconOnly" Command="{Binding GeneratePaletteCommand}"
+                            ToolTip.Tip="Regenerates every unlocked color — using the Harmonize tool if one is selected">
+                        <materialIcons:MaterialIcon Kind="Shuffle" Width="18" Height="18"/>
+                     </Button>
                  </StackPanel>
 
             </Grid>
@@ -251,6 +255,20 @@
                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                             <materialIcons:MaterialIcon Kind="Crosshairs" Width="16" Height="16"/>
                             <TextBlock Text="Image" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider (picking | studio tools) -->
+                    <Border Width="1" Height="24" Margin="8,0"
+                            Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
+
+                    <!-- Gradient studio (§8) -->
+                    <Button Height="38" Margin="0,0,4,0"
+                            Command="{Binding OpenGradientStudioCommand}"
+                            ToolTip.Tip="Build a multi-stop gradient from your colors — copy CSS, save SVG/PNG, or add its stops to the palette">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="GradientHorizontal" Width="16" Height="16"/>
+                            <TextBlock Text="Gradient" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 

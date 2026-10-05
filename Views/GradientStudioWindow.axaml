@@ -1,0 +1,135 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialIcons="using:Material.Icons.Avalonia"
+        x:Class="Spectrum.Views.GradientStudioWindow"
+        x:CompileBindings="False"
+        Title="Gradient studio"
+        Width="780" Height="680"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/Spectrum.ico"
+        Background="{DynamicResource CanvasBrush}">
+
+    <!-- §8 — build a multi-stop gradient, then copy CSS / save SVG or PNG,
+         or push its colors straight into the palette (undoable). -->
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="20">
+
+        <!-- Header -->
+        <StackPanel Spacing="2">
+            <TextBlock Text="GRADIENT STUDIO" Classes="eyebrow"/>
+            <TextBlock Classes="subtitle"
+                       Text="Edit stops, then export as CSS, SVG or PNG — or send the colors into the palette."/>
+        </StackPanel>
+
+        <!-- Live preview -->
+        <Border x:Name="PreviewBorder" Grid.Row="1" Height="150" Margin="0,14,0,0"
+                CornerRadius="12"
+                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3"/>
+
+        <!-- Live CSS readout -->
+        <TextBlock x:Name="CssText" Grid.Row="2" Classes="mono caption" FontSize="11"
+                   TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+        <!-- Kind / angle + stop actions -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,12,0,8">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <ComboBox x:Name="KindCombo" MinWidth="110" Height="34"
+                          SelectionChanged="OnKindChanged"
+                          SelectedIndex="0"
+                          ToolTip.Tip="Gradient family (conic isn't previewable in-app)">
+                    <ComboBoxItem Content="Linear"/>
+                    <ComboBoxItem Content="Radial"/>
+                </ComboBox>
+
+                <TextBlock Text="Angle" Classes="caption" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                <Slider x:Name="AngleSlider" Minimum="0" Maximum="360" Value="90"
+                        Width="150" VerticalAlignment="Center" ValueChanged="OnAngleChanged"
+                        ToolTip.Tip="CSS angle: 0° = to top, 90° = to right"/>
+                <TextBlock x:Name="AngleLabel" Text="90°" Classes="mono caption"
+                           VerticalAlignment="Center" MinWidth="38"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Classes="iconOnly" Click="OnEvenlySpace"
+                        ToolTip.Tip="Redistribute the stops evenly from 0% to 100%">
+                    <materialIcons:MaterialIcon Kind="FormatAlignJustify" Width="18" Height="18"/>
+                </Button>
+                <Button Classes="iconOnly" Click="OnReverse"
+                        ToolTip.Tip="Play the colors back in the opposite direction">
+                    <materialIcons:MaterialIcon Kind="SwapHorizontal" Width="18" Height="18"/>
+                </Button>
+                <Button Classes="iconOnly" Click="OnAddStop"
+                        ToolTip.Tip="Insert a stop halfway and re-space everything">
+                    <materialIcons:MaterialIcon Kind="Add" Width="18" Height="18"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Stop list -->
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="StopsList" Margin="0,4,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="46,*,130,34,34,34" Margin="0,0,0,8">
+                            <Border Grid.Column="0" Height="34" CornerRadius="8"
+                                    Background="{Binding Brush}"
+                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
+                                    Cursor="Hand" PointerPressed="OnStopSwatchClick"
+                                    ToolTip.Tip="Click to change this stop's color"/>
+
+                            <Slider Grid.Column="1" Minimum="0" Maximum="100"
+                                    Value="{Binding Position, Mode=TwoWay}"
+                                    VerticalAlignment="Center" Margin="10,0"
+                                    ToolTip.Tip="Stop position (0–100%)"/>
+
+                            <TextBlock Grid.Column="2" Text="{Binding Info}" Classes="mono caption"
+                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                            <Button Grid.Column="3" Classes="iconOnly" Padding="6"
+                                    Click="OnMoveUp" ToolTip.Tip="Move earlier"
+                                    IsEnabled="{Binding IsNotFirst}">
+                                <materialIcons:MaterialIcon Kind="ChevronUp" Width="15" Height="15"/>
+                            </Button>
+                            <Button Grid.Column="4" Classes="iconOnly" Padding="6"
+                                    Click="OnMoveDown" ToolTip.Tip="Move later"
+                                    IsEnabled="{Binding IsNotLast}">
+                                <materialIcons:MaterialIcon Kind="ChevronDown" Width="15" Height="15"/>
+                            </Button>
+                            <Button Grid.Column="5" Classes="iconOnly" Padding="6"
+                                    Click="OnRemoveStop" ToolTip.Tip="Remove this stop">
+                                <materialIcons:MaterialIcon Kind="Close" Width="15" Height="15"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer actions -->
+        <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Classes="iconOnly" Click="OnCopyCss"
+                        ToolTip.Tip="Copy the gradient as a CSS value to the clipboard">
+                    <materialIcons:MaterialIcon Kind="Code" Width="18" Height="18"/>
+                </Button>
+                <Button Classes="iconOnly" Click="OnSaveSvg"
+                        ToolTip.Tip="Export as a scalable vector file">
+                    <materialIcons:MaterialIcon Kind="ContentSave" Width="18" Height="18"/>
+                </Button>
+                <Button Classes="iconOnly" Click="OnSavePng"
+                        ToolTip.Tip="Render a 1200×600 PNG of this gradient">
+                    <materialIcons:MaterialIcon Kind="Image" Width="18" Height="18"/>
+                </Button>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock x:Name="HintText" Classes="caption" TextWrapping="Wrap" MaxWidth="240"
+                           VerticalAlignment="Center"/>
+                <Button Classes="iconOnly" Click="OnClose"/>
+                <Button Classes="primary iconOnly" Click="OnAddToPalette"
+                        ToolTip.Tip="Add the gradient stops to the palette"/>
+            </StackPanel>
+        </Grid>
+
+    </Grid>
+</Window>

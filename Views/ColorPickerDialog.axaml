@@ -112,9 +112,13 @@
                    IsVisible="{Binding InputFeedback, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
         <Grid ColumnDefinitions="*,*">
-            <Button Grid.Column="0" Content="Cancel" Click="OnCancel" HorizontalAlignment="Stretch"/>
-            <Button Grid.Column="1" Content="Use color" Classes="primary" Click="OnConfirm"
-                    HorizontalAlignment="Stretch" FontWeight="SemiBold" Margin="10,0,0,0"/>
+            <Button Grid.Column="0" Classes="iconOnly" Click="OnCancel"
+                    ToolTip.Tip="Cancel" HorizontalAlignment="Stretch"/>
+            <Button Grid.Column="1" Classes="primary iconOnly" Click="OnConfirm"
+                    ToolTip.Tip="Use this color"
+                    HorizontalAlignment="Stretch" FontWeight="SemiBold" Margin="10,0,0,0">
+                <materialIcons:MaterialIcon Kind="Check" Width="18" Height="18"/>
+            </Button>
         </Grid>
 
     </StackPanel>

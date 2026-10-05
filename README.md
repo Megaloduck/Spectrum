@@ -5,6 +5,7 @@
 **An intuitive color palette editor built with Avalonia UI. Create, generate, and export beautiful color palettes for your design projects.**
 
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![CI](https://github.com/Megaloduck/Spectrum/actions/workflows/ci.yml/badge.svg)](https://github.com/Megaloduck/Spectrum/actions/workflows/ci.yml)
 [![Avalonia](https://img.shields.io/badge/Avalonia%20UI-11.2-6f2dbd?logo=avalonia&logoColor=white)](https://avaloniaui.net/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational)](https://github.com/Megaloduck/Spectrum)
 [![License](https://img.shields.io/github/license/Megaloduck/Spectrum?color=green)](LICENSE)
@@ -51,6 +52,7 @@
 - Harmonies: complementary, analogous, triadic, tetradic, split-complementary, monochromatic + random-with-lock
 - **Tints / shades / tones** generators, palette-from-base, palette-from-image
 - **WCAG AA/AAA** contrast checker *and* **APCA (Lc)** verdicts, live for the base color
+- **Contrast matrix** — every text-on-background pair scored at once: color-coded WCAG cells, APCA in the tooltip, one-click CSV copy
 - **Color blindness simulation** (Protanopia, Deuteranopia, Tritanopia, Achromatopsia)
 
 **Import / export (§5–6, local files only)**
@@ -66,6 +68,7 @@
 - **Side-by-side comparison** with any palette in the library, **swatch zoom view**, **contrast overlay badges** (WCAG + APCA) on every card
 - **Row / Grid / List / Compact view modes**, **dark/light variant generator**
 - Swatch cards read as **color + name + hex at rest**; the per-swatch action rail fades in on hover (lock stays visible)
+- **Gradient studio** — multi-stop linear/radial gradients with a live CSS readout, **Copy CSS / Save SVG / Save PNG**, and one click to send the stop colors into the palette (undoable)
 
 **Storage & settings (§9–10)**
 - **JSON file storage** (default) and **SQLite** storage behind one interface, with migration between them; autosave, backups, version history, whole-library import/export
@@ -73,6 +76,7 @@
 
 **Technical (§11)**
 - Cross-platform Avalonia UI (.NET 9), **MVVM** (CommunityToolkit), offline-first (**no background network calls**; update check runs only when you click it), accessibility labels on swatches, light/dark themes
+- **xUnit test suite** over the color math, WCAG/APCA contrast, copy-format round-trips and every import/export codec (ASE/ACO/GPL/CSS/JSON), with **GitHub Actions CI** building and testing on Linux and Windows
 - Studio-style monochrome UI driven entirely by a design-token stylesheet (`Styles/Theme.axaml`), with a runtime accent override
 
 ## 🛠️ Tech Stack
@@ -107,6 +111,8 @@ Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) an
 | Reorder colors | Drag a swatch card (any view mode) |
 | Simulate color blindness | **Analyze** workspace (`Ctrl+3`) → **Color Blind** dropdown in the toolbar |
 | Extract colors from an image | **Extract from Image** in the toolbar |
+| Build a gradient | **Gradient** in the Studio toolbar (`Ctrl+1`) → copy CSS, save SVG/PNG, or add its stops to the palette |
+| Score every color pair | **Matrix** in the Analyze toolbar (`Ctrl+3`) → WCAG cells + APCA tooltips + CSV copy |
 | Screen eyedropper | **Screen** button or `Ctrl+Alt+P` (click anywhere to pick) |
 | Export a palette | **Export** workspace (`Ctrl+4`) → build a preview, copy, **Save to file…** or **PNG sheet…** |
 | Command palette | `Ctrl+K` |

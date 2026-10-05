@@ -5,6 +5,7 @@
         xmlns:converters="using:Spectrum.Converters"
         xmlns:materialIcons="using:Material.Icons.Avalonia"
         xmlns:workspaces="using:Spectrum.Views.Workspaces"
+        xmlns:local="using:Spectrum.Views.Widgets"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1360" d:DesignHeight="700"
@@ -102,12 +103,12 @@
 
                     <Grid ColumnDefinitions="*,Auto,Auto">
                         <TextBlock Text="PALETTES" Classes="eyebrow" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Classes="ghost" Command="{Binding Library.NewPaletteCommand}"
-                                Padding="6,4" ToolTip.Tip="New palette (Ctrl+N)">
+                        <Button Grid.Column="1" Classes="iconOnly paletteRail" Command="{Binding Library.NewPaletteCommand}"
+                                ToolTip.Tip="New palette (Ctrl+N)">
                             <materialIcons:MaterialIcon Kind="Plus" Width="17" Height="17"/>
                         </Button>
-                        <Button Grid.Column="2" Classes="ghost" Command="{Binding ToggleLibraryPanelCommand}"
-                                Padding="6,4" ToolTip.Tip="Collapse the library panel (Ctrl+B)">
+                                <Button Grid.Column="2" Classes="iconOnly paletteRail" Command="{Binding ToggleLibraryPanelCommand}"
+                                ToolTip.Tip="Collapse the library panel (Ctrl+B)">
                             <materialIcons:MaterialIcon Kind="ChevronLeft" Width="17" Height="17"/>
                         </Button>
                     </Grid>
@@ -134,7 +135,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PaletteItemViewModel">
                                 <Grid ColumnDefinitions="8,*,Auto" Margin="0,5">
-                                <Border Grid.Column="0" Width="8" Height="44" CornerRadius="4"
+                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="4"
                                         Background="{Binding PreviewBrush}"
                                         BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
                                         AutomationProperties.Name="{Binding Name} palette preview"
@@ -156,9 +157,7 @@
                                             <materialIcons:MaterialIcon Kind="PinOutline" Width="14" Height="14"/>
                                         </ToggleButton>
 
-                                        <Button Classes="iconOnly paletteRail" Padding="4"
-                                                Foreground="#E5484D"
-                                                Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).Library.DeletePaletteCommand}"
+                                        <Button Classes="iconOnly paletteRail" Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).Library.DeletePaletteCommand}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip.Tip="Delete this palette">
                                             <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="14" Height="14"/>
@@ -201,15 +200,24 @@
                                         <Separator/>
                                         <Separator/>
                                         <TextBlock Text="FILES" Classes="eyebrow"/>
-                                        <Button Content="Import palette file… (CSS / GPL / ASE / ACO)"
-                                                Command="{Binding Library.ImportPaletteFileCommand}"
-                                                HorizontalAlignment="Stretch"/>
-                                        <Button Content="Export whole library…"
-                                                Command="{Binding Library.ExportLibraryCommand}"
-                                                HorizontalAlignment="Stretch"/>
-                                        <Button Content="Import library…"
-                                                Command="{Binding Library.ImportLibraryCommand}"
-                                                HorizontalAlignment="Stretch"/>
+                                        <Button Classes="iconOnly" Command="{Binding Library.ImportPaletteFileCommand}"
+                                                ToolTip.Tip="Import a palette file (CSS / GPL / ASE / ACO)">
+                                            <materialIcons:MaterialIcon Kind="Upload" Width="18" Height="18"/>
+                                        </Button>
+                                        <Button Classes="iconOnly" Command="{Binding Library.ExportLibraryCommand}"
+                                                ToolTip.Tip="Export the whole library">
+                                            <materialIcons:MaterialIcon Kind="CloudDownloadOutline" Width="18" Height="18"/>
+                                        </Button>
+                                        <Button Classes="iconOnly" Command="{Binding Library.ImportLibraryCommand}"
+                                                ToolTip.Tip="Import a library from a file">
+                                            <materialIcons:MaterialIcon Kind="FolderUploadOutline" Width="18" Height="18"/>
+                                        </Button>
+                                        <Separator/>
+                                        <Button Classes="iconOnly" Command="{Binding Library.UndoLastDeleteCommand}"
+                                                ToolTip.Tip="Undo last deleted palette"
+                                                IsEnabled="{Binding Library.UndoLastDeleteCanExecute}">
+                                            <materialIcons:MaterialIcon Kind="Undo" Width="18" Height="18"/>
+                                        </Button>
                                     </StackPanel>
                                 </Flyout>
                             </Button.Flyout>
@@ -228,6 +236,11 @@
                 <workspaces:AnalyzeWorkspace IsVisible="{Binding IsAnalyzeMode}"/>
                 <workspaces:ExportWorkspace IsVisible="{Binding IsExportMode}"/>
             </Grid>
+
+            <!-- Transient toast: fades in above the work area and auto-hides.
+                 It is bound to MainWindowViewModel.ToastMessage, which is set on
+                 every StatusMessage assignment so the user sees any action. -->
+            <local:Toast/>
 
         </Grid>
 

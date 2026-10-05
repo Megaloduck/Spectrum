@@ -194,7 +194,9 @@ namespace Spectrum.Services
             var sb = new StringBuilder();
             foreach (var swatch in palette)
             {
-                var suffix = swatch.Color.A < 255 ? $" (alpha {swatch.Color.A / 255.0:P0})" : string.Empty;
+                var suffix = swatch.Color.A < 255
+                    ? FormattableString.Invariant($" (alpha {swatch.Color.A / 255.0:P0})")
+                    : string.Empty;
                 sb.AppendLine($"{swatch.Name}: {swatch.Hex}{suffix}");
             }
 
@@ -203,11 +205,14 @@ namespace Spectrum.Services
 
         // Opaque colors export as plain hex; translucent ones export as
         // rgba(...) since hex-with-alpha isn't universally supported by
-        // the CSS/SCSS/Tailwind consumers of these strings.
+        // the CSS/SCSS/Tailwind consumers of these strings. Formatted with the
+        // invariant culture — "0,50" under a decimal-comma locale would be
+        // invalid CSS.
         private static string ColorValue(ColorSwatch swatch)
         {
             return swatch.Color.A < 255
-                ? $"rgba({swatch.Color.R}, {swatch.Color.G}, {swatch.Color.B}, {swatch.Color.A / 255.0:F2})"
+                ? FormattableString.Invariant(
+                    $"rgba({swatch.Color.R}, {swatch.Color.G}, {swatch.Color.B}, {swatch.Color.A / 255.0:F2})")
                 : swatch.Hex;
         }
 

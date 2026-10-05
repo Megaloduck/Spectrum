@@ -1,11 +1,16 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Spectrum.ViewModels;
+using Spectrum.Views.Widgets;
+using System;
 
 namespace Spectrum.Views.Workspaces
 {
     public partial class StudioWorkspace : DockedWorkspaceView
     {
+        private SliderRow? _sliderRow;
+
         public StudioWorkspace() => InitializeComponent();
 
         protected override Grid RootGrid => WorkspaceRoot;
@@ -17,6 +22,22 @@ namespace Spectrum.Views.Workspaces
             {
                 vm.OpenColorPickerCommand.Execute(null);
                 e.Handled = true;
+            }
+        }
+
+        /// <summary>Feeds the five color-panel sliders into the shared SliderRow control.</summary>
+        public void BindSliders(MainWindowViewModel vm)
+        {
+            _sliderRow?.BindTo(vm);
+        }
+
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+            if (DataContext is MainWindowViewModel vm)
+            {
+                _sliderRow = this.FindControl<SliderRow>("SliderRow");
+                BindSliders(vm);
             }
         }
     }

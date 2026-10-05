@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Spectrum.ViewModels"
         xmlns:conv="using:Spectrum.Converters"
+        xmlns:materialIcons="using:Material.Icons.Avalonia"
         x:Class="Spectrum.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
@@ -25,8 +26,19 @@
 
                 <TextBlock Text="Accent color" Classes="caption" Margin="0,4,0,0"/>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Pick accent…" Click="OnPickAccent"/>
-                    <Button Content="Reset" Classes="ghost" Click="OnResetAccent"/>
+                    <Button Grid.Column="0" Classes="iconOnly" Click="OnPickAccent"
+                            ToolTip.Tip="Pick the accent color">
+                        <materialIcons:MaterialIcon Kind="Palette" Width="18" Height="18"/>
+                    </Button>
+                    <Button Grid.Column="1" Classes="iconOnly" Click="OnResetAccent"
+                            ToolTip.Tip="Reset the accent to the monochrome default">
+                        <materialIcons:MaterialIcon Kind="Undo" Width="18" Height="18"/>
+                    </Button>
+                    <Border Grid.Column="2" Width="34" Height="30" CornerRadius="8" BorderThickness="1.3"
+                            BorderBrush="{DynamicResource OutlineBrush}"
+                            Background="{DynamicResource AccentBrush}"/>
+                    <TextBlock Grid.Column="3" Text="{Binding AccentLabel}" Classes="caption"
+                               VerticalAlignment="Center" Margin="8,0,0,0"/>
                     <Border Width="34" Height="30" CornerRadius="8" BorderThickness="1.3"
                             BorderBrush="{DynamicResource OutlineBrush}"
                             Background="{DynamicResource AccentBrush}"/>
@@ -94,7 +106,10 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBox Grid.Column="0" IsReadOnly="True" Text="{Binding StorageLocationLabel}"
                              Classes="mono" FontSize="12"/>
-                    <Button Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Click="OnBrowseStorage"/>
+                    <Button Grid.Column="1" Classes="iconOnly" Click="OnBrowseStorage"
+                        ToolTip.Tip="Browse the storage folder">
+                    <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="18" Height="18"/>
+                </Button>
                 </Grid>
 
                 <TextBlock Text="Storage location setting — autosave, backups and version history all live here."
@@ -113,8 +128,10 @@
                 <TextBlock Text="RESET / CLEAR DATA" Classes="eyebrow" Foreground="#E5484D"/>
                 <TextBlock Classes="caption" TextWrapping="Wrap"
                            Text="Deletes every palette, version and backup from this app's storage folder. Settings are kept."/>
-                <Button x:Name="ResetButton" Content="Clear all palettes…" HorizontalAlignment="Left"
-                        Click="OnResetData" Foreground="#E5484D" BorderBrush="#E5484D"/>
+                <Button x:Name="ResetButton" Classes="iconOnly" Click="OnResetData"
+                        ToolTip.Tip="Destructive — deletes every palette, version and backup"
+                        HorizontalAlignment="Left"
+                        Foreground="#E5484D" BorderBrush="#E5484D"/>
             </StackPanel>
         </Border>
 
@@ -125,13 +142,13 @@
                 <TextBlock x:Name="VersionText" Classes="caption mono" FontSize="11"/>
                 <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap"
                            Text="Offline-first: Spectrum makes no network calls in the background."/>
-                <Button Content="Check for updates…" HorizontalAlignment="Left" Click="OnCheckUpdates"
-                        ToolTip.Tip="Runs only when clicked — fetches a tiny version manifest"/>
+                <Button Classes="iconOnly" Click="OnCheckUpdates"
+                        ToolTip.Tip="Check for updates" HorizontalAlignment="Left"/>
             </StackPanel>
         </Border>
 
-        <Button Content="Done" Classes="primary" HorizontalAlignment="Stretch" Click="OnDone"
-                FontWeight="SemiBold"/>
+        <Button Classes="primary iconOnly" Click="OnDone"
+                ToolTip.Tip="Save and close settings" HorizontalAlignment="Stretch" FontWeight="SemiBold"/>
 
     </StackPanel>
 </Window>

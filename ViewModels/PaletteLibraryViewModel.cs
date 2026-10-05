@@ -70,6 +70,9 @@ namespace Spectrum.ViewModels
 
         public PaletteDto? ActivePalette => SelectedPalette?.Dto;
 
+        /// <summary>Whether the library's Undo-last-delete can run (tombstone present).</summary>
+        public bool UndoLastDeleteCanExecute => PaletteLibraryService.CanUndoLastDelete;
+
         // ---------------- Commands ----------------
 
         [RelayCommand]
@@ -126,6 +129,16 @@ namespace Spectrum.ViewModels
 
             PaletteLibraryService.MarkDirty();
             StatusMessage($"Deleted \"{name}\".");
+        }
+
+        [RelayCommand]
+        private void UndoLastDelete()
+        {
+            if (!PaletteLibraryService.CanUndoLastDelete) return;
+
+            PaletteLibraryService.UndoLastDelete();
+            RefreshVisible();
+            StatusMessage("Undid last deleted palette.");
         }
 
         [RelayCommand]

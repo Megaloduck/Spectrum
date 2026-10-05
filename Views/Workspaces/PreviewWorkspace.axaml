@@ -52,8 +52,7 @@
                         <Border Background="{Binding MockupBackgroundBrush}"
                                 CornerRadius="12" Padding="18"
                                 BorderBrush="{DynamicResource OutlineBrush}"
-                                BorderThickness="1.3"
-                                ClipToBounds="True">
+                                BorderThickness="1.3">
                             <StackPanel Spacing="12">
 
                                 <!-- Header row -->
@@ -124,12 +123,14 @@
                                         Orientation="Horizontal"
                                         Spacing="8"
                                         VerticalAlignment="Center">
-                                <Button Content="Light mode"
-                                        Command="{Binding GenerateLightVariantCommand}"
-                                        ToolTip.Tip="Create a lighter sibling palette from these colors"/>
-                                <Button Content="Dark mode"
-                                        Command="{Binding GenerateDarkVariantCommand}"
-                                        ToolTip.Tip="Create a darker sibling palette from these colors"/>
+                                <Button Classes="iconOnly" Command="{Binding GenerateLightVariantCommand}"
+                                        ToolTip.Tip="Create a lighter sibling palette from these colors">
+                                <materialIcons:MaterialIcon Kind="Flashlight" Width="18" Height="18"/>
+                            </Button>
+                            <Button Classes="iconOnly" Command="{Binding GenerateDarkVariantCommand}"
+                                        ToolTip.Tip="Create a darker sibling palette from these colors">
+                                <materialIcons:MaterialIcon Kind="NightLight" Width="18" Height="18"/>
+                            </Button>
                             </StackPanel>
 
                         </Grid>

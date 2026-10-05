@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Spectrum.Views.Widgets"
+             x:Class="Spectrum.Views.Widgets.SliderRow"
+             x:CompileBindings="False">
+
+    <!-- Each data row: label | value caption | gradient track | slider. -->
+    <ItemsControl ItemsSource="{Binding SliderRows}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel Spacing="10"/>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto">
+                    <TextBlock Text="{Binding Label}"
+                               FontWeight="SemiBold"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value}"
+                               Classes="caption"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                    <Border Grid.Column="2"
+                            Grid.Row="0"
+                            Height="8"
+                            VerticalAlignment="Center"
+                            CornerRadius="4"
+                            Background="{Binding TrackBrush}"
+                            Margin="0,0,10,0"/>
+                    <Slider Grid.Column="3"
+                            Grid.Row="0"
+                            Minimum="{Binding Minimum}"
+                            Maximum="{Binding Maximum}"
+                            Value="{Binding Value, Mode=TwoWay}"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="{Binding Tooltip}"/>
+                </Grid>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

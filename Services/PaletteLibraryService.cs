@@ -34,6 +34,12 @@ namespace Spectrum.Services
 
         public static LibraryDto Library { get; private set; } = new();
 
+        /// <summary>The last deleted palette, stashed for Ctrl+Z undo in the library.</summary>
+        public static PaletteDto? LastDeletedPalette { get; private set; }
+
+        /// <summary>Whether the next DeletePalette can be undone (tombstone available).</summary>
+        public static bool CanUndoLastDelete => LastDeletedPalette is not null;
+
         /// <summary>Raised after a successful autosave (status bar, save pill).</summary>
         public static event Action? Saved;
 
@@ -87,9 +93,38 @@ namespace Spectrum.Services
 
         public static void DeletePalette(PaletteDto palette)
         {
+            // Stash a tombstone so the library-level delete can be undone.
+            LastDeletedPalette = new PaletteDto
+            {
+                Id = palette.Id,
+                Name = palette.Name,
+                Swatches = palette.Swatches.Select(s => new PaletteSwatchDto(
+                    s.Name, s.A, s.R, s.G, s.B, s.IsLocked)).ToList(),
+                CreatedUtc = palette.CreatedUtc,
+                UpdatedUtc = palette.UpdatedUtc,
+            };
+
             Library.Palettes.Remove(palette);
-            if (Library.ActivePaletteId == palette.Id)
-                Library.ActivePaletteId = Library.Palettes.FirstOrDefault()?.Id;
+            if (Library.ActivePaletteId == palette.Id)                    Library.ActivePaletteId = Library.Palettes.FirstOrDefault()?.Id;
+
+            MarkDirty();
+        }
+
+        public static void UndoLastDelete()
+        {
+            var deleted = LastDeletedPalette;
+            if (deleted is null) return;
+
+            // Re-add the deleted palette as a brand-new item so its Id and its
+            // position match the original row state, then drop the tombstone.
+            Library.Palettes.Add(deleted);
+
+            if (Library.ActivePaletteId is null)
+            {
+                Library.ActivePaletteId = deleted.Id;
+            }
+
+            LastDeletedPalette = null;
             MarkDirty();
         }
 

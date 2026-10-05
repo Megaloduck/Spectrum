@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Spectrum.Models;
@@ -190,6 +191,44 @@ namespace Spectrum.ViewModels
             await window.ShowDialog(owner);
         }
 
+        /// <summary>§8 "Gradient studio": build a multi-stop gradient seeded from the
+        /// palette, export it (CSS / SVG / PNG), then pull its colors into the board.</summary>
+        [RelayCommand]
+        private async Task OpenGradientStudioAsync()
+        {
+            if (GetOwnerWindow() is not { } owner) return;
+
+            var initial = Palette.Select(s => s.Color).ToList();
+            var window = new Views.GradientStudioWindow(initial);
+            var colors = await window.ShowDialog<List<Color>?>(owner);
+
+            if (colors is null || colors.Count == 0)
+            {
+                StatusMessage = "Gradient studio closed.";
+                return;
+            }
+
+            PushHistory();
+            foreach (var color in colors)
+                Palette.Add(CreateSwatch(color, ColorNamingService.GetClosestName(color)));
+
+            StatusMessage = $"Added {colors.Count} gradient color{(colors.Count == 1 ? "" : "s")} to the palette — Ctrl+Z undoes it.";
+        }
+
+        /// <summary>§4/§8 "Contrast matrix": every text-on-background pair of the
+        /// palette scored at once (WCAG color-coded, APCA in tooltips).</summary>
+        [RelayCommand]
+        private async Task OpenContrastMatrixAsync()
+        {
+            if (GetOwnerWindow() is not { } owner) return;
+
+            var current = PaletteLibraryService.FindPalette(_activePaletteId)
+                          ?? PaletteLibraryService.Library.Palettes.FirstOrDefault();
+
+            var window = new Views.ContrastMatrixWindow(current);
+            await window.ShowDialog(owner);
+        }
+
         /// <summary>Prevents two windows' hotkey handlers opening two pickers at once.</summary>
         private static bool ScreenPickerOpen;
 
@@ -222,8 +261,32 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private string _exportPreview = string.Empty;
 
-        [ObservableProperty]
         private string _statusMessage = "Ready to Inspire.";
+
+        [ObservableProperty]
+        private string _toastMessage = string.Empty;
+
+        /// <summary>
+        /// Public status-message setter. Every assignment updates the status bar
+        /// (bound from StatusBarView.axaml) and raises a transient toast so the
+        /// user sees the result of an action even while scrolled away.
+        /// </summary>
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set
+            {
+                _statusMessage = value;
+                ToastMessage = value;
+
+                // The toast auto-hides after ToastDurationMs. Start the timer on
+                // first use (the toast instance is cleared before each show).
+                if (!_toastTimer.IsEnabled)
+                {
+                    _toastTimer.Start();
+                }
+            }
+        }
 
         [ObservableProperty]
         private int _paletteCount;
@@ -231,6 +294,11 @@ namespace Spectrum.ViewModels
         public string PaletteCountLabel => PaletteCount == 1 ? "1 color" : $"{PaletteCount} colors";
 
         partial void OnPaletteCountChanged(int value) => OnPropertyChanged(nameof(PaletteCountLabel));
+
+
+
+        /// <summary>Returns true while a destructive action can be undone.</summary>
+        public bool CanUndoToast => _undoStack.Count > 0 || PaletteLibraryService.CanUndoLastDelete;
 
         public Color BaseColor
         {
@@ -308,6 +376,9 @@ namespace Spectrum.ViewModels
         private readonly Stack<List<SwatchSnapshot>> _undoStack = new();
         private readonly Stack<List<SwatchSnapshot>> _redoStack = new();
         private bool _isRestoringHistory;
+
+        /// <summary>Auto-hide timer for the transient toast.</summary>
+        private readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromMilliseconds(6000) };
 
         private readonly record struct SwatchSnapshot(Color Color, string Name, bool IsLocked);
 
@@ -1021,6 +1092,12 @@ namespace Spectrum.ViewModels
             }
 
             StatusMessage = $"Extracted {replaced} color{(replaced == 1 ? "" : "s")} from the image.";
+        }
+
+        [RelayCommand]
+        private void DismissToast()
+        {
+            ToastMessage = string.Empty;
         }
 
         [RelayCommand]

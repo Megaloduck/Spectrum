@@ -1,20 +1,23 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+    <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Spectrum.ViewModels"
              xmlns:converters="using:Spectrum.Converters"
              xmlns:local="using:Spectrum.Views"
+             xmlns:materialIcons="using:Material.Icons.Avalonia"
              x:Class="Spectrum.Views.Workspaces.ExportWorkspace"
              x:DataType="vm:MainWindowViewModel">
 
     <!-- Ctrl+4 — Move files in and out: export presets, PNG sheet, imports.
          The board steps aside here, so this workspace fills the whole column. -->
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
 
         <!-- Toolbar: no workspace-specific controls — only the shared actions. -->
         <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
             <Grid ColumnDefinitions="*,Auto">
-                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                     <TextBlock Grid.Column="2" Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center"/>
+                </WrapPanel>
                 <local:ToolbarGlobalsView Grid.Column="1"/>
             </Grid>
         </Border>
@@ -41,9 +44,10 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Grid.Column="1" Margin="8,0,0,0" Height="38"
-                                Command="{Binding BuildExportPreviewCommand}">
-                            Build preview
+                        <Button Grid.Column="1" Classes="iconOnly" Margin="8,0,0,0" Height="38"
+                                Command="{Binding BuildExportPreviewCommand}"
+                                ToolTip.Tip="Build the export preview">
+                            <materialIcons:MaterialIcon Kind="ViewList" Width="18" Height="18"/>
                         </Button>
                     </Grid>
 
@@ -53,11 +57,18 @@
                              Watermark="Press Build preview to see the generated source"/>
 
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
-                        <Button Content="Copy export" Command="{Binding CopyExportCommand}"/>
-                        <Button Content="Save to file…" Command="{Binding ExportToFileCommand}"
-                                ToolTip.Tip="ASE / ACO and other binary formats always write to disk (Ctrl+E)"/>
-                        <Button Content="PNG sheet…" Command="{Binding ExportPngCommand}"
-                                ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)"/>
+                        <Button Classes="iconOnly" Command="{Binding CopyExportCommand}"
+                                ToolTip.Tip="Copy the export to the clipboard">
+                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="18" Height="18"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding ExportToFileCommand}"
+                                ToolTip.Tip="ASE / ACO and other binary formats always write to disk (Ctrl+E)">
+                            <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="18" Height="18"/>
+                        </Button>
+                        <Button Classes="iconOnly" Command="{Binding ExportPngCommand}"
+                                ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)">
+                            <materialIcons:MaterialIcon Kind="Image" Width="18" Height="18"/>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -93,8 +104,6 @@
             </Border>
 
         </Grid>
-
-        <local:StatusBarView Grid.Row="2"/>
 
     </Grid>
 </UserControl>

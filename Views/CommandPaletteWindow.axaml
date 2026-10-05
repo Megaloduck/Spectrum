@@ -4,7 +4,7 @@
         xmlns:materialIcons="using:Material.Icons.Avalonia"
         x:Class="Spectrum.Views.CommandPaletteWindow"
         x:CompileBindings="True"
-        Title="Command palette"
+        Title="Command palette" 
         Width="620" SizeToContent="Height" CanResize="False"
         MaxHeight="560"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
