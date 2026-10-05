@@ -3,8 +3,6 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Spectrum.Models;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Spectrum.ViewModels
@@ -115,22 +113,5 @@ namespace Spectrum.ViewModels
             if (delta.TotalDays < 7) return $"{(int)delta.TotalDays}d ago";
             return utc.ToLocalTime().ToString("d");
         }
-    }
-
-    /// <summary>A row in the version-history flyout of one palette.</summary>
-    public class PaletteVersionItemViewModel : ViewModelBase
-    {
-        public PaletteVersionDto Version { get; }
-
-        public PaletteVersionItemViewModel(PaletteVersionDto version)
-        {
-            Version = version;
-        }
-
-        public string Label =>
-            $"{Version.SavedUtc.ToLocalTime():MMM d, HH:mm} · {Version.Swatches.Count} colors";
-
-        public string SwatchSummary =>
-            string.Join("  ", Version.Swatches.Take(6).Select(s => $"#{s.R:X2}{s.G:X2}{s.B:X2}"));
     }
 }

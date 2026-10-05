@@ -18,17 +18,17 @@ namespace Spectrum.Views.Workspaces
         /// <summary>Clicking the big base-color preview opens the spectrum picker (§2).</summary>
         private void OnBasePreviewPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (DataContext is MainWindowViewModel vm && vm.OpenColorPickerCommand.CanExecute(null))
+            if (DataContext is MainWindowViewModel vm && vm.Studio.OpenColorPickerCommand.CanExecute(null))
             {
-                vm.OpenColorPickerCommand.Execute(null);
+                vm.Studio.OpenColorPickerCommand.Execute(null);
                 e.Handled = true;
             }
         }
 
         /// <summary>Feeds the five color-panel sliders into the shared SliderRow control.</summary>
-        public void BindSliders(MainWindowViewModel vm)
+        public void BindSliders(StudioWorkspaceViewModel studio)
         {
-            _sliderRow?.BindTo(vm);
+            _sliderRow?.BindTo(studio);
         }
 
         protected override void OnDataContextChanged(EventArgs e)
@@ -37,7 +37,7 @@ namespace Spectrum.Views.Workspaces
             if (DataContext is MainWindowViewModel vm)
             {
                 _sliderRow = this.FindControl<SliderRow>("SliderRow");
-                BindSliders(vm);
+                BindSliders(vm.Studio);
             }
         }
     }

@@ -35,8 +35,8 @@
 
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto" Margin="0,14,0,0">
                         <ComboBox MinWidth="160" Height="38"
-                                  ItemsSource="{Binding ExportFormats}"
-                                  SelectedItem="{Binding SelectedExportFormat}"
+                                  ItemsSource="{Binding Export.ExportFormats}"
+                                  SelectedItem="{Binding Export.SelectedExportFormat}"
                                   ToolTip.Tip="Format used by Build preview / Save / Copy">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -45,27 +45,27 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <Button Grid.Column="1" Classes="iconOnly" Margin="8,0,0,0" Height="38"
-                                Command="{Binding BuildExportPreviewCommand}"
+                                Command="{Binding Export.BuildExportPreviewCommand}"
                                 ToolTip.Tip="Build the export preview">
                             <materialIcons:MaterialIcon Kind="ViewList" Width="18" Height="18"/>
                         </Button>
                     </Grid>
 
-                    <TextBox Grid.Row="2" Text="{Binding ExportPreview}" AcceptsReturn="True"
+                    <TextBox Grid.Row="2" Text="{Binding Export.ExportPreview}" AcceptsReturn="True"
                              IsReadOnly="True" Margin="0,12,0,0" MinHeight="140"
                              TextWrapping="Wrap" Classes="mono" FontSize="12"
                              Watermark="Press Build preview to see the generated source"/>
 
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
-                        <Button Classes="iconOnly" Command="{Binding CopyExportCommand}"
+                        <Button Classes="iconOnly" Command="{Binding Export.CopyExportCommand}"
                                 ToolTip.Tip="Copy the export to the clipboard">
                             <materialIcons:MaterialIcon Kind="ContentCopy" Width="18" Height="18"/>
                         </Button>
-                        <Button Classes="iconOnly" Command="{Binding ExportToFileCommand}"
+                        <Button Classes="iconOnly" Command="{Binding Export.ExportToFileCommand}"
                                 ToolTip.Tip="ASE / ACO and other binary formats always write to disk (Ctrl+E)">
                             <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="18" Height="18"/>
                         </Button>
-                        <Button Classes="iconOnly" Command="{Binding ExportPngCommand}"
+                        <Button Classes="iconOnly" Command="{Binding Export.ExportPngCommand}"
                                 ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)">
                             <materialIcons:MaterialIcon Kind="Image" Width="18" Height="18"/>
                         </Button>

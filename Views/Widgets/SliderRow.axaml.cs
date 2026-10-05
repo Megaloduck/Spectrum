@@ -27,58 +27,58 @@ namespace Spectrum.Views.Widgets
         }
 
         /// <summary>
-        /// Populates the slider rows from the view model's color-panel sliders.
+        /// Populates the slider rows from Studio's color-panel sliders.
         /// Each row carries a snapshot of label/value/min/max/track-brush at the
         /// moment BindTo is called; the slider's value is bound TwoWay so moves
-        /// flow back up to MainWindowViewModel automatically.
+        /// flow back up to StudioWorkspaceViewModel automatically.
         /// </summary>
-        public void BindTo(MainWindowViewModel vm)
+        public void BindTo(StudioWorkspaceViewModel studio)
         {
             var rows = new ObservableCollection<SliderRowItem>
             {
                 new SliderRowItem
                 {
                     Label = "Hue",
-                    Value = vm.Hue.ToString("N0"),
+                    Value = studio.Hue.ToString("N0"),
                     Minimum = 0,
                     Maximum = 360,
-                    TrackBrush = vm.HueTrackBrush,
+                    TrackBrush = studio.HueTrackBrush,
                     Tooltip = "Hue angle (0–360°)"
                 },
                 new SliderRowItem
                 {
                     Label = "Saturation",
-                    Value = vm.Saturation.ToString("N0"),
+                    Value = studio.Saturation.ToString("N0"),
                     Minimum = 0,
                     Maximum = 100,
-                    TrackBrush = vm.SaturationTrackBrush,
+                    TrackBrush = studio.SaturationTrackBrush,
                     Tooltip = "Saturation (0–100%)"
                 },
                 new SliderRowItem
                 {
                     Label = "Brightness",
-                    Value = vm.Lightness.ToString("N0"),
+                    Value = studio.Lightness.ToString("N0"),
                     Minimum = 0,
                     Maximum = 100,
-                    TrackBrush = vm.BrightnessTrackBrush,
+                    TrackBrush = studio.BrightnessTrackBrush,
                     Tooltip = "Lightness (0–100%)"
                 },
                 new SliderRowItem
                 {
                     Label = "Temperature",
-                    Value = vm.Temperature.ToString("N0"),
+                    Value = studio.Temperature.ToString("N0"),
                     Minimum = -100,
                     Maximum = 100,
-                    TrackBrush = vm.TemperatureTrackBrush,
+                    TrackBrush = studio.TemperatureTrackBrush,
                     Tooltip = "Warm–cool temperature (-100…+100)"
                 },
                 new SliderRowItem
                 {
                     Label = "Opacity",
-                    Value = vm.Alpha.ToString("N0"),
+                    Value = studio.Alpha.ToString("N0"),
                     Minimum = 0,
                     Maximum = 100,
-                    TrackBrush = vm.AlphaTrackBrush,
+                    TrackBrush = studio.AlphaTrackBrush,
                     Tooltip = "Alpha (0–100%)"
                 },
             };
@@ -93,9 +93,9 @@ namespace Spectrum.Views.Widgets
 
     /// <summary>
     /// One row of the slider control: label, value caption, gradient track,
-    /// and the interactive slider. Bound to a <see cref="MainWindowViewModel"/>
-    /// data source so the track and the slider keep correct values as the
-    /// color panel changes.
+    /// and the interactive slider. Snapshot of a <see cref="StudioWorkspaceViewModel"/>
+    /// color-panel value so the track and the slider show the right thing as
+    /// the color panel changes.
     /// </summary>
     public partial class SliderRowItem : ObservableObject
     {

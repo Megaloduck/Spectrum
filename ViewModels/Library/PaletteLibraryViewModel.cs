@@ -70,7 +70,9 @@ namespace Spectrum.ViewModels
 
         public PaletteDto? ActivePalette => SelectedPalette?.Dto;
 
-        /// <summary>Whether the library's Undo-last-delete can run (tombstone present).</summary>
+        /// <summary>Whether the library's Undo-last-delete can run (tombstone present).
+        /// Bound to the flyout button's IsEnabled; PropertyChanged is raised after every
+        /// delete / undo so the button state stays current.</summary>
         public bool UndoLastDeleteCanExecute => PaletteLibraryService.CanUndoLastDelete;
 
         // ---------------- Commands ----------------
@@ -128,17 +130,25 @@ namespace Spectrum.ViewModels
             }
 
             PaletteLibraryService.MarkDirty();
+            OnPropertyChanged(nameof(UndoLastDeleteCanExecute));
             StatusMessage($"Deleted \"{name}\".");
         }
 
         [RelayCommand]
         private void UndoLastDelete()
         {
-            if (!PaletteLibraryService.CanUndoLastDelete) return;
+            var restored = PaletteLibraryService.UndoLastDelete();
+            if (restored is null) return;
 
-            PaletteLibraryService.UndoLastDelete();
+            // The service only puts the DTO back in the library — the sidebar needs
+            // its own row for it, and the restored palette becomes the active one.
+            var item = CreateItem(restored);
+            Palettes.Insert(0, item);
             RefreshVisible();
-            StatusMessage("Undid last deleted palette.");
+            SelectedPalette = item;
+
+            OnPropertyChanged(nameof(UndoLastDeleteCanExecute));
+            StatusMessage($"Restored \"{restored.Name}\".");
         }
 
         [RelayCommand]
@@ -303,6 +313,8 @@ namespace Spectrum.ViewModels
             var target = Palettes.FirstOrDefault(p => p.Dto.Id == previousId)
                          ?? VisiblePalettes.FirstOrDefault();
             SelectedPalette = target; // fires ActivePaletteChanged → board reloads
+
+            OnPropertyChanged(nameof(UndoLastDeleteCanExecute));
         }
 
         // ---------------- Filtering / selection ----------------

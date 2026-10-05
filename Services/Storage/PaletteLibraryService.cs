@@ -34,7 +34,7 @@ namespace Spectrum.Services
 
         public static LibraryDto Library { get; private set; } = new();
 
-        /// <summary>The last deleted palette, stashed for Ctrl+Z undo in the library.</summary>
+        /// <summary>The last deleted palette, stashed so the library-level delete can be undone.</summary>
         public static PaletteDto? LastDeletedPalette { get; private set; }
 
         /// <summary>Whether the next DeletePalette can be undone (tombstone available).</summary>
@@ -94,38 +94,46 @@ namespace Spectrum.Services
         public static void DeletePalette(PaletteDto palette)
         {
             // Stash a tombstone so the library-level delete can be undone.
+            // Pin state and version history travel with it, so an undo is lossless.
             LastDeletedPalette = new PaletteDto
             {
                 Id = palette.Id,
                 Name = palette.Name,
-                Swatches = palette.Swatches.Select(s => new PaletteSwatchDto(
-                    s.Name, s.A, s.R, s.G, s.B, s.IsLocked)).ToList(),
+                IsPinned = palette.IsPinned,
+                Swatches = palette.Swatches
+                    .Select(s => new PaletteSwatchDto(s.Name, s.A, s.R, s.G, s.B, s.IsLocked))
+                    .ToList(),
+                Versions = palette.Versions.ToList(),
                 CreatedUtc = palette.CreatedUtc,
                 UpdatedUtc = palette.UpdatedUtc,
             };
 
             Library.Palettes.Remove(palette);
-            if (Library.ActivePaletteId == palette.Id)                    Library.ActivePaletteId = Library.Palettes.FirstOrDefault()?.Id;
+
+            if (Library.ActivePaletteId == palette.Id)
+                Library.ActivePaletteId = Library.Palettes.FirstOrDefault()?.Id;
 
             MarkDirty();
         }
 
-        public static void UndoLastDelete()
+        /// <summary>
+        /// Puts the last deleted palette back into the library and returns it, or
+        /// null when there is nothing to undo. The caller is responsible for adding
+        /// a sidebar row for the returned palette.
+        /// </summary>
+        public static PaletteDto? UndoLastDelete()
         {
             var deleted = LastDeletedPalette;
-            if (deleted is null) return;
+            if (deleted is null) return null;
 
-            // Re-add the deleted palette as a brand-new item so its Id and its
-            // position match the original row state, then drop the tombstone.
-            Library.Palettes.Add(deleted);
+            Library.Palettes.Insert(0, deleted);
 
             if (Library.ActivePaletteId is null)
-            {
                 Library.ActivePaletteId = deleted.Id;
-            }
 
             LastDeletedPalette = null;
             MarkDirty();
+            return deleted;
         }
 
         /// <summary>Queues a persist (debounced) and notifies listeners of the dirty state.</summary>
@@ -214,4 +222,4 @@ namespace Spectrum.Services
                 palette.Versions.RemoveAt(0);
         }
     }
-}
+}   

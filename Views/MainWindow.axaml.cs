@@ -118,13 +118,13 @@ namespace Spectrum.Views
                         if (vm.SelectedSwatch is not null) RunIfPossible(vm.DuplicateSwatchCommand, vm.SelectedSwatch);
                         break;
                     case Key.P:
-                        RunIfPossible(vm.PickFromScreenCommand);
+                        RunIfPossible(vm.Studio.PickFromScreenCommand);
                         break;
                     case Key.E:
-                        RunIfPossible(vm.ExportToFileCommand);
+                        RunIfPossible(vm.Export.ExportToFileCommand);
                         break;
                     case Key.J:
-                        RunIfPossible(vm.ExportPngCommand);
+                        RunIfPossible(vm.Export.ExportPngCommand);
                         break;
                     case Key.B:
                         RunIfPossible(vm.ToggleLibraryPanelCommand);
@@ -158,7 +158,7 @@ namespace Spectrum.Views
             switch (e.Key)
             {
                 case Key.Space:
-                    RunIfPossible(vm.GeneratePaletteCommand);
+                    RunIfPossible(vm.Studio.GeneratePaletteCommand);
                     e.Handled = true;
                     break;
                 case Key.Delete:

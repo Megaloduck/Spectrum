@@ -148,21 +148,21 @@ namespace Spectrum.Views
             }
 
             // Palette generation & editing
-            Add("Generate / harmonize palette", "Space", vm.GeneratePaletteCommand);
-            Add("Add base color to palette", "color panel", vm.AddCurrentColorCommand);
-            Add("Open color picker", "spectrum + RGB/HSL/HSV", vm.OpenColorPickerCommand);
-            Add("Paste color from clipboard", "HEX / RGB / HSL", vm.PasteColorCommand);
-            Add("Add tints of base color", "color science", vm.AddTintsCommand);
-            Add("Add shades of base color", "color science", vm.AddShadesCommand);
-            Add("Add tones of base color", "color science", vm.AddTonesCommand);
+            Add("Generate / harmonize palette", "Space", vm.Studio.GeneratePaletteCommand);
+            Add("Add base color to palette", "color panel", vm.Studio.AddCurrentColorCommand);
+            Add("Open color picker", "spectrum + RGB/HSL/HSV", vm.Studio.OpenColorPickerCommand);
+            Add("Paste color from clipboard", "HEX / RGB / HSL", vm.Studio.PasteColorCommand);
+            Add("Add tints of base color", "color science", vm.Analyze.AddTintsCommand);
+            Add("Add shades of base color", "color science", vm.Analyze.AddShadesCommand);
+            Add("Add tones of base color", "color science", vm.Analyze.AddTonesCommand);
             Add("Clear palette", "remove all swatches", vm.ClearPaletteCommand);
             Add("Undo", "Ctrl+Z", vm.UndoCommand);
             Add("Redo", "Ctrl+Y", vm.RedoCommand);
 
             // Picking
-            Add("Pick color from screen", "Ctrl+Alt+P", vm.PickFromScreenCommand);
-            Add("Pick color from image", "eyedropper", vm.PickFromImageCommand);
-            Add("Extract palette from image", "histogram", vm.ExtractFromImageCommand);
+            Add("Pick color from screen", "Ctrl+Alt+P", vm.Studio.PickFromScreenCommand);
+            Add("Pick color from image", "eyedropper", vm.Studio.PickFromImageCommand);
+            Add("Extract palette from image", "histogram", vm.Studio.ExtractFromImageCommand);
 
             // Library
             Add("New palette", "Ctrl+N", vm.Library.NewPaletteCommand);
@@ -177,10 +177,10 @@ namespace Spectrum.Views
             // Files & export
             Add("Save palette to file", "Ctrl+S", vm.SavePaletteCommand);
             Add("Load palette from file", "Ctrl+O", vm.LoadPaletteCommand);
-            Add("Export selected format to file", "Ctrl+E", vm.ExportToFileCommand);
-            Add("Export PNG swatch sheet", "Ctrl+J", vm.ExportPngCommand);
-            Add("Build export preview", "footer", vm.BuildExportPreviewCommand);
-            Add("Copy export to clipboard", "footer", vm.CopyExportCommand);
+            Add("Export selected format to file", "Ctrl+E", vm.Export.ExportToFileCommand);
+            Add("Export PNG swatch sheet", "Ctrl+J", vm.Export.ExportPngCommand);
+            Add("Build export preview", "footer", vm.Export.BuildExportPreviewCommand);
+            Add("Copy export to clipboard", "footer", vm.Export.CopyExportCommand);
             Add("Copy whole palette as text", "footer", vm.CopyAllHexCommand);
             Add("Import palette file (CSS/GPL/ASE/ACO)", "library menu", vm.Library.ImportPaletteFileCommand);
             Add("Export whole library", "library menu", vm.Library.ExportLibraryCommand);
@@ -193,8 +193,8 @@ namespace Spectrum.Views
             Add("Workspace: Export — files in and out", "Ctrl+4", vm.SetWorkspaceCommand, WorkspaceMode.Export);
 
             // Analyze & studio tools
-            Add("Open contrast matrix", "Analyze — every pair scored", vm.OpenContrastMatrixCommand);
-            Add("Open gradient studio", "build & export a gradient", vm.OpenGradientStudioCommand);
+            Add("Open contrast matrix", "Analyze — every pair scored", vm.Analyze.OpenContrastMatrixCommand);
+            Add("Open gradient studio", "build & export a gradient", vm.Studio.OpenGradientStudioCommand);
 
             // Window & view
             Add("Toggle light / dark theme", "appearance", vm.ToggleThemeCommand);

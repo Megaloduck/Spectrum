@@ -71,9 +71,9 @@ namespace Spectrum
                 generate.Click += (_, _) =>
                 {
                     if (desktop.MainWindow?.DataContext is MainWindowViewModel vm &&
-                        vm.GeneratePaletteCommand.CanExecute(null))
+                        vm.Studio.GeneratePaletteCommand.CanExecute(null))
                     {
-                        vm.GeneratePaletteCommand.Execute(null);
+                        vm.Studio.GeneratePaletteCommand.Execute(null);
                     }
                 };
 
