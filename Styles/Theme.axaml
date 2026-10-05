@@ -12,10 +12,20 @@
           <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#F5F5F5"/>
           <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#EFEFEF"/>
+          <SolidColorBrush x:Key="SurfacePressedBrush" Color="#E0E0E0"/>
           <SolidColorBrush x:Key="OutlineBrush" Color="#000000"/>
           <SolidColorBrush x:Key="HairlineBrush" Color="#E2E2E2"/>
           <SolidColorBrush x:Key="TextPrimaryBrush" Color="#000000"/>
           <SolidColorBrush x:Key="TextMutedBrush" Color="#6B6B6B"/>
+
+          <!-- Fluent's own text-field state colors, pinned to our surfaces so a
+               focused / hovered field never flips to a hard-coded light fill. -->
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#000000"/>
+          <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#000000"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#EFEFEF"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#E0E0E0"/>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
@@ -23,10 +33,18 @@
           <SolidColorBrush x:Key="SurfaceBrush" Color="#1B1B1B"/>
           <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#242424"/>
           <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#2C2C2C"/>
+          <SolidColorBrush x:Key="SurfacePressedBrush" Color="#383838"/>
           <SolidColorBrush x:Key="OutlineBrush" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="HairlineBrush" Color="#3A3A3A"/>
           <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F2F2"/>
           <SolidColorBrush x:Key="TextMutedBrush" Color="#A0A0A0"/>
+
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#1B1B1B"/>
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#1B1B1B"/>
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#F2F2F2"/>
+          <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#F2F2F2"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#2C2C2C"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#383838"/>
         </ResourceDictionary>
 
       </ResourceDictionary.ThemeDictionaries>
@@ -38,9 +56,10 @@
                confirmation surfaces (library delete button, Settings reset
                panel, ColorPickerDialog input feedback). Giving it a token lets
                grep verify the red #E5484D no longer leaks into chrome.
-             - AccentBrush keeps its monochrome ink default (#3B82F6 / #0F766E)
-               as an opt-in free-color accent that SettingsService.ApplyAccent
-               swaps in at runtime. No free-color ink in the default chrome.
+             - AccentBrush defaults to teal (#0F766E) and is what SettingsService
+               .ApplyAccent swaps at runtime. Focus rings on text fields and
+               combo boxes follow it; the BoxShadow rings on buttons cannot bind
+               a brush, so they stay teal.
            ===================================================================== -->
       <SolidColorBrush x:Key="DangerBrush" Color="#E5484D"/>
 
@@ -130,8 +149,11 @@
     <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
   </Style>
 
+  <!-- Pressed used to fill with OutlineBrush (black in light theme), which made
+       the label black-on-black while the mouse was down. A slightly deeper
+       surface keeps the text readable in both themes. -->
   <Style Selector="Button:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource OutlineBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfacePressedBrush}"/>
   </Style>
 
   <Style Selector="Button:focus-visible /template/ ContentPresenter">
@@ -222,7 +244,7 @@
   </Style>
 
   <Style Selector="Button.wsTab:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource OutlineBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfacePressedBrush}"/>
   </Style>
 
   <Style Selector="Button.wsTab:focus-visible /template/ ContentPresenter">
@@ -285,12 +307,11 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
-  <Style Selector="TextBox:focus-visible">
-    <!-- OutlineBrush is the border; on focus, pull the border aside and
-         paint a monochrome focus ring so the field is navigable without
-         any free-color accent. -->
-    <Setter Property="BorderBrush" Value="#0F766E"/>
-    <Setter Property="Background" Value="#FFFFFF"/>
+  <Style Selector="TextBox:focus">
+    <!-- Follows the accent setting. The fill stays on the theme surface (it used
+         to be a hard-coded #FFFFFF, which gave light text on white in dark mode). -->
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="BorderThickness" Value="2"/>
   </Style>
 
@@ -303,10 +324,8 @@
   </Style>
 
   <Style Selector="ComboBox:focus-visible">
-    <!-- The ComboBox renders its own focus ring via BorderBrush;
-         on focus, pull the border aside and paint a monochrome ring. -->
-    <Setter Property="BorderBrush" Value="#0F766E"/>
-    <Setter Property="Background" Value="#FFFFFF"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="BorderThickness" Value="2"/>
   </Style>
 

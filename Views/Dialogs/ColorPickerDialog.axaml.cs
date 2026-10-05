@@ -23,6 +23,10 @@ namespace Spectrum.Views
         /// <summary>Design-time only — the real dialog is created with an initial color.</summary>
         public ColorPickerDialog() : this(Colors.Black)
         {
+            // The designer (and compiled bindings) need a live DataContext; the runtime
+            // constructor always sets one, but the parameterless constructor historically did
+            // not, which left every {Binding} on the dialog blank in the designer.
+            DataContext = _vm;
         }
 
         public ColorPickerDialog(Color initial)
@@ -32,7 +36,19 @@ namespace Spectrum.Views
             DataContext = _vm;
 
             _vm.ColorChanged += UpdateMarker;
-            Opened += (_, _) => Dispatcher.UIThread.Post(UpdateMarker);
+
+            Opened += (_, _) =>
+            {
+                // The plane hasn't been measured yet when Opened fires; post so layout runs first.
+                Dispatcher.UIThread.Post(UpdateMarker);
+            };
+
+            // Reposition the marker whenever the plane is resized (window resize, DPI change).
+            Plane.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == BoundsProperty)
+                    UpdateMarker();
+            };
         }
 
         // ---------------- Spectrum plane ----------------
@@ -99,16 +115,14 @@ namespace Spectrum.Views
             if (box is null) return;
 
             var text = box.Text ?? string.Empty;
-            var ok = box.Name switch
-            {
-                nameof(HexBox) => _vm.TryApplyHex(text),
-                nameof(RgbBox) => _vm.TryApplyRgb(text),
-                nameof(HslBox) => _vm.TryApplyHsl(text),
-                nameof(HsvBox) => _vm.TryApplyHsv(text),
-                _ => true,
-            };
 
-            if (ok) _vm.InputFeedback = string.Empty;
+            switch (box.Name)
+            {
+                case nameof(HexBox): _vm.TryApplyHex(text); break;
+                case nameof(RgbBox): _vm.TryApplyRgb(text); break;
+                case nameof(HslBox): _vm.TryApplyHsl(text); break;
+                case nameof(HsvBox): _vm.TryApplyHsv(text); break;
+            }
         }
 
         // ---------------- Result ----------------

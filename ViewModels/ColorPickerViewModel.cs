@@ -36,28 +36,37 @@ namespace Spectrum.ViewModels
 
         /// <summary>The picked color including alpha.</summary>
         public Color CurrentColor =>
-            ColorMathService.HsvToRgb(new HsvColor(Hue, Saturation / 100.0, Value / 100.0),
+            ColorMathService.HsvToRgb(
+                new HsvColor(Hue, Saturation / 100.0, Value / 100.0),
                 (byte)Math.Round(Alpha / 100.0 * 255));
 
-        /// <summary>The picked color, fully opaque — used for previewing hue/sat/value without alpha wash.</summary>
+        /// <summary>
+        /// The picked color, fully opaque — used for previewing hue/sat/value
+        /// without the alpha wash.
+        /// </summary>
         public Color OpaqueColor =>
-            ColorMathService.HsvToRgb(new HsvColor(Hue, Saturation / 100.0, Value / 100.0));
+            ColorMathService.HsvToRgb(
+                new HsvColor(Hue, Saturation / 100.0, Value / 100.0));
+
+        /// <summary>
+        /// Fully-saturated, fully-bright version of the current hue.
+        /// This is the base color of the spectrum plane — it must depend
+        /// ONLY on <see cref="Hue"/> so the plane stays a vivid color even
+        /// when the user drags S or V toward 0.
+        /// </summary>
+        public Color PureHueColor =>
+            ColorMathService.HsvToRgb(new HsvColor(Hue, 1.0, 1.0));
 
         public IBrush PreviewBrush => new SolidColorBrush(OpaqueColor);
 
-        /// <summary>Spectrum plane background: white → current hue (the black gradient is a second layer).</summary>
-        public IBrush PlaneHueBrush => new LinearGradientBrush
-        {
-            StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
-            EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
-            GradientStops =
-            {
-                new GradientStop(Colors.White, 0),
-                new GradientStop(OpaqueColor, 1),
-            },
-        };
+        /// <summary>
+        /// Spectrum plane base layer: solid, fully-saturated hue.
+        /// The white→transparent (saturation) and transparent→black (value)
+        /// overlays are drawn as separate layers on top in XAML.
+        /// </summary>
+        public IBrush PlaneHueBrush => new SolidColorBrush(PureHueColor);
 
-        /// <summary>Opacity slider track: transparent → current color.</summary>
+        /// <summary>Opacity slider track: transparent → current opaque color.</summary>
         public IBrush AlphaTrackBrush => new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
@@ -138,6 +147,7 @@ namespace Spectrum.ViewModels
         {
             OnPropertyChanged(nameof(CurrentColor));
             OnPropertyChanged(nameof(OpaqueColor));
+            OnPropertyChanged(nameof(PureHueColor));
             OnPropertyChanged(nameof(PreviewBrush));
             OnPropertyChanged(nameof(PlaneHueBrush));
             OnPropertyChanged(nameof(AlphaTrackBrush));
@@ -162,57 +172,78 @@ namespace Spectrum.ViewModels
 
         public bool TryApplyHex(string text)
         {
-            if (!ColorMathService.TryParseHex(text, out var color)) return Feedback("Couldn't parse that hex value.");
+            if (!ColorMathService.TryParseHex(text, out var color))
+                return Feedback("Couldn't parse that hex value.");
+
             ApplyColor(color);
 
             // Only an 8-digit input (RRGGBBAA) carries meaningful alpha.
             if (text.Trim().TrimStart('#').Length == 8)
                 Alpha = color.A / 255.0 * 100;
 
+            InputFeedback = string.Empty;
             return true;
         }
 
-        public bool TryApplyRgb(string text) => ApplyTriplet(text, 0, 255, "RGB", parts =>
+        public bool TryApplyRgb(string text) => ApplyTriplet(text, "RGB", parts =>
         {
             var a = OpaqueColor.A;
             ApplyColor(Color.FromArgb(a, ToByte(parts[0]), ToByte(parts[1]), ToByte(parts[2])));
         });
 
-        public bool TryApplyHsl(string text) => ApplyTriplet(text, 0, 360, "HSL", parts =>
+        public bool TryApplyHsl(string text) => ApplyTriplet(text, "HSL", parts =>
         {
             // Values arrive as (hue 0-360, sat %, lightness %) as displayed.
             var a = OpaqueColor.A;
-            var color = ColorMathService.HslToRgb(parts[0], Math.Clamp(parts[1], 0, 100) / 100.0,
-                Math.Clamp(parts[2], 0, 100) / 100.0, a);
+            var color = ColorMathService.HslToRgb(
+                parts[0],
+                Math.Clamp(parts[1], 0, 100) / 100.0,
+                Math.Clamp(parts[2], 0, 100) / 100.0,
+                a);
             ApplyColor(color);
         });
 
-        public bool TryApplyHsv(string text) => ApplyTriplet(text, 0, 360, "HSV", parts =>
+        public bool TryApplyHsv(string text) => ApplyTriplet(text, "HSV", parts =>
         {
             var a = OpaqueColor.A;
             var color = ColorMathService.HsvToRgb(
-                new HsvColor(parts[0], Math.Clamp(parts[1], 0, 100) / 100.0, Math.Clamp(parts[2], 0, 100) / 100.0), a);
+                new HsvColor(
+                    parts[0],
+                    Math.Clamp(parts[1], 0, 100) / 100.0,
+                    Math.Clamp(parts[2], 0, 100) / 100.0),
+                a);
             ApplyColor(color);
         });
 
-        private bool ApplyTriplet(string text, double min, double max, string label, Action<double[]> apply)
+        private bool ApplyTriplet(string text, string label, Action<double[]> apply)
         {
             var numbers = NumberRegex.Matches(text ?? string.Empty)
                 .Select(m => double.Parse(m.Value, CultureInfo.InvariantCulture))
                 .ToArray();
 
             if (numbers.Length < 3)
-                return Feedback($"Enter {label} as three numbers, e.g. {(label == "RGB" ? "255, 128, 0" : "210, 60%, 50%")}.");
+                return Feedback(
+                    $"Enter {label} as three numbers, e.g. " +
+                    (label == "RGB" ? "255, 128, 0" : "210, 60%, 50%") + ".");
 
             apply(numbers);
+            InputFeedback = string.Empty;
             return true;
         }
 
-        /// <summary>Applies a picked color to the plane state (keeps the alpha slider as-is).</summary>
+        /// <summary>
+        /// Applies a picked color to the plane state.
+        /// Preserves the current hue when the incoming color has no chroma
+        /// information (black, white, grays), so the hue slider doesn't snap
+        /// to red when the user drags to the S=0 or V=0 corner.
+        /// </summary>
         public void ApplyColor(Color color)
         {
             var hsv = ColorMathService.RgbToHsv(color);
-            Hue = hsv.H;
+
+            if (hsv.S > 0.0001 && hsv.V > 0.0001)
+                Hue = hsv.H;
+
             Saturation = hsv.S * 100;
             Value = hsv.V * 100;
         }

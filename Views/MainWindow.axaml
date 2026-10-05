@@ -133,7 +133,7 @@
                              AutoScrollToSelectedItem="True">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PaletteItemViewModel">
-                                <Grid ColumnDefinitions="8,*,Auto" Margin="0,5">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,5">
                                 <Border Grid.Column="0" Width="40" Height="40" CornerRadius="4"
                                         Background="{Binding PreviewBrush}"
                                         BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
