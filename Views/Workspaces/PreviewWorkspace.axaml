@@ -147,7 +147,7 @@
         <Grid Grid.Column="0" RowDefinitions="Auto,*" >
 
             <!-- Toolbar -->
-            <Border Grid.Row="0" Classes="panel" Padding="16,10">
+            <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
                 <Grid ColumnDefinitions="*,Auto">
 
                     <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -172,6 +172,17 @@
                                         VerticalAlignment="Center">
                                 <materialIcons:MaterialIcon Kind="ViewColumn" Width="16" Height="16"/>
                                 <TextBlock Text="Compare" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Detach (§7 multi-window): lives on the Preview toolbar only. -->
+                        <Button Height="38" Margin="0,0,4,0"
+                                Command="{Binding DetachWindowCommand}"
+                                ToolTip.Tip="Open this palette in a separate window (§7 multi-window)">
+                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                        VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="WindowRestore" Width="16" Height="16"/>
+                                <TextBlock Text="Detach" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 

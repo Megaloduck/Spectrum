@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Spectrum.Models;
@@ -13,9 +12,9 @@ using System;
 namespace Spectrum.Views
 {
     /// <summary>
-    /// The swatch board: open-palette tabs, the four card templates and the
-    /// drag-to-reorder behaviour. Owned here rather than by the window so that
-    /// Studio, Preview and Analyze can each host a board without duplicating it.
+    /// The swatch board: the four card templates and the drag-to-reorder
+    /// behaviour. Owned here rather than by the window so that Studio, Preview
+    /// and Analyze can each host a board without duplicating it.
     /// </summary>
     public partial class PaletteBoardView : UserControl
     {
@@ -64,29 +63,6 @@ namespace Spectrum.Views
             // version, so assign it through the property's own type.
             typeof(ItemsControl).GetProperty(nameof(ItemsControl.ItemsPanel))!
                 .SetValue(Board, Resources[panelKey]);
-        }
-
-        // ---------------- Tabs (§7) ----------------
-
-        private void OnTabPressed(object? sender, PointerPressedEventArgs e)
-        {
-            // The tab's close button has its own handler; don't also activate.
-            if (e.Source is Button) return;
-            if (sender is Border { DataContext: PaletteItemViewModel item } &&
-                DataContext is MainWindowViewModel vm)
-            {
-                vm.Library.SelectedPalette = item;
-            }
-        }
-
-        private void OnTabClose(object? sender, RoutedEventArgs e)
-        {
-            if (sender is Button { DataContext: PaletteItemViewModel item } &&
-                DataContext is MainWindowViewModel vm &&
-                vm.Library.CloseTabCommand.CanExecute(item))
-            {
-                vm.Library.CloseTabCommand.Execute(item);
-            }
         }
 
         // ---------------- Drag-to-reorder ----------------

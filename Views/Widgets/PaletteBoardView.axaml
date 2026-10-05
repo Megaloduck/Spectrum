@@ -11,9 +11,9 @@
              x:Class="Spectrum.Views.PaletteBoardView"
              x:DataType="vm:MainWindowViewModel">
 
-    <!-- The palette itself: open-palette tabs, the swatch board, and the status
-         strip. Studio, Preview and Analyze all show exactly this, so it lives
-         here once and each workspace just places it. -->
+    <!-- The palette itself: the swatch board and the status strip. Studio,
+         Preview and Analyze all show exactly this, so it lives here once and
+         each workspace just places it. -->
 
     <UserControl.Resources>
         <!-- Board card templates for the four view modes (§8 grid/list/compact).
@@ -256,81 +256,24 @@
         <ItemsPanelTemplate x:Key="CompactPanel"><WrapPanel/></ItemsPanelTemplate>
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <!-- The palette + the status message pinned to the bottom. Palettes are
+         chosen from the library sidebar, so there are no open-palette tabs. -->
+    <Border Classes="panel" Padding="14">
+        <Grid RowDefinitions="*,Auto">
 
-        <!-- Open palettes as tabs (§7 "Tabs for open palettes") -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,4,0,10">
-            <ScrollViewer Grid.Column="0"
-                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <ItemsControl ItemsSource="{Binding Library.OpenTabs}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:PaletteItemViewModel">
-                                <Border Classes="panel" CornerRadius="10" Padding="10,5,6,3"
-                                        BorderThickness="1.2" Cursor="Hand"
-                                        PointerPressed="OnTabPressed"
-                                        Background="{DynamicResource SurfaceRaisedBrush}">
-                                    <Grid RowDefinitions="Auto,2">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <Border Width="14" Height="14" CornerRadius="4"
-                                                    Background="{Binding PreviewBrush}"
-                                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
-                                            <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
-                                                       VerticalAlignment="Center" MaxWidth="140"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                            <Button Classes="iconOnly" Padding="2" VerticalAlignment="Center"
-                                                    Click="OnTabClose"
-                                                    ToolTip.Tip="Close tab">
-                                                <materialIcons:MaterialIcon Kind="Close" Width="12" Height="12"/>
-                                            </Button>
-                                        </StackPanel>
-                                        <Border Grid.Row="1" Height="3" CornerRadius="1.5"
-                                                Background="{DynamicResource AccentBrush}"
-                                                IsVisible="{Binding IsSelected}" Margin="0,3,0,0"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+            <ScrollViewer Grid.Row="0"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="Board" ItemsSource="{Binding Palette}"/>
             </ScrollViewer>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                <Button Classes="ghost" FontSize="11" Padding="10,5"
-                        Command="{Binding DetachWindowCommand}"
-                        ToolTip.Tip="Open this palette in a separate window (§7 multi-window)">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <materialIcons:MaterialIcon Kind="WindowRestore" Width="14" Height="14"/>
-                        <TextBlock Text="Detach" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
+            <TextBlock Grid.Row="1"
+                       Text="{Binding StatusMessage}"
+                       Classes="caption"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Right"
+                       Margin="0,10,4,0"/>
+
         </Grid>
-
-        <!-- THE PALETTE + status message pinned to the bottom -->
-        <Border Grid.Row="1" Classes="panel" Padding="14">
-            <Grid RowDefinitions="*,Auto">
-
-                <ScrollViewer Grid.Row="0"
-                              HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto">
-                    <ItemsControl x:Name="Board" ItemsSource="{Binding Palette}"/>
-                </ScrollViewer>
-
-                <TextBlock Grid.Row="1"
-                           Text="{Binding StatusMessage}"
-                           Classes="caption"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Right"
-                           Margin="0,10,4,0"/>
-
-            </Grid>
-        </Border>
-
-    </Grid>
+    </Border>
 </UserControl>

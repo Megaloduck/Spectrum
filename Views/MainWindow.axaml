@@ -5,7 +5,6 @@
         xmlns:converters="using:Spectrum.Converters"
         xmlns:materialIcons="using:Material.Icons.Avalonia"
         xmlns:workspaces="using:Spectrum.Views.Workspaces"
-        xmlns:local="using:Spectrum.Views.Widgets"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1360" d:DesignHeight="700"
@@ -236,11 +235,6 @@
                 <workspaces:AnalyzeWorkspace IsVisible="{Binding IsAnalyzeMode}"/>
                 <workspaces:ExportWorkspace IsVisible="{Binding IsExportMode}"/>
             </Grid>
-
-            <!-- Transient toast: fades in above the work area and auto-hides.
-                 It is bound to MainWindowViewModel.ToastMessage, which is set on
-                 every StatusMessage assignment so the user sees any action. -->
-            <local:Toast/>
 
         </Grid>
 

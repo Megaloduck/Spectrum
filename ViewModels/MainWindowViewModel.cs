@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Spectrum.Models;
@@ -263,29 +262,15 @@ namespace Spectrum.ViewModels
 
         private string _statusMessage = "Ready to Inspire.";
 
-        [ObservableProperty]
-        private string _toastMessage = string.Empty;
-
         /// <summary>
         /// Public status-message setter. Every assignment updates the status bar
-        /// (bound from StatusBarView.axaml) and raises a transient toast so the
+        /// (bound from StatusBarView.axaml) and the board's status strip, so the
         /// user sees the result of an action even while scrolled away.
         /// </summary>
         public string StatusMessage
         {
             get => _statusMessage;
-            set
-            {
-                _statusMessage = value;
-                ToastMessage = value;
-
-                // The toast auto-hides after ToastDurationMs. Start the timer on
-                // first use (the toast instance is cleared before each show).
-                if (!_toastTimer.IsEnabled)
-                {
-                    _toastTimer.Start();
-                }
-            }
+            set => _statusMessage = value;
         }
 
         [ObservableProperty]
@@ -376,9 +361,6 @@ namespace Spectrum.ViewModels
         private readonly Stack<List<SwatchSnapshot>> _undoStack = new();
         private readonly Stack<List<SwatchSnapshot>> _redoStack = new();
         private bool _isRestoringHistory;
-
-        /// <summary>Auto-hide timer for the transient toast.</summary>
-        private readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromMilliseconds(6000) };
 
         private readonly record struct SwatchSnapshot(Color Color, string Name, bool IsLocked);
 
@@ -1092,12 +1074,6 @@ namespace Spectrum.ViewModels
             }
 
             StatusMessage = $"Extracted {replaced} color{(replaced == 1 ? "" : "s")} from the image.";
-        }
-
-        [RelayCommand]
-        private void DismissToast()
-        {
-            ToastMessage = string.Empty;
         }
 
         [RelayCommand]
