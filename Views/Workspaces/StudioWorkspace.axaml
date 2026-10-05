@@ -5,7 +5,6 @@
              xmlns:converters="using:Spectrum.Converters"
              xmlns:materialIcons="using:Material.Icons.Avalonia"
              xmlns:local="using:Spectrum.Views"
-             xmlns:widgets="using:Spectrum.Views.Widgets"
              x:Class="Spectrum.Views.Workspaces.StudioWorkspace"
              x:DataType="vm:MainWindowViewModel">
 
@@ -33,174 +32,139 @@
                 </Grid>
 
                 <ScrollViewer Grid.Row="1">
-                     <StackPanel Spacing="12"  Margin="20,8,20,20" >
+                    <StackPanel Spacing="12" Margin="20,8,20,20">
 
-                    <!-- Base color swatch with its auto-name overlaid, bottom-left.
-                         Click opens the spectrum picker (§2 color wheel/spectrum). -->
-                    <Border Background="{Binding Studio.BaseColorBrush}" Height="150" CornerRadius="14"
-                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3"
-                            Cursor="Hand" PointerPressed="OnBasePreviewPressed"
-                            ToolTip.Tip="Click to open the full color picker (spectrum, RGB/HSL/HSV input)">
-                        <TextBlock Text="{Binding Studio.BaseColorName}" Foreground="{Binding Studio.BaseForegroundBrush}"
-                                   FontWeight="Bold" FontSize="14"
-                                   Margin="14" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
-                    </Border>
+                        <!-- Base color swatch with its auto-name overlaid, bottom-left.
+                             Click opens the spectrum picker (§2 color wheel/spectrum). -->
+                        <Border Background="{Binding Studio.BaseColorBrush}" Height="150" CornerRadius="14"
+                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3"
+                                Cursor="Hand" PointerPressed="OnBasePreviewPressed"
+                                ToolTip.Tip="Click to open the full color picker (spectrum, RGB/HSL/HSV input)">
+                            <TextBlock Text="{Binding Studio.BaseColorName}" Foreground="{Binding Studio.BaseForegroundBrush}"
+                                       FontWeight="Bold" FontSize="14"
+                                       Margin="14" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
+                        </Border>
 
-                    <Grid ColumnDefinitions="88,*,Auto">
-                        <ComboBox Grid.Column="0" SelectedIndex="0" Margin="0,0,8,0" HorizontalAlignment="Stretch"
-                                  ToolTip.Tip="Manual input format (HEX entry)">
-                            <ComboBoxItem Content="HEX"/>
-                        </ComboBox>
-                        <TextBox Grid.Column="1" Text="{Binding Studio.BaseHex}" Classes="mono" Watermark="#RRGGBB"
-                                 Margin="0,0,8,0"/>
-                        <Button Grid.Column="2" Classes="iconOnly" Height="34" Padding="8,6"
-                                Command="{Binding Studio.PasteColorCommand}"
-                                ToolTip.Tip="Paste a color from the clipboard (HEX / RGB / HSL)">
-                            <materialIcons:MaterialIcon Kind="ClipboardArrowDownOutline" Width="16" Height="16"/>
-                        </Button>
-                    </Grid>
+                        <Grid ColumnDefinitions="88,*,Auto">
+                            <ComboBox Grid.Column="0" SelectedIndex="0" Margin="0,0,8,0" HorizontalAlignment="Stretch"
+                                      ToolTip.Tip="Manual input format (HEX entry)">
+                                <ComboBoxItem Content="HEX"/>
+                            </ComboBox>
+                            <TextBox Grid.Column="1" Text="{Binding Studio.BaseHex}" Classes="mono" Watermark="#RRGGBB"
+                                     Margin="0,0,8,0"/>
+                            <Button Grid.Column="2" Classes="iconOnly" Height="34" Padding="8,6"
+                                    Command="{Binding Studio.PasteColorCommand}"
+                                    ToolTip.Tip="Paste a color from the clipboard (HEX / RGB / HSL)">
+                                <materialIcons:MaterialIcon Kind="ClipboardArrowDownOutline" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>
+
                         <Button Classes="iconOnly" Command="{Binding Studio.AddCurrentColorCommand}"
                                 ToolTip.Tip="Add the base color to the palette">
                             <materialIcons:MaterialIcon Kind="AddBox" Width="18" Height="18"/>
                         </Button>
 
-                    <!-- Picked-color history (§3): click to reload into the color panel -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="RECENT PICKS" Classes="eyebrow"/>
-                        <TextBlock Classes="caption" FontSize="11"
-                                   Text="Screen eyedropper: Ctrl+Alt+P · click a swatch to reuse"
-                                   TextWrapping="Wrap"/>
-                        <ItemsControl ItemsSource="{Binding Studio.RecentPicks}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:RecentPick">
-                                    <Button Margin="0,0,6,6" Padding="0"
-                                            Background="Transparent" BorderThickness="0"
-                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Studio.ApplyRecentPickCommand}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip.Tip="{Binding Name}">
-                                        <Border Width="32" Height="32" CornerRadius="8"
-                                                Background="{Binding Brush}"
-                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
+                        <!-- Picked-color history (§3): click to reload into the color panel -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="RECENT PICKS" Classes="eyebrow"/>
+                            <TextBlock Classes="caption" FontSize="11"
+                                       Text="Screen eyedropper: Ctrl+Alt+P · click a swatch to reuse"
+                                       TextWrapping="Wrap"/>
+                            <ItemsControl ItemsSource="{Binding Studio.RecentPicks}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:RecentPick">
+                                        <Button Margin="0,0,6,6" Padding="0"
+                                                Background="Transparent" BorderThickness="0"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Studio.ApplyRecentPickCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{Binding Name}">
+                                            <Border Width="32" Height="32" CornerRadius="8"
+                                                    Background="{Binding Brush}"
+                                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
 
+                        <!-- ===== Color panel sliders ===== -->
 
-
-                         <!-- Color Generator Slider -->
-                    <widgets:SliderRow/>
-
+                        <!-- Hue -->
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Text="Hue" FontWeight="SemiBold" FontSize="13"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Studio.Hue, StringFormat=N0}" Classes="caption"/>    
+                            <TextBlock Grid.Column="1" Text="{Binding Studio.Hue, StringFormat=N0}" Classes="caption"/>
                         </Grid>
                         <Grid Height="40">
+                            <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                                    Background="{Binding Studio.HueTrackBrush}"/>
+                            <Slider Minimum="0" Maximum="360" Value="{Binding Studio.Hue}"
+                                    Background="Transparent"/>
+                        </Grid>
 
-    <!-- Actual gradient bar -->
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding Studio.HueTrackBrush}"/>
-
-    <!-- Interactive slider -->
-    <Slider Minimum="0"
-            Maximum="360"   
-            Value="{Binding Studio.Hue}"
-            Background="Transparent"/>
-
-</Grid>
-
+                        <!-- Saturation -->
                         <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
                             <TextBlock Text="Saturation" FontWeight="SemiBold" FontSize="13"/>
                             <TextBlock Grid.Column="1" Text="{Binding Studio.Saturation, StringFormat=N0}" Classes="caption"/>
                         </Grid>
                         <Grid Height="40">
+                            <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                                    Background="{Binding Studio.SaturationTrackBrush}"/>
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Studio.Saturation}"
+                                    Background="Transparent"/>
+                        </Grid>
 
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding Studio.SaturationTrackBrush}"/>
-
-    <Slider Minimum="0"
-            Maximum="100"
-            Value="{Binding Studio.Saturation}"
-            Background="Transparent"/>
-
-</Grid>
-
+                        <!-- Brightness -->
                         <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
                             <TextBlock Text="Brightness" FontWeight="SemiBold" FontSize="13"/>
                             <TextBlock Grid.Column="1" Text="{Binding Studio.Lightness, StringFormat=N0}" Classes="caption"/>
                         </Grid>
                         <Grid Height="40">
+                            <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                                    Background="{Binding Studio.BrightnessTrackBrush}"/>
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Studio.Lightness}"
+                                    Background="Transparent"/>
+                        </Grid>
 
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding Studio.BrightnessTrackBrush}"/>
-
-    <Slider Minimum="0"
-            Maximum="100"
-            Value="{Binding Studio.Lightness}"
-            Background="Transparent"/>
-
-</Grid>
-
+                        <!-- Temperature -->
                         <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
                             <TextBlock Text="Temperature" FontWeight="SemiBold" FontSize="13"/>
                             <TextBlock Grid.Column="1" Text="{Binding Studio.Temperature, StringFormat=N0}" Classes="caption"/>
                         </Grid>
                         <Grid Height="40">
+                            <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                                    Background="{Binding Studio.TemperatureTrackBrush}"/>
+                            <Slider Minimum="-100" Maximum="100" Value="{Binding Studio.Temperature}"
+                                    Background="Transparent"/>
+                        </Grid>
 
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding Studio.TemperatureTrackBrush}"/>
-
-    <Slider Minimum="-100"
-            Maximum="100"
-            Value="{Binding Studio.Temperature}"
-            Background="Transparent"/>
-
-</Grid>
-
+                        <!-- Opacity -->
                         <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,0">
                             <TextBlock Text="Opacity" FontWeight="SemiBold" FontSize="13"/>
                             <TextBlock Grid.Column="1" Text="{Binding Studio.AlphaLabel}" Classes="caption"/>
                         </Grid>
                         <Grid Height="40">
-
-    <Border Height="8"
-            VerticalAlignment="Center"
-            CornerRadius="4"
-            Background="{Binding Studio.AlphaTrackBrush}"/>
-
-    <Slider Minimum="0"
-            Maximum="100"
-            Value="{Binding Studio.Alpha}"
-            Background="Transparent"/>
-
-</Grid>
+                            <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                                    Background="{Binding Studio.AlphaTrackBrush}"/>
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Studio.Alpha}"
+                                    Background="Transparent"/>
+                        </Grid>
 
                     </StackPanel>
-
                 </ScrollViewer>
 
-                 <!-- Harmonize Button -->
-                 <StackPanel Grid.Row="2" Margin="20,14,20,16"  Spacing="10">
-                     <Separator VerticalAlignment="Center"/>
-                     <Button Classes="iconOnly" Command="{Binding Studio.GeneratePaletteCommand}"
+                <!-- Harmonize Button -->
+                <StackPanel Grid.Row="2" Margin="20,14,20,16" Spacing="10">
+                    <Separator VerticalAlignment="Center"/>
+                    <Button Classes="iconOnly" Command="{Binding Studio.GeneratePaletteCommand}"
                             ToolTip.Tip="Regenerates every unlocked color — using the Harmonize tool if one is selected">
                         <materialIcons:MaterialIcon Kind="Shuffle" Width="18" Height="18"/>
-                     </Button>
-                 </StackPanel>
+                    </Button>
+                </StackPanel>
 
             </Grid>
         </Border>
@@ -212,69 +176,69 @@
                  history/file actions pinned on the right. -->
             <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
                 <Grid ColumnDefinitions="*,Auto">
-                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
 
-                    <!-- Harmony Type ComboBox -->
-                    <ComboBox MinWidth="150" Height="38" Margin="0,0,4,0"
-                              ItemsSource="{Binding Studio.HarmonyTypes}" SelectedItem="{Binding Studio.SelectedHarmony}"
-                              ToolTip.Tip="Rule Generate/Space uses for unlocked colors">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                        <!-- Harmony Type ComboBox -->
+                        <ComboBox MinWidth="150" Height="38" Margin="0,0,4,0"
+                                  ItemsSource="{Binding Studio.HarmonyTypes}" SelectedItem="{Binding Studio.SelectedHarmony}"
+                                  ToolTip.Tip="Rule Generate/Space uses for unlocked colors">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
-                    <!-- Divider 1 (rule | picking) -->
-                    <Border Width="1" Height="24" Margin="12,0"
-                            Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
+                        <!-- Divider 1 (rule | picking) -->
+                        <Border Width="1" Height="24" Margin="12,0"
+                                Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
 
-                    <!-- Extract from Image -->
-                    <Button Height="38" Margin="0,0,4,0"
-                            Command="{Binding Studio.ExtractFromImageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
-                            <TextBlock Text="Extract from Image" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                        <!-- Extract from Image -->
+                        <Button Height="38" Margin="0,0,4,0"
+                                Command="{Binding Studio.ExtractFromImageCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
+                                <TextBlock Text="Extract from Image" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                    <!-- Screen eyedropper (§3) -->
-                    <Button Height="38" Margin="0,0,4,0"
-                            Command="{Binding Studio.PickFromScreenCommand}"
-                            ToolTip.Tip="Pick a color from anywhere on screen — global hotkey Ctrl+Alt+P (local only)">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <materialIcons:MaterialIcon Kind="Eyedropper" Width="16" Height="16"/>
-                            <TextBlock Text="Screen" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                        <!-- Screen eyedropper (§3) -->
+                        <Button Height="38" Margin="0,0,4,0"
+                                Command="{Binding Studio.PickFromScreenCommand}"
+                                ToolTip.Tip="Pick a color from anywhere on screen — global hotkey Ctrl+Alt+P (local only)">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="Eyedropper" Width="16" Height="16"/>
+                                <TextBlock Text="Screen" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                    <!-- In-app image eyedropper (§3) -->
-                    <Button Height="38" Margin="0,0,4,0"
-                            Command="{Binding Studio.PickFromImageCommand}"
-                            ToolTip.Tip="Pick a color from a specific pixel of an image">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <materialIcons:MaterialIcon Kind="Crosshairs" Width="16" Height="16"/>
-                            <TextBlock Text="Image" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                        <!-- In-app image eyedropper (§3) -->
+                        <Button Height="38" Margin="0,0,4,0"
+                                Command="{Binding Studio.PickFromImageCommand}"
+                                ToolTip.Tip="Pick a color from a specific pixel of an image">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="Crosshairs" Width="16" Height="16"/>
+                                <TextBlock Text="Image" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                    <!-- Divider (picking | studio tools) -->
-                    <Border Width="1" Height="24" Margin="8,0"
-                            Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
+                        <!-- Divider (picking | studio tools) -->
+                        <Border Width="1" Height="24" Margin="8,0"
+                                Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>
 
-                    <!-- Gradient studio (§8) -->
-                    <Button Height="38" Margin="0,0,4,0"
-                            Command="{Binding Studio.OpenGradientStudioCommand}"
-                            ToolTip.Tip="Build a multi-stop gradient from your colors — copy CSS, save SVG/PNG, or add its stops to the palette">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <materialIcons:MaterialIcon Kind="GradientHorizontal" Width="16" Height="16"/>
-                            <TextBlock Text="Gradient" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                        <!-- Gradient studio (§8) -->
+                        <Button Height="38" Margin="0,0,4,0"
+                                Command="{Binding Studio.OpenGradientStudioCommand}"
+                                ToolTip.Tip="Build a multi-stop gradient from your colors — copy CSS, save SVG/PNG, or add its stops to the palette">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="GradientHorizontal" Width="16" Height="16"/>
+                                <TextBlock Text="Gradient" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                </WrapPanel>
+                    </WrapPanel>
 
-                <local:ToolbarGlobalsView Grid.Column="1"/>
+                    <local:ToolbarGlobalsView Grid.Column="1"/>
                 </Grid>
             </Border>
 

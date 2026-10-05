@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Media;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -120,19 +119,13 @@ namespace Spectrum.ViewModels
             };
         }
 
-
-        private string _statusMessage = "Ready to Inspire.";
-
         /// <summary>
-        /// Public status-message setter. Every assignment updates the status bar
-        /// (bound from StatusBarView.axaml) and the board's status strip, so the
-        /// user sees the result of an action even while scrolled away.
+        /// Result of the latest action, shown in the strip under the board and in
+        /// the Export toolbar. Every assignment raises PropertyChanged, so the UI
+        /// updates immediately.
         /// </summary>
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set => _statusMessage = value;
-        }
+        [ObservableProperty]
+        private string _statusMessage = "Ready to Inspire.";
 
         [ObservableProperty]
         private int _paletteCount;
@@ -140,11 +133,6 @@ namespace Spectrum.ViewModels
         public string PaletteCountLabel => PaletteCount == 1 ? "1 color" : $"{PaletteCount} colors";
 
         partial void OnPaletteCountChanged(int value) => OnPropertyChanged(nameof(PaletteCountLabel));
-
-
-
-        /// <summary>Returns true while a destructive action can be undone.</summary>
-        public bool CanUndoToast => _undoStack.Count > 0 || PaletteLibraryService.CanUndoLastDelete;
 
         // ---- Undo/redo history (covers add/remove/clear/generate/extract/load —
         // ---- see PushHistory call sites. In-place edits like renaming or
@@ -224,14 +212,6 @@ namespace Spectrum.ViewModels
             if (Library is not null) window.AttachLibrary(Library);
             await window.ShowDialog(owner);
             StatusMessage = "Settings saved.";
-        }
-
-        /// <summary>§7 "Command palette (Ctrl+K)": fuzzy-searchable list of every command.</summary>
-        private async void OpenCommandPalette()
-        {
-            if (GetOwnerWindow() is not { } owner) return;
-            var palette = new Views.CommandPaletteWindow(this);
-            await palette.ShowDialog(owner);
         }
 
         // Panel collapse toggles (§7 "Resizable / collapsible panels"). Plain
