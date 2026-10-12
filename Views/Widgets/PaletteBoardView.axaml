@@ -17,11 +17,19 @@
 
     <UserControl.Resources>
         <!-- Board card templates for the four view modes (§8 grid/list/compact).
-             The mode switch is applied in code-behind (PaletteBoardView.ApplyViewMode). -->
+             The mode switch is applied in code-behind (PaletteBoardView.ApplyViewMode).
+
+             Card actions, in order of how often they're used:
+               · Lock            always visible
+               · Details / Edit / Copy / "…"   fade in on hover, while the card is
+                 selected, or while keyboard focus is inside it
+               · "…" holds the rest: rename, move, duplicate, remove
+             Clicking the hex value copies it. -->
 
         <!-- Row: the classic Coolors-style full-height card (also reused by Grid mode). -->
         <DataTemplate x:Key="RowCardTemplate" x:DataType="models:ColorSwatch">
-            <Border Classes="swatchCard" Background="{Binding Brush}" CornerRadius="14" Margin="4" Cursor="Hand" MinHeight="250"
+            <Border Classes="swatchCard" Classes.selected="{Binding IsSelected}"
+                    Background="{Binding Brush}" CornerRadius="14" Margin="4" Cursor="Hand" MinHeight="250"
                     AutomationProperties.Name="{Binding Name}"
                     AutomationProperties.AutomationId="{Binding Hex}"
                     PointerPressed="OnSwatchPointerPressed"
@@ -40,9 +48,9 @@
                                    Classes="caption" FontSize="11"/>
                     </StackPanel>
                 </ToolTip.Tip>
-                <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+                <Grid RowDefinitions="Auto,*,Auto" Margin="11">
 
-                    <!-- Icon stack: lock stays put, the rest fades in on hover -->
+                    <!-- Top-right: lock stays put, the rail of actions fades in -->
                     <StackPanel Grid.Row="0" HorizontalAlignment="Right" Spacing="6">
                         <ToggleButton Classes="iconOnly"
                                       IsChecked="{Binding IsLocked, Mode=TwoWay}"
@@ -51,72 +59,88 @@
                                 Kind="{Binding IsLocked, Converter={x:Static converters:LockIconConverter.Instance}}"
                                 Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
                         </ToggleButton>
+
                         <StackPanel Classes="swatchRail" Spacing="6">
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Move left">
-                            <materialIcons:MaterialIcon Kind="ArrowUp" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Move right">
-                            <materialIcons:MaterialIcon Kind="ArrowDown" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}" ToolTip.Tip="Zoom view (§8)">
-                            <materialIcons:MaterialIcon Kind="Magnify" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                            <Button.Flyout>
-                                <Flyout Placement="Right">
-                                    <StackPanel x:DataType="models:ColorSwatch" Width="270" Spacing="7" Margin="6">
-                                        <Border Height="120" CornerRadius="10" Background="{Binding Brush}"
-                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
-                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16"/>
-                                        <TextBlock Text="{Binding Hex}" Classes="mono" FontSize="14"/>
-                                        <TextBlock Text="{Binding RgbLabel}" Classes="mono caption" FontSize="11"/>
-                                        <TextBlock Text="{Binding HslLabel}" Classes="mono caption" FontSize="11"/>
-                                        <TextBlock Text="{Binding LabLabel}" Classes="mono caption" FontSize="11"/>
-                                        <TextBlock Text="{Binding OklchLabel}" Classes="mono caption" FontSize="11"/>
-                                        <Separator/>
-                                        <TextBlock Text="{Binding ContrastLabel}" Classes="caption" FontSize="11"/>
-                                        <TextBlock Text="{Binding WhiteTextBadge}" Classes="caption" FontSize="11"/>
-                                        <TextBlock Text="{Binding BlackTextBadge}" Classes="caption" FontSize="11"/>
-                                        <Button Content="Edit color…" HorizontalAlignment="Stretch"
-                                                Command="{Binding EditColorCommand}" CommandParameter="{Binding}"/>
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                Command="{Binding EditColorCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Edit color (spectrum picker)">
-                            <materialIcons:MaterialIcon Kind="Palette" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}">
-                            <materialIcons:MaterialIcon Kind="Pencil" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                            <Button.Flyout>
-                                <Flyout>
-                                    <StackPanel x:DataType="models:ColorSwatch" Width="180" Spacing="8" Margin="4">
-                                        <TextBlock Text="RENAME" Classes="eyebrow"/>
-                                        <TextBox Text="{Binding Name}" Watermark="Name"/>
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                Command="{Binding DuplicateCommand}"
-                                CommandParameter="{Binding}"
-                                ToolTip.Tip="Duplicate swatch">
-                            <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                Command="{Binding CopyCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Copy in the selected format">
-                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
-                                Command="{Binding RemoveCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Remove swatch">
-                            <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
+
+                            <!-- Details / zoom (§8) -->
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}" ToolTip.Tip="Details">
+                                <materialIcons:MaterialIcon Kind="Magnify" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                <Button.Flyout>
+                                    <Flyout Placement="Right">
+                                        <StackPanel x:DataType="models:ColorSwatch" Width="270" Spacing="7" Margin="6">
+                                            <Border Height="120" CornerRadius="10" Background="{Binding Brush}"
+                                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16"/>
+                                            <TextBlock Text="{Binding Hex}" Classes="mono" FontSize="14"/>
+                                            <TextBlock Text="{Binding RgbLabel}" Classes="mono caption" FontSize="11"/>
+                                            <TextBlock Text="{Binding HslLabel}" Classes="mono caption" FontSize="11"/>
+                                            <TextBlock Text="{Binding LabLabel}" Classes="mono caption" FontSize="11"/>
+                                            <TextBlock Text="{Binding OklchLabel}" Classes="mono caption" FontSize="11"/>
+                                            <Separator/>
+                                            <TextBlock Text="{Binding ContrastLabel}" Classes="caption" FontSize="11"/>
+                                            <TextBlock Text="{Binding WhiteTextBadge}" Classes="caption" FontSize="11"/>
+                                            <TextBlock Text="{Binding BlackTextBadge}" Classes="caption" FontSize="11"/>
+                                            <Button Content="Edit color…" HorizontalAlignment="Stretch"
+                                                    Command="{Binding EditColorCommand}" CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
+
+                            <!-- Edit (spectrum picker) -->
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                    Command="{Binding EditColorCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="Edit color (spectrum picker)">
+                                <materialIcons:MaterialIcon Kind="Palette" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                            </Button>
+
+                            <!-- Copy in the selected format -->
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                    Command="{Binding CopyCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="Copy in the selected format">
+                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                            </Button>
+
+                            <!-- More: rename, move, duplicate, remove -->
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}" ToolTip.Tip="More actions">
+                                <materialIcons:MaterialIcon Kind="DotsHorizontal" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                <Button.Flyout>
+                                    <Flyout Placement="Right">
+                                        <StackPanel x:DataType="models:ColorSwatch" Width="190" Spacing="2" Margin="4">
+                                            <TextBlock Text="RENAME" Classes="eyebrow" Margin="4,0,0,2"/>
+                                            <TextBox Text="{Binding Name}" Watermark="Name"/>
+                                            <Separator Margin="0,6"/>
+                                            <Button Classes="menuItem" Command="{Binding MoveUpCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="ArrowLeft" Width="15" Height="15"/>
+                                                    <TextBlock Text="Move earlier" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="menuItem" Command="{Binding MoveDownCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="ArrowRight" Width="15" Height="15"/>
+                                                    <TextBlock Text="Move later" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="menuItem" Command="{Binding DuplicateCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="15" Height="15"/>
+                                                    <TextBlock Text="Duplicate" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="menuItem" Command="{Binding RemoveCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="Close" Width="15" Height="15"
+                                                                                Foreground="{DynamicResource DangerBrush}"/>
+                                                    <TextBlock Text="Remove" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource DangerBrush}"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
+
                         </StackPanel>
                     </StackPanel>
 
@@ -125,8 +149,16 @@
                         <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"
                                    TextWrapping="Wrap" Foreground="{Binding ForegroundBrush}"/>
                         <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
-                        <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
-                                   Classes="mono" Foreground="{Binding ForegroundBrush}"/>
+
+                        <!-- Click the hex to copy it (in the footer's selected format) -->
+                        <Button Classes="iconOnly" HorizontalAlignment="Left" Margin="-4,0,0,0"
+                                Foreground="{Binding ForegroundBrush}"
+                                Command="{Binding CopyCommand}" CommandParameter="{Binding}"
+                                ToolTip.Tip="Click to copy">
+                            <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontSize="14"
+                                       Classes="mono" Foreground="{Binding ForegroundBrush}"/>
+                        </Button>
+
                         <TextBlock Text="{Binding ContrastLabel}" FontSize="10" Opacity="0.75"
                                    Foreground="{Binding ForegroundBrush}"/>
                         <!-- §8 contrast overlay badges -->
@@ -152,13 +184,14 @@
 
         <!-- List: one wide row per swatch with its data (§8 list view). -->
         <DataTemplate x:Key="ListCardTemplate" x:DataType="models:ColorSwatch">
-            <Border Classes="swatchCard" Background="{Binding Brush}" CornerRadius="12" Margin="4" Height="74" Cursor="Hand"
+            <Border Classes="swatchCard" Classes.selected="{Binding IsSelected}"
+                    Background="{Binding Brush}" CornerRadius="12" Margin="4" Height="74" Cursor="Hand"
                     AutomationProperties.Name="{Binding Name}"
                     AutomationProperties.AutomationId="{Binding Hex}"
                     PointerPressed="OnSwatchPointerPressed"
                     PointerMoved="OnSwatchPointerMoved"
                     PointerReleased="OnSwatchPointerReleased">
-                <Grid ColumnDefinitions="*,Auto" Margin="16,0">
+                <Grid ColumnDefinitions="*,Auto" Margin="13,0">
                     <StackPanel VerticalAlignment="Center" Spacing="3">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
@@ -190,31 +223,56 @@
                                 Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
                         </ToggleButton>
                         <StackPanel Classes="swatchRail" Orientation="Horizontal" Spacing="8">
-                        <Button Classes="iconOnly" Command="{Binding MoveUpCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Move up">
-                            <materialIcons:MaterialIcon Kind="ArrowUp" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Command="{Binding MoveDownCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Move down">
-                            <materialIcons:MaterialIcon Kind="ArrowDown" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Command="{Binding EditColorCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Edit color (spectrum picker)">
-                            <materialIcons:MaterialIcon Kind="Palette" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Command="{Binding DuplicateCommand}"
-                                CommandParameter="{Binding}"
-                                ToolTip.Tip="Duplicate swatch">
-                            <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Command="{Binding CopyCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Copy in the selected format">
-                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
-                        <Button Classes="iconOnly" Command="{Binding RemoveCommand}" CommandParameter="{Binding}"
-                                ToolTip.Tip="Remove swatch">
-                            <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
-                        </Button>
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                    Command="{Binding EditColorCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="Edit color (spectrum picker)">
+                                <materialIcons:MaterialIcon Kind="Palette" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                            </Button>
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}"
+                                    Command="{Binding CopyCommand}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="Copy in the selected format">
+                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                            </Button>
+
+                            <!-- More: rename, move, duplicate, remove -->
+                            <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}" ToolTip.Tip="More actions">
+                                <materialIcons:MaterialIcon Kind="DotsHorizontal" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
+                                <Button.Flyout>
+                                    <Flyout Placement="Left">
+                                        <StackPanel x:DataType="models:ColorSwatch" Width="190" Spacing="2" Margin="4">
+                                            <TextBlock Text="RENAME" Classes="eyebrow" Margin="4,0,0,2"/>
+                                            <TextBox Text="{Binding Name}" Watermark="Name"/>
+                                            <Separator Margin="0,6"/>
+                                            <Button Classes="menuItem" Command="{Binding MoveUpCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="ArrowUp" Width="15" Height="15"/>
+                                                    <TextBlock Text="Move up" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="menuItem" Command="{Binding MoveDownCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="ArrowDown" Width="15" Height="15"/>
+                                                    <TextBlock Text="Move down" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="menuItem" Command="{Binding DuplicateCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="15" Height="15"/>
+                                                    <TextBlock Text="Duplicate" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="menuItem" Command="{Binding RemoveCommand}" CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <materialIcons:MaterialIcon Kind="Close" Width="15" Height="15"
+                                                                                Foreground="{DynamicResource DangerBrush}"/>
+                                                    <TextBlock Text="Remove" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource DangerBrush}"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -223,7 +281,8 @@
 
         <!-- Compact: small chips, as many as possible (§8 compact view). -->
         <DataTemplate x:Key="CompactCardTemplate" x:DataType="models:ColorSwatch">
-            <Border Background="{Binding Brush}" CornerRadius="10" Margin="4" Width="108" Height="92"
+            <Border Classes="swatchCard" Classes.selected="{Binding IsSelected}"
+                    Background="{Binding Brush}" CornerRadius="10" Margin="4" Width="108" Height="92"
                     Cursor="Hand"
                     AutomationProperties.Name="{Binding Name}"
                     AutomationProperties.AutomationId="{Binding Hex}"
@@ -231,7 +290,7 @@
                     PointerMoved="OnSwatchPointerMoved"
                     PointerReleased="OnSwatchPointerReleased"
                     ToolTip.Tip="{Binding Hex}">
-                <Grid RowDefinitions="Auto,*" Margin="9">
+                <Grid RowDefinitions="Auto,*" Margin="6">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <ToggleButton Classes="iconOnly" IsChecked="{Binding IsLocked, Mode=TwoWay}"
                                       ToolTip.Tip="Keep this color when generating">
@@ -266,6 +325,41 @@
                           VerticalScrollBarVisibility="Auto">
                 <ItemsControl x:Name="Board" ItemsSource="{Binding Palette}"/>
             </ScrollViewer>
+
+            <!-- Empty state: an empty board used to be a blank panel. -->
+            <StackPanel Grid.Row="0" IsVisible="{Binding IsPaletteEmpty}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="10" MaxWidth="420">
+                <materialIcons:MaterialIcon Kind="PaletteOutline" Width="40" Height="40"
+                                            HorizontalAlignment="Center" Opacity="0.5"/>
+                <TextBlock Text="This palette is empty" FontWeight="Bold" FontSize="18"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Classes="caption" TextAlignment="Center" TextWrapping="Wrap"
+                           Text="Press Space to generate a fresh set of colors, or start from a picture or a single color."/>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,6,0,0">
+                    <Button Command="{Binding Studio.GeneratePaletteCommand}"
+                            ToolTip.Tip="Generate colors (Space)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="Shuffle" Width="16" Height="16"/>
+                            <TextBlock Text="Generate" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding Studio.ExtractFromImageCommand}"
+                            ToolTip.Tip="Pull the dominant colors out of an image">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="TrayArrowUp" Width="16" Height="16"/>
+                            <TextBlock Text="From image" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding Studio.AddCurrentColorCommand}"
+                            ToolTip.Tip="Add the current base color">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <materialIcons:MaterialIcon Kind="Plus" Width="16" Height="16"/>
+                            <TextBlock Text="Add base color" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
 
             <TextBlock Grid.Row="1"
                        Text="{Binding StatusMessage}"

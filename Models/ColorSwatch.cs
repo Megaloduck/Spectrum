@@ -23,6 +23,12 @@ namespace Spectrum.Models
         [ObservableProperty]
         private bool _isLocked;
 
+        // True for the swatch most recently clicked on the board. Kept in sync by
+        // MainWindowViewModel.SelectedSwatch; the card draws a selection ring
+        // from it (Border.swatchCard.selected in Theme.axaml).
+        [ObservableProperty]
+        private bool _isSelected;
+
         // Set by the ViewModel whenever the toolbar's "Color Blind" tool
         // changes. This only affects how the swatch is *drawn* (Brush /
         // ForegroundBrush below) — Hex, Name, and everything you copy or

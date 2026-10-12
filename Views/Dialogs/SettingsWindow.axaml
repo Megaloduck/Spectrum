@@ -38,13 +38,19 @@
 
                         <TextBlock Text="Accent color" Classes="caption" Margin="0,4,0,0"/>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Classes="iconOnly" Click="OnPickAccent"
+                            <Button Padding="10,7" Click="OnPickAccent"
                                     ToolTip.Tip="Pick the accent color">
-                                <materialIcons:MaterialIcon Kind="Palette" Width="18" Height="18"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <materialIcons:MaterialIcon Kind="Palette" Width="16" Height="16"/>
+                                    <TextBlock Text="Pick…" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Button>
-                            <Button Classes="iconOnly" Click="OnResetAccent"
+                            <Button Padding="10,7" Click="OnResetAccent"
                                     ToolTip.Tip="Reset the accent to the default">
-                                <materialIcons:MaterialIcon Kind="Undo" Width="18" Height="18"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <materialIcons:MaterialIcon Kind="Undo" Width="16" Height="16"/>
+                                    <TextBlock Text="Reset" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Button>
                             <Border Width="34" Height="30" CornerRadius="8" BorderThickness="1.3"
                                     BorderBrush="{DynamicResource OutlineBrush}"
@@ -121,11 +127,13 @@
                                      IsReadOnly="True"
                                      Text="{Binding StorageLocationLabel}"
                                      Classes="mono" FontSize="12"/>
-                            <Button Grid.Column="1" Classes="iconOnly"
+                            <Button Grid.Column="1" Margin="8,0,0,0" Padding="10,7"
                                     Click="OnBrowseStorage"
                                     ToolTip.Tip="Browse the storage folder">
-                                <materialIcons:MaterialIcon Kind="FolderOpenOutline"
-                                                            Width="18" Height="18"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="16" Height="16"/>
+                                    <TextBlock Text="Browse…" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Button>
                         </Grid>
 
@@ -140,21 +148,29 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Danger zone -->
-                <Border BorderThickness="1.3" BorderBrush="#E5484D"
+                <!-- Danger zone. The reset button had no content at all; code-behind
+                     swaps Content for its confirmation text on click. -->
+                <Border BorderThickness="1.3" BorderBrush="{DynamicResource DangerBrush}"
                         CornerRadius="18" Padding="16">
                     <StackPanel Spacing="8">
                         <TextBlock Text="RESET / CLEAR DATA"
-                                   Classes="eyebrow" Foreground="#E5484D"/>
+                                   Classes="eyebrow" Foreground="{DynamicResource DangerBrush}"/>
                         <TextBlock Classes="caption" TextWrapping="Wrap"
                                    Text="Deletes every palette, version and backup from this app's storage folder. Settings are kept."/>
                         <Button x:Name="ResetButton"
-                                Classes="iconOnly"
+                                Padding="12,8"
                                 Click="OnResetData"
                                 ToolTip.Tip="Destructive — deletes every palette, version and backup"
                                 HorizontalAlignment="Left"
-                                Foreground="#E5484D"
-                                BorderBrush="#E5484D"/>
+                                Foreground="{DynamicResource DangerBrush}"
+                                BorderBrush="{DynamicResource DangerBrush}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="16" Height="16"
+                                                            Foreground="{DynamicResource DangerBrush}"/>
+                                <TextBlock Text="Delete all palettes…" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource DangerBrush}"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
 
@@ -165,10 +181,15 @@
                         <TextBlock x:Name="VersionText" Classes="caption mono" FontSize="11"/>
                         <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap"
                                    Text="Offline-first: Spectrum makes no network calls in the background."/>
-                        <Button Classes="iconOnly"
+                        <Button Padding="12,8"
                                 Click="OnCheckUpdates"
                                 ToolTip.Tip="Check for updates"
-                                HorizontalAlignment="Left"/>
+                                HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <materialIcons:MaterialIcon Kind="Refresh" Width="16" Height="16"/>
+                                <TextBlock Text="Check for updates" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
 
@@ -183,11 +204,17 @@
                 BorderBrush="{DynamicResource OutlineBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="22,12">
-            <Button Classes="primary iconOnly"
+            <Button Classes="primary"
                     Click="OnDone"
-                    ToolTip.Tip="Save and close settings"
+                    IsCancel="True"
+                    ToolTip.Tip="Save and close settings (Esc)"
                     HorizontalAlignment="Stretch"
-                    FontWeight="SemiBold"/>
+                    FontWeight="SemiBold">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <materialIcons:MaterialIcon Kind="Check" Width="16" Height="16"/>
+                    <TextBlock Text="Done" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </Border>
 
     </Grid>

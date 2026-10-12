@@ -34,11 +34,21 @@
             <TextBlock x:Name="SummaryText" Classes="caption" TextWrapping="Wrap"
                        VerticalAlignment="Center" Margin="0,0,16,0"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <Button Classes="iconOnly" Click="OnCopyCsv"
+                <!-- Both buttons used to be icon-only / empty; they now say what they do. -->
+                <Button Padding="12,8" Click="OnCopyCsv"
                         ToolTip.Tip="Copy the whole matrix (ratios, dot-decimal) to the clipboard">
-                    <materialIcons:MaterialIcon Kind="Table" Width="18" Height="18"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="Table" Width="16" Height="16"/>
+                        <TextBlock Text="Copy CSV" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Button>
-                <Button Classes="iconOnly ghost" Click="OnClose"/>
+                <Button Classes="primary" Padding="12,8" Click="OnClose" IsCancel="True"
+                        ToolTip.Tip="Close (Esc)">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <materialIcons:MaterialIcon Kind="Close" Width="16" Height="16"/>
+                        <TextBlock Text="Close" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
 

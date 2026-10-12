@@ -17,6 +17,10 @@ namespace Spectrum.Services
     {
         public static AppSettings Settings { get; private set; } = new();
 
+        /// <summary>Must match AccentBrush in Styles/Theme.axaml, so "Default accent"
+        /// looks the same before and after Settings has been applied.</summary>
+        private static readonly Color DefaultAccent = Color.FromRgb(0x0F, 0x76, 0x6E);
+
         private static readonly string AppDirectory =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectrum");
 
@@ -86,7 +90,7 @@ namespace Spectrum.Services
             if (string.IsNullOrWhiteSpace(Settings.AccentHex) ||
                 !ColorMathService.TryParseHex(Settings.AccentHex, out var accent))
             {
-                accent = Color.FromRgb(0x3B, 0x82, 0xF6);
+                accent = DefaultAccent;
             }
 
             var brush = new SolidColorBrush(accent);

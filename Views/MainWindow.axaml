@@ -106,7 +106,7 @@
                                 ToolTip.Tip="New palette (Ctrl+N)">
                             <materialIcons:MaterialIcon Kind="Plus" Width="17" Height="17"/>
                         </Button>
-                                <Button Grid.Column="2" Classes="iconOnly paletteRail" Command="{Binding ToggleLibraryPanelCommand}"
+                        <Button Grid.Column="2" Classes="iconOnly paletteRail" Command="{Binding ToggleLibraryPanelCommand}"
                                 ToolTip.Tip="Collapse the library panel (Ctrl+B)">
                             <materialIcons:MaterialIcon Kind="ChevronLeft" Width="17" Height="17"/>
                         </Button>
@@ -134,11 +134,11 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PaletteItemViewModel">
                                 <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,5">
-                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="4"
-                                        Background="{Binding PreviewBrush}"
-                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
-                                        AutomationProperties.Name="{Binding Name} palette preview"
-                                        ToolTip.Tip="Palette preview"/>
+                                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="4"
+                                            Background="{Binding PreviewBrush}"
+                                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
+                                            AutomationProperties.Name="{Binding Name} palette preview"
+                                            ToolTip.Tip="Palette preview"/>
 
                                     <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="3">
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"
@@ -197,7 +197,6 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                         <Separator/>
-                                        <Separator/>
                                         <TextBlock Text="FILES" Classes="eyebrow"/>
                                         <Button Classes="iconOnly" Command="{Binding Library.ImportPaletteFileCommand}"
                                                 ToolTip.Tip="Import a palette file (CSS / GPL / ASE / ACO)">
@@ -237,6 +236,31 @@
             </Grid>
 
         </Grid>
+
+        <!-- Toast: short-lived feedback for the latest action. Destructive actions
+             (remove swatch, clear palette) add an Undo button and stay a bit longer.
+             Declared last so it draws above everything else. -->
+        <Border Grid.Row="0" Grid.RowSpan="2"
+                HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,26" Padding="16,10" CornerRadius="12"
+                Background="{DynamicResource SurfaceRaisedBrush}"
+                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.3"
+                BoxShadow="0 8 24 0 #40000000"
+                IsVisible="{Binding IsToastVisible}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="{Binding ToastMessage}" VerticalAlignment="Center"
+                           MaxWidth="520" TextTrimming="CharacterEllipsis"/>
+                <Button Classes="ghost" Padding="10,4"
+                        Command="{Binding UndoCommand}"
+                        IsVisible="{Binding ToastCanUndo}"
+                        ToolTip.Tip="Undo (Ctrl+Z)">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <materialIcons:MaterialIcon Kind="Undo" Width="14" Height="14"/>
+                        <TextBlock Text="Undo" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
 
     </Grid>
 

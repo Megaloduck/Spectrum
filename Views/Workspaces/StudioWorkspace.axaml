@@ -189,6 +189,18 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
+                        <!-- Generate: the main action of the app. It lives in the toolbar so it
+                             stays visible even when the dock is collapsed (Ctrl+I). -->
+                        <Button Height="38" Margin="0,0,4,0" FontWeight="SemiBold"
+                                Command="{Binding Studio.GeneratePaletteCommand}"
+                                ToolTip.Tip="Regenerate every unlocked color using the rule on the left (Space)">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="Shuffle" Width="16" Height="16"/>
+                                <TextBlock Text="Generate" VerticalAlignment="Center"/>
+                                <TextBlock Text="Space" Classes="caption" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
                         <!-- Divider 1 (rule | picking) -->
                         <Border Width="1" Height="24" Margin="12,0"
                                 Background="{DynamicResource OutlineBrush}" Opacity="0.5"/>

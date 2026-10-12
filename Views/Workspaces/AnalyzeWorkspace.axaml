@@ -1,4 +1,4 @@
-    <UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Spectrum.ViewModels"
              xmlns:converters="using:Spectrum.Converters"
@@ -114,6 +114,8 @@
                                    ToolTip.Tip="APCA verdict: Lc 60 ≈ WCAG 4.5:1, Lc 75 ≈ 7:1"/>
                     </Grid>
 
+                    <!-- White / black / custom background. White and black used to share
+                         the same sun icon, so they were indistinguishable. -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <Button Classes="iconOnly" Command="{Binding Analyze.UseWhiteContrastBackgroundCommand}"
                                 ToolTip.Tip="Use white as the contrast background">
@@ -121,7 +123,7 @@
                         </Button>
                         <Button Classes="iconOnly" Command="{Binding Analyze.UseBlackContrastBackgroundCommand}"
                                 ToolTip.Tip="Use black as the contrast background">
-                            <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="18" Height="18"/>
+                            <materialIcons:MaterialIcon Kind="WeatherNight" Width="18" Height="18"/>
                         </Button>
                         <Button Classes="iconOnly" Command="{Binding Analyze.PickContrastBackgroundCommand}"
                                 ToolTip.Tip="Pick a contrast background">

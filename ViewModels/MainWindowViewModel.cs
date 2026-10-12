@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Spectrum.Models;
@@ -59,6 +60,13 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private ColorSwatch? _selectedSwatch;
 
+        /// <summary>Keeps each swatch's IsSelected flag in step so its card can draw a selection ring.</summary>
+        partial void OnSelectedSwatchChanged(ColorSwatch? oldValue, ColorSwatch? newValue)
+        {
+            if (oldValue is not null) oldValue.IsSelected = false;
+            if (newValue is not null) newValue.IsSelected = true;
+        }
+
         // ---------------- §8 Preview & visualization ----------------
 
         public Array ViewModes { get; } = Enum.GetValues(typeof(ViewMode));
@@ -110,6 +118,9 @@ namespace Spectrum.ViewModels
             if (WorkspaceMode == mode) return;
             WorkspaceMode = mode;
 
+            // Switching tabs is navigation, not an action worth a toast.
+            var previous = _suppressToast;
+            _suppressToast = true;
             StatusMessage = mode switch
             {
                 WorkspaceMode.Studio => "Studio — generate and edit the palette.",
@@ -117,22 +128,86 @@ namespace Spectrum.ViewModels
                 WorkspaceMode.Analyze => "Analyze — contrast, conversions and color-vision simulation.",
                 _ => "Export — send the palette out, or bring files in.",
             };
+            _suppressToast = previous;
         }
+
+        // ---------------- Status + toast feedback ----------------
+
+        private string _statusMessage = "Ready to Inspire.";
+        private bool _suppressToast;
+        private bool _nextToastUndoable;
+        private DispatcherTimer? _toastTimer;
 
         /// <summary>
         /// Result of the latest action, shown in the strip under the board and in
-        /// the Export toolbar. Every assignment raises PropertyChanged, so the UI
-        /// updates immediately.
+        /// the Export toolbar — and, unless suppressed, as a short-lived toast.
+        /// This is a hand-written property (not [ObservableProperty]) so that
+        /// assigning the same text twice in a row — "Copied #FF0000" after
+        /// "Copied #FF0000" — still raises PropertyChanged and re-shows the toast.
         /// </summary>
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set
+            {
+                _statusMessage = value;
+                OnPropertyChanged();
+
+                var undoable = _nextToastUndoable;
+                _nextToastUndoable = false;
+                if (!_suppressToast) ShowToast(value, undoable);
+            }
+        }
+
         [ObservableProperty]
-        private string _statusMessage = "Ready to Inspire.";
+        private string _toastMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool _isToastVisible;
+
+        /// <summary>True when the toast offers an Undo button (destructive actions).</summary>
+        [ObservableProperty]
+        private bool _toastCanUndo;
+
+        private void ShowToast(string message, bool undoable)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+            if (Application.Current is null) return; // design-time previewer
+
+            ToastMessage = message;
+            ToastCanUndo = undoable && CanUndo();
+            IsToastVisible = true;
+
+            if (_toastTimer is null)
+            {
+                var timer = new DispatcherTimer();
+                timer.Tick += (_, _) =>
+                {
+                    timer.Stop();
+                    IsToastVisible = false;
+                };
+                _toastTimer = timer;
+            }
+
+            _toastTimer.Stop();
+            // Give people longer to reach for Undo than to read a plain message.
+            _toastTimer.Interval = TimeSpan.FromSeconds(ToastCanUndo ? 6 : 3);
+            _toastTimer.Start();
+        }
 
         [ObservableProperty]
         private int _paletteCount;
 
         public string PaletteCountLabel => PaletteCount == 1 ? "1 color" : $"{PaletteCount} colors";
 
-        partial void OnPaletteCountChanged(int value) => OnPropertyChanged(nameof(PaletteCountLabel));
+        /// <summary>Drives the board's empty state.</summary>
+        public bool IsPaletteEmpty => PaletteCount == 0;
+
+        partial void OnPaletteCountChanged(int value)
+        {
+            OnPropertyChanged(nameof(PaletteCountLabel));
+            OnPropertyChanged(nameof(IsPaletteEmpty));
+        }
 
         // ---- Undo/redo history (covers add/remove/clear/generate/extract/load —
         // ---- see PushHistory call sites. In-place edits like renaming or
@@ -145,6 +220,9 @@ namespace Spectrum.ViewModels
 
         public MainWindowViewModel()
         {
+            // Startup chatter ("Opened …", "Created …") isn't worth a toast.
+            _suppressToast = true;
+
             // Keep the header's "N colors" pill in sync no matter what
             // caused the palette to change (add, remove, clear, generate...),
             // and mirror every edit into the library DTO so autosave can
@@ -191,6 +269,8 @@ namespace Spectrum.ViewModels
                              ?? PaletteLibraryService.Library.Palettes[0];
                 Library.SelectPalette(active);
             }
+
+            _suppressToast = false;
         }
 
         /// <summary>§10 defaults, read at startup and again whenever Settings changes.</summary>
@@ -265,6 +345,7 @@ namespace Spectrum.ViewModels
         /// <summary>Called by the window on close so the library can detach its service hooks.</summary>
         public void Detach()
         {
+            _toastTimer?.Stop();
             Library.Detach();
             GlobalHotkeyService.HotkeyRaised -= OnGlobalHotkeyRaised;
         }
@@ -277,6 +358,7 @@ namespace Spectrum.ViewModels
             _isLoadingBoard = true;
             try
             {
+                SelectedSwatch = null;
                 Palette.Clear();
                 _activePaletteId = dto?.Id;
 
@@ -296,7 +378,12 @@ namespace Spectrum.ViewModels
             }
 
             ClearHistory();
+
+            // The app bar already shows which palette is open — no toast for this.
+            var previous = _suppressToast;
+            _suppressToast = true;
             StatusMessage = dto is null ? "No palette selected." : $"Opened \"{dto.Name}\".";
+            _suppressToast = previous;
         }
 
         /// <summary>Writes the board back into the active palette's DTO and queues an autosave.</summary>
@@ -369,6 +456,7 @@ namespace Spectrum.ViewModels
         {
             _isRestoringHistory = true;
             _isLoadingBoard = true;
+            SelectedSwatch = null; // the old swatch objects are about to be replaced
             Palette.Clear();
             foreach (var s in snapshot)
             {
@@ -424,7 +512,11 @@ namespace Spectrum.ViewModels
         {
             if (swatch is null) return;
             PushHistory();
+            if (ReferenceEquals(SelectedSwatch, swatch)) SelectedSwatch = null;
             Palette.Remove(swatch);
+
+            // Destructive: the toast offers Undo for a little longer.
+            _nextToastUndoable = true;
             StatusMessage = "Swatch removed.";
         }
 
@@ -432,7 +524,10 @@ namespace Spectrum.ViewModels
         private void ClearPalette()
         {
             PushHistory();
+            SelectedSwatch = null;
             Palette.Clear();
+
+            _nextToastUndoable = true;
             StatusMessage = "Palette cleared.";
         }
 
@@ -588,6 +683,7 @@ namespace Spectrum.ViewModels
             }
 
             PushHistory();
+            SelectedSwatch = null;
             Palette.Clear();
 
             foreach (var dto in dtos)

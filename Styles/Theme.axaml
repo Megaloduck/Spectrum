@@ -257,6 +257,28 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
 
+  <!-- ===================== Swatch selection + menu items ===================== -->
+  <!-- Every swatch card reserves a 3px transparent border so selecting one only
+       recolors the ring — nothing in the card shifts. -->
+  <Style Selector="Border.swatchCard">
+    <Setter Property="BorderThickness" Value="3"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="Border.swatchCard.selected">
+    <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
+  </Style>
+
+  <!-- Text rows inside the swatch "more" flyout. -->
+  <Style Selector="Button.menuItem">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="8,6"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+  </Style>
+
   <!-- ===================== Swatch & library row rails ===================== -->
   <Style Selector="Border.swatchCard StackPanel.swatchRail">
     <Setter Property="Opacity" Value="0"/>
@@ -268,7 +290,19 @@
     </Setter>
   </Style>
 
+  <!-- The action rail shows on hover, while the card is selected, and while
+       keyboard focus is inside it — so it is reachable without a mouse. -->
   <Style Selector="Border.swatchCard:pointerover StackPanel.swatchRail">
+    <Setter Property="Opacity" Value="1"/>
+    <Setter Property="IsHitTestVisible" Value="True"/>
+  </Style>
+
+  <Style Selector="Border.swatchCard.selected StackPanel.swatchRail">
+    <Setter Property="Opacity" Value="1"/>
+    <Setter Property="IsHitTestVisible" Value="True"/>
+  </Style>
+
+  <Style Selector="Border.swatchCard:focus-within StackPanel.swatchRail">
     <Setter Property="Opacity" Value="1"/>
     <Setter Property="IsHitTestVisible" Value="True"/>
   </Style>
