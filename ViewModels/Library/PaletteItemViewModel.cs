@@ -27,6 +27,10 @@ namespace Spectrum.ViewModels
             Dto = dto;
         }
 
+        /// <summary>True while the user is editing the name inline (TextBox shown in the row).</summary>
+        [ObservableProperty]
+        private bool _isRenaming;
+
         public string Name
         {
             get => Dto.Name;
@@ -38,6 +42,13 @@ namespace Spectrum.ViewModels
                 OnPropertyChanged();
                 Changed?.Invoke();
             }
+        }
+
+        /// <summary>Commits the current name and exits inline rename mode.</summary>
+        public void EndRename()
+        {
+            IsRenaming = false;
+            OnPropertyChanged(nameof(Name));
         }
 
         public bool IsPinned

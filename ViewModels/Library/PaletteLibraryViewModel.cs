@@ -163,6 +163,16 @@ namespace Spectrum.ViewModels
         }
 
         [RelayCommand]
+        private void RenamePalette(PaletteItemViewModel? item)
+        {
+            item ??= SelectedPalette;
+            if (item is null) return;
+
+            item.IsSelected = true;
+            StatusMessage($"Renaming \"{item.Name}\" — type a name and press Enter.");
+        }
+
+        [RelayCommand]
         private void RestoreVersion(PaletteVersionDto? version)
         {
             if (version is null) return;

@@ -130,19 +130,34 @@
                              SelectedItem="{Binding Library.SelectedPalette}"
                              Classes="paletteList"
                              Background="Transparent" Margin="0,8,0,0"
-                             AutoScrollToSelectedItem="True">
+                             AutoScrollToSelectedItem="True"
+                             x:Name="PaletteList">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PaletteItemViewModel">
-                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,5">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,5"
+                                      Background="Transparent"
+                                      PointerPressed="OnPaletteItemPointerPressed"
+                                      x:Name="Row">
                                     <Border Grid.Column="0" Width="40" Height="40" CornerRadius="4"
                                             Background="{Binding PreviewBrush}"
                                             BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
                                             AutomationProperties.Name="{Binding Name} palette preview"
                                             ToolTip.Tip="Palette preview"/>
 
-                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="3">
+                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="3"
+                                                PointerPressed="OnPaletteNamePointerPressed">
+                                        <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Classes="swatchName"
+                                                 IsVisible="{Binding IsRenaming}"
+                                                 x:Name="NameEditor"
+                                                 Padding="0,4"
+                                                 FontWeight="SemiBold" FontSize="13"
+                                                 LostFocus="OnNameEditorLostFocus"
+                                                 KeyDown="OnNameEditorKeyDown"/>
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"
-                                                   TextTrimming="CharacterEllipsis"/>
+                                                   TextTrimming="CharacterEllipsis"
+                                                   x:Name="NameText"
+                                                   Cursor="Hand"/>
                                         <TextBlock Text="{Binding CountLabel}" Classes="caption"/>
                                     </StackPanel>
 
@@ -155,6 +170,12 @@
                                                       ToolTip.Tip="Pin this palette (stays at the top)">
                                             <materialIcons:MaterialIcon Kind="PinOutline" Width="14" Height="14"/>
                                         </ToggleButton>
+
+                                        <Button Classes="iconOnly" Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).Library.RenamePaletteCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="Rename this palette">
+                                            <materialIcons:MaterialIcon Kind="Pencil" Width="14" Height="14"/>
+                                        </Button>
 
                                         <Button Classes="iconOnly paletteRail" Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).Library.DeletePaletteCommand}"
                                                 CommandParameter="{Binding}"

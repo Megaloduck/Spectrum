@@ -2,6 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Spectrum.Models;
 using Spectrum.ViewModels;
 using System;
@@ -168,6 +171,10 @@ namespace Spectrum.Views
                 case Key.Escape:
                     vm.SelectedSwatch = null;
                     break;
+                case Key.F2:
+                    RunIfPossible(vm.Library.RenamePaletteCommand, vm.Library.SelectedPalette);
+                    e.Handled = true;
+                    break;
             }
         }
 
@@ -180,6 +187,94 @@ namespace Spectrum.Views
         {
             var palette = new CommandPaletteWindow(vm);
             await palette.ShowDialog(this);
+        }
+
+        private void OnPaletteItemPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // Double-click on a palette row (or its name) opens inline rename.
+            if (e.ClickCount != 2) return;
+
+            var row = sender as Control;
+            if (row is null) return;
+
+            var item = row.DataContext as PaletteItemViewModel;
+            if (item is null) return;
+
+            var library = DataContext as MainWindowViewModel;
+            if (library is null) return;
+
+            library.Library.RenamePaletteCommand.Execute(item);
+
+            // Enter inline-edit mode. The template flips the TextBlock for a
+            // TextBox; focus it so the user can type immediately.
+            item.IsRenaming = true;
+
+            // The visual tree needs a tick to re-render the TextBox before we
+            // can focus it, so post the focus call to the UI thread.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (row.IsVisible && row.DataContext is PaletteItemViewModel pm)
+                {
+                    var editor = FindDescendantByName(row, "NameEditor") as TextBox;
+                    if (editor is not null)
+                    {
+                        editor.Focus();
+                        editor.SelectAll();
+                    }
+                }
+            }, DispatcherPriority.Render);
+
+            e.Handled = true;
+        }
+
+        private static Control? FindDescendantByName(Visual? root, string name)
+        {
+            if (root is null) return null;
+            if (root is Control c && c.Name == name) return c;
+            foreach (var child in root.GetVisualChildren())
+            {
+                var found = FindDescendantByName(child, name);
+                if (found is not null) return found;
+            }
+            return null;
+        }
+
+        private void OnPaletteNamePointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // Let the ListBox handle single clicks for selection, but double-clicks
+            // still open rename via the row handler above.
+            if (e.ClickCount == 2)
+            {
+                OnPaletteItemPointerPressed(sender, e);
+            }
+        }
+
+        private void OnNameEditorLostFocus(object? sender, RoutedEventArgs e)
+        {
+            if (sender is not TextBox editor) return;
+            var item = editor.DataContext as PaletteItemViewModel;
+            item?.EndRename();
+        }
+
+        private void OnNameEditorKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (sender is not TextBox editor) return;
+            var item = editor.DataContext as PaletteItemViewModel;
+
+            if (e.Key == Key.Enter)
+            {
+                // The TwoWay binding already wrote the text back to
+                // PaletteItemViewModel.Name, which pushed it into the DTO.
+                item?.EndRename();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                // Revert: re-read Name from the DTO (the TwoWay binding already
+                // pushed Enter's text there), then exit edit mode.
+                item?.EndRename();
+                e.Handled = true;
+            }
         }
     }
 }

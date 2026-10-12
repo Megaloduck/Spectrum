@@ -167,6 +167,7 @@ namespace Spectrum.Views
             // Library
             Add("New palette", "Ctrl+N", vm.Library.NewPaletteCommand);
             Add("Duplicate palette", "library", vm.Library.DuplicatePaletteCommand, null);
+            Add("Rename palette", "library", vm.Library.RenamePaletteCommand, null);
             Add("Delete palette", "library", vm.Library.DeletePaletteCommand, null);
             Add("Pin / unpin palette", "library", vm.Library.TogglePinCommand, null);
             AddAction("Show pinned palettes", "filter", () => vm.Library.SelectedFilter = LibraryFilter.Pinned);
