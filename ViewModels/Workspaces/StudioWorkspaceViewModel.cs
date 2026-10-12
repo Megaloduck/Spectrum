@@ -150,7 +150,10 @@ namespace Spectrum.ViewModels
             BaseColorChanged?.Invoke();
         }
 
-        private void ApplyToBaseColor(Color color)
+        /// <summary>Loads a color into the color panel (HSL + temperature + opacity).
+        /// Called when a board swatch is selected or edited so the panel — and the
+        /// Analyze reference record it drives — follow the clicked swatch.</summary>
+        internal void ApplyToBaseColor(Color color)
         {
             var (h, s, l) = ColorHarmonyService.ToHsl(color);
             Hue = h;

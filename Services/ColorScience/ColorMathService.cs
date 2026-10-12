@@ -222,6 +222,142 @@ namespace Spectrum.Services
         public static Color OklchToRgb(OklchColor lch, byte alpha = 255) =>
             OklabToRgb(OklchToLab(lch), alpha);
 
+        // ---------------- HWB ----------------
+
+        /// <summary>HWB (hue, whiteness, blackness) — the CSS hw() space. Whiteness
+        /// and blackness are fractions of the minimum / maximum RGB channel.</summary>
+        public static (double H, double W, double B) RgbToHwb(Color c)
+        {
+            var hsv = RgbToHsv(c);
+            var w = Math.Min(c.R, Math.Min(c.G, c.B)) / 255.0;
+            var b = 1.0 - Math.Max(c.R, Math.Max(c.G, c.B)) / 255.0;
+            return (hsv.H, w, b);
+        }
+
+        // ---------------- CMYK ----------------
+
+        /// <summary>Naive sRGB→CMYK (no ICC profile — a screen approximation of print
+        /// ink, which is exactly what a reference readout should be labelled as).</summary>
+        public static (double C, double M, double Y, double K) RgbToCmyk(Color c)
+        {
+            var r = c.R / 255.0;
+            var g = c.G / 255.0;
+            var b = c.B / 255.0;
+
+            var k = 1.0 - Math.Max(r, Math.Max(g, b));
+            if (k >= 1.0 - 1e-9) return (0, 0, 0, 1);
+
+            var inv = 1.0 - k;
+            return ((1 - r - k) / inv, (1 - g - k) / inv, (1 - b - k) / inv, k);
+        }
+
+        // ---------------- Perceptual difference ----------------
+
+        /// <summary>CIE76 ΔE between two colors — a number below ~2.3 is imperceptible,
+        /// below ~10 reads as "the same color" for UI purposes. Used by the color-
+        /// vision collision detector to find palette pairs that collapse.</summary>
+        public static double DeltaE(Color a, Color b)
+        {
+            var la = RgbToLab(a);
+            var lb = RgbToLab(b);
+            var dl = la.L - lb.L;
+            var da = la.A - lb.A;
+            var db = la.B - lb.B;
+            return Math.Sqrt(dl * dl + da * da + db * db);
+        }
+
+        // ---------------- OKLCH mixing (perceptually even ramps) ----------------
+
+        /// <summary>Interpolates two colors in OKLCH instead of sRGB, which avoids the
+        /// muddy gray midpoint that RGB mixing produces between complementary hues.
+        /// Hue takes the shortest path; a near-zero-chroma endpoint borrows the other
+        /// endpoint's hue so white/gray ends don't collapse the ramp's color.</summary>
+        public static Color MixOklch(Color a, Color b, double t)
+        {
+            t = Math.Clamp(t, 0, 1);
+
+            var oa = RgbToOklch(a);
+            var ob = RgbToOklch(b);
+
+            double hue;
+            if (oa.C < 1e-4 && ob.C < 1e-4) hue = 0;
+            else if (oa.C < 1e-4) hue = ob.H;
+            else if (ob.C < 1e-4) hue = oa.H;
+            else
+            {
+                var shortest = ((ob.H - oa.H + 540) % 360) - 180;
+                hue = ((oa.H + shortest * t) % 360 + 360) % 360;
+            }
+
+            var lch = new OklchColor(
+                oa.L + (ob.L - oa.L) * t,
+                oa.C + (ob.C - oa.C) * t,
+                hue);
+
+            var mixed = OklchToRgb(lch);
+            return Color.FromArgb(
+                (byte)Math.Round(a.A + (b.A - a.A) * t),
+                mixed.R, mixed.G, mixed.B);
+        }
+
+        /// <summary>Lighter steps in OKLCH: L climbs toward 1 and chroma relaxes toward
+        /// 0 while the hue holds — a Tailwind-style 50…400 ramp without the wash-out.</summary>
+        public static System.Collections.Generic.List<Color> TintsOklch(Color baseColor, int count = 5)
+        {
+            var ok = RgbToOklch(baseColor);
+            var result = new System.Collections.Generic.List<Color>();
+            for (var i = count - 1; i >= 0; i--)
+            {
+                var t = i / (double)count;
+                result.Add(OklchToRgb(new OklchColor(
+                    ok.L + (1.0 - ok.L) * t,
+                    ok.C * (1.0 - t),
+                    ok.H), baseColor.A));
+            }
+            return result;
+        }
+
+        /// <summary>Darker steps in OKLCH: L sinks toward 0 (chroma fades with it,
+        /// matching how real pigments lose hue in shadow).</summary>
+        public static System.Collections.Generic.List<Color> ShadesOklch(Color baseColor, int count = 5)
+        {
+            var ok = RgbToOklch(baseColor);
+            var result = new System.Collections.Generic.List<Color>();
+            for (var i = 0; i < count; i++)
+            {
+                var t = i / (double)count;
+                result.Add(OklchToRgb(new OklchColor(
+                    ok.L * (1.0 - t),
+                    ok.C * (1.0 - t),
+                    ok.H), baseColor.A));
+            }
+            return result;
+        }
+
+        /// <summary>Desaturated steps at constant lightness — chroma relaxes toward 0
+        /// while L and hue stay put, so tones never drift lighter or darker.</summary>
+        public static System.Collections.Generic.List<Color> TonesOklch(Color baseColor, int count = 5)
+        {
+            var ok = RgbToOklch(baseColor);
+            var result = new System.Collections.Generic.List<Color>();
+            for (var i = 0; i < count; i++)
+            {
+                var t = i / (double)count;
+                result.Add(OklchToRgb(new OklchColor(ok.L, ok.C * (1.0 - t), ok.H), baseColor.A));
+            }
+            return result;
+        }
+
+        /// <summary>A full light→dark strip around the base color (tints, base, shades),
+        /// rendered as the ramp preview in Analyze.</summary>
+        public static System.Collections.Generic.List<Color> RampOklch(Color baseColor, int steps = 4)
+        {
+            var result = TintsOklch(baseColor, steps);
+            result.Add(baseColor);
+            result.AddRange(ShadesOklch(baseColor, steps));
+            return result;
+        }
+
         // ---------------- Palette generation helpers (§4 tints/shades) ----------------
 
         /// <summary>count lighter steps (mix toward white), including the base as the last item.</summary>

@@ -60,11 +60,18 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private ColorSwatch? _selectedSwatch;
 
-        /// <summary>Keeps each swatch's IsSelected flag in step so its card can draw a selection ring.</summary>
+        /// <summary>Keeps each swatch's IsSelected flag in step so its card can draw a
+        /// selection ring, and loads the clicked color into the color panel — which
+        /// drives the Analyze reference record — so the right dock always shows the
+        /// swatch you clicked instead of whatever the panel last held.</summary>
         partial void OnSelectedSwatchChanged(ColorSwatch? oldValue, ColorSwatch? newValue)
         {
             if (oldValue is not null) oldValue.IsSelected = false;
-            if (newValue is not null) newValue.IsSelected = true;
+            if (newValue is not null)
+            {
+                newValue.IsSelected = true;
+                Studio?.ApplyToBaseColor(newValue.Color);
+            }
         }
 
         // ---------------- §8 Preview & visualization ----------------
@@ -231,6 +238,7 @@ namespace Spectrum.ViewModels
             {
                 PaletteCount = Palette.Count;
                 Preview?.RaiseMockupPropertiesChanged();
+                Analyze?.RefreshForPalette();
                 if (!_isLoadingBoard && !_isRestoringHistory) SyncActivePalette();
             };
 
@@ -408,6 +416,12 @@ namespace Spectrum.ViewModels
             {
                 SyncActivePalette();
                 Preview.RaiseMockupPropertiesChanged();
+                Analyze.RefreshForPalette();
+
+                // If the edited swatch is the one selected on the board, keep the
+                // color panel (and the Analyze reference record it drives) following it.
+                if (e.PropertyName == nameof(ColorSwatch.Color) && ReferenceEquals(SelectedSwatch, sender))
+                    Studio.ApplyToBaseColor(((ColorSwatch)sender!).Color);
             }
         }
 

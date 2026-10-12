@@ -4,65 +4,259 @@ using CommunityToolkit.Mvvm.Input;
 using Spectrum.Models;
 using Spectrum.Services;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Spectrum.ViewModels
 {
-    /// <summary>
-    /// Ctrl+2 · Preview — the live mockup derived from the palette, the light /
-    /// dark variant generators and side-by-side comparison. The board layout
-    /// (Row / Grid / List / Compact) is shared board state and stays on
-    /// <see cref="MainWindowViewModel"/>.
+    /// <summary>Which context the Preview gallery is rendering the palette into.</summary>
+    public enum MockupScene
+    {
+        Dashboard,
+        Landing,
+        Mobile,
+        Chart,
+        Poster,
+    }
+
+    /// <summary>One semantic role in the mockup (Primary, Accent, Surface…), bound to
+    /// a palette color by index — or to Auto (index 0) for the derived default.
+    /// Options[0] is always "Auto"; options 1..n map to palette swatch i-1.</summary>
+    public partial class MockupRole : ObservableObject
+    {
+        /// <summary>Raised when the user reassigns this role, so the shell can refresh.</summary>
+        public event Action? RoleChanged;
+
+        public string Name { get; init; } = string.Empty;
+
+        public ObservableCollection<string> Options { get; } = new();
+
+        [ObservableProperty]
+        private int _selectedOption;
+
+        /// <summary>True while the owning ViewModel rebuilds Options. The ComboBox's
+        /// two-way SelectedIndex binding writes transient -1/0 values back while
+        /// items are cleared and re-added; reacting to those would ping-pong
+        /// RoleChanged → RaiseMockupPropertiesChanged → RebuildRoleOptions →
+        /// Options.Clear → binding writeback → … and overflow the stack (this
+        /// exact bug crashed the app at startup).</summary>
+        private bool _suppressChangeNotification;
+
+        /// <summary>Programmatic selection that must not re-enter the refresh path.</summary>
+        public void SetSelectedOptionSilently(int value)
+        {
+            _suppressChangeNotification = true;
+            try
+            {
+                SelectedOption = value;
+            }
+            finally
+            {
+                _suppressChangeNotification = false;
+            }
+        }
+
+        partial void OnSelectedOptionChanged(int value)
+        {
+            if (!_suppressChangeNotification) RoleChanged?.Invoke();
+        }
+    }
+
+    /// <summary>One bar in the chart scene (pixel height, already scaled).</summary>
+    public sealed record ChartBar(double Height, IBrush Brush);
+
+    /// <summary>Ctrl+2 · Preview — the palette rendered as a *context gallery*:
+    ///
+    ///   · Role mapping: assign palette colors to semantic roles (Primary, Accent,
+    ///     Surface, Background, Text, Border) once; every scene follows the map,
+    ///     and Auto keeps the old derived defaults.
+    ///   · Scenes: Dashboard, Landing, Mobile, Chart and Poster — five real
+    ///     contexts instead of one dashboard card, so a palette is judged where
+    ///     it will actually be used.
+    ///   · Surfaces derive through OKLCH mixing (MixOklch) so the washed-out
+    ///     gray backgrounds of RGB mixing don't muddy the preview.
+    ///
+    /// The board layout (Row / Grid / List / Compact) is shared board state and
+    /// stays on <see cref="MainWindowViewModel"/>. Variants and comparison are
+    /// unchanged; see RaiseMockupPropertiesChanged for the refresh entry point.
     /// </summary>
     public partial class PreviewWorkspaceViewModel : ViewModelBase
     {
         private readonly MainWindowViewModel _shell;
 
-        public PreviewWorkspaceViewModel(MainWindowViewModel shell) => _shell = shell;
+        public PreviewWorkspaceViewModel(MainWindowViewModel shell)
+        {
+            _shell = shell;
 
-        // Live UI mockup brushes, derived from the current palette.
+            Roles = new ObservableCollection<MockupRole>
+            {
+                new() { Name = "Primary" },
+                new() { Name = "Accent" },
+                new() { Name = "Surface" },
+                new() { Name = "Background" },
+                new() { Name = "Text" },
+                new() { Name = "Border" },
+            };
+
+            foreach (var role in Roles) role.RoleChanged += RaiseMockupPropertiesChanged;
+
+            RebuildRoleOptions();
+            RebuildChartBars();
+        }
+
+        public ObservableCollection<MockupRole> Roles { get; }
+
+        // ---------------- Scenes ----------------
+
+        public Array Scenes { get; } = Enum.GetValues(typeof(MockupScene));
+
+        [ObservableProperty]
+        private MockupScene _selectedScene = MockupScene.Dashboard;
+
+        partial void OnSelectedSceneChanged(MockupScene value)
+        {
+            OnPropertyChanged(nameof(IsSceneDashboard));
+            OnPropertyChanged(nameof(IsSceneLanding));
+            OnPropertyChanged(nameof(IsSceneMobile));
+            OnPropertyChanged(nameof(IsSceneChart));
+            OnPropertyChanged(nameof(IsScenePoster));
+        }
+
+        public bool IsSceneDashboard => SelectedScene == MockupScene.Dashboard;
+        public bool IsSceneLanding => SelectedScene == MockupScene.Landing;
+        public bool IsSceneMobile => SelectedScene == MockupScene.Mobile;
+        public bool IsSceneChart => SelectedScene == MockupScene.Chart;
+        public bool IsScenePoster => SelectedScene == MockupScene.Poster;
+
+        // ---------------- Role resolution ----------------
+
+        private Color ResolveRole(int roleIndex, Color autoColor)
+        {
+            var option = Roles[roleIndex].SelectedOption;
+            if (option < 1 || option > _shell.Palette.Count) return autoColor;
+            return _shell.Palette[option - 1].Color;
+        }
+
         private Color PaletteAt(int index, Color fallback) =>
             _shell.Palette.Count == 0
                 ? fallback
                 : _shell.Palette[Math.Clamp(index, 0, _shell.Palette.Count - 1)].Color;
 
-        private Color MockupBackground => ColorMathService.Mix(PaletteAt(-1, Colors.White), Colors.White, 0.92);
-        private Color MockupSurface => ColorMathService.Mix(PaletteAt(-1, Colors.White), Colors.White, 0.98);
+        private Color LastColor => PaletteAt(_shell.Palette.Count - 1, Colors.White);
 
-        public IBrush MockupPrimaryBrush => new SolidColorBrush(PaletteAt(0, Colors.Gray));
-        public IBrush MockupPrimaryForegroundBrush => new SolidColorBrush(ReadableOn(PaletteAt(0, Colors.Gray)));
-        public IBrush MockupAccentBrush => new SolidColorBrush(PaletteAt(-1, Colors.Gray));
-        public IBrush MockupAccentForegroundBrush => new SolidColorBrush(ReadableOn(PaletteAt(-1, Colors.Gray)));
-        public IBrush MockupBackgroundBrush => new SolidColorBrush(MockupBackground);
-        public IBrush MockupSurfaceBrush => new SolidColorBrush(MockupSurface);
-        public IBrush MockupTextBrush => new SolidColorBrush(BestContrastText());
+        // Auto defaults: primary = first swatch, accent = last, surfaces derived
+        // from the accent through OKLCH (no muddy RGB midpoint), text = the
+        // palette color with the best contrast on the resolved background.
+        private Color AutoPrimary => PaletteAt(0, Colors.Gray);
+        private Color AutoAccent => LastColor;
+        private Color AutoBackground => ColorMathService.MixOklch(LastColor, Colors.White, 0.92);
+        private Color AutoSurface => ColorMathService.MixOklch(LastColor, Colors.White, 0.98);
 
-        private Color BestContrastText()
+        private Color AutoText
         {
-            if (_shell.Palette.Count == 0) return Color.FromRgb(0x1E, 0x20, 0x25);
-
-            return _shell.Palette
-                .Select(s => s.Color)
-                .OrderByDescending(c => ContrastService.ContrastRatio(c, MockupBackground))
-                .First();
+            get
+            {
+                if (_shell.Palette.Count == 0) return Color.FromRgb(0x1E, 0x20, 0x25);
+                var background = ResolveRole(3, AutoBackground);
+                return _shell.Palette
+                    .Select(s => s.Color)
+                    .OrderByDescending(c => ContrastService.ContrastRatio(c, background))
+                    .First();
+            }
         }
+
+        private Color AutoBorder => ColorMathService.MixOklch(AutoText, AutoBackground, 0.88);
+
+        public IBrush PrimaryBrush => new SolidColorBrush(ResolveRole(0, AutoPrimary));
+        public IBrush AccentBrush => new SolidColorBrush(ResolveRole(1, AutoAccent));
+        public IBrush SurfaceBrush => new SolidColorBrush(ResolveRole(2, AutoSurface));
+        public IBrush BackgroundBrush => new SolidColorBrush(ResolveRole(3, AutoBackground));
+        public IBrush TextBrush => new SolidColorBrush(ResolveRole(4, AutoText));
+        public IBrush BorderBrush => new SolidColorBrush(ResolveRole(5, AutoBorder));
+
+        public IBrush PrimaryForegroundBrush => new SolidColorBrush(ReadableOn(ResolveRole(0, AutoPrimary)));
+        public IBrush AccentForegroundBrush => new SolidColorBrush(ReadableOn(ResolveRole(1, AutoAccent)));
+
+        /// <summary>Muted body copy: the resolved text color at reduced strength on the
+        /// resolved background, so secondary text can be judged too.</summary>
+        public IBrush MutedTextBrush =>
+            new SolidColorBrush(ColorMathService.MixOklch(ResolveRole(4, AutoText), ResolveRole(3, AutoBackground), 0.35));
 
         private static Color ReadableOn(Color color) =>
             (0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B) / 255.0 > 0.6
                 ? Color.FromRgb(0x1E, 0x20, 0x25)
                 : Colors.White;
 
-        /// <summary>Called by the shell whenever the palette changes so the mockup follows.</summary>
+        // ---------------- Chart scene data ----------------
+
+        public ObservableCollection<ChartBar> ChartBars { get; } = new();
+
+        private static readonly double[] ChartHeights = { 0.55, 0.82, 0.38, 1.0, 0.64, 0.76 };
+
+        private void RebuildChartBars()
+        {
+            ChartBars.Clear();
+            if (_shell.Palette.Count == 0) return;
+
+            for (var i = 0; i < ChartHeights.Length; i++)
+            {
+                var color = _shell.Palette[i % _shell.Palette.Count].Color;
+                ChartBars.Add(new ChartBar(ChartHeights[i] * 150, new SolidColorBrush(color)));
+            }
+        }
+
+        // ---------------- Role option rebuilding ----------------
+
+        /// <summary>Guards the whole refresh against reentrancy: rebuilding options
+        /// mutates collections the ComboBox two-way bindings write back into, and
+        /// without this guard that feedback loop recursed until the stack died.</summary>
+        private bool _isRefreshing;
+
+        private void RebuildRoleOptions()
+        {
+            foreach (var role in Roles)
+            {
+                var previous = role.SelectedOption;
+                role.Options.Clear();
+                role.Options.Add("Auto");
+                foreach (var swatch in _shell.Palette)
+                    role.Options.Add($"{swatch.Name}  {swatch.Hex}");
+
+                // Keep the assignment when possible; fall back to Auto when the
+                // palette shrank below the stored index. Silent: the binding
+                // writebacks during Clear/Add above must not re-enter here.
+                role.SetSelectedOptionSilently(previous <= _shell.Palette.Count ? previous : 0);
+            }
+        }
+
+        /// <summary>Called by the shell whenever the palette or any swatch color changes
+        /// so the role options, mockup brushes and chart follow. Reentrant-safe:
+        /// collection/binding side effects during the rebuild may call back in.</summary>
         public void RaiseMockupPropertiesChanged()
         {
-            OnPropertyChanged(nameof(MockupPrimaryBrush));
-            OnPropertyChanged(nameof(MockupPrimaryForegroundBrush));
-            OnPropertyChanged(nameof(MockupAccentBrush));
-            OnPropertyChanged(nameof(MockupAccentForegroundBrush));
-            OnPropertyChanged(nameof(MockupBackgroundBrush));
-            OnPropertyChanged(nameof(MockupSurfaceBrush));
-            OnPropertyChanged(nameof(MockupTextBrush));
+            if (_isRefreshing) return;
+            _isRefreshing = true;
+            try
+            {
+                RebuildRoleOptions();
+                RebuildChartBars();
+
+                OnPropertyChanged(nameof(PrimaryBrush));
+                OnPropertyChanged(nameof(PrimaryForegroundBrush));
+                OnPropertyChanged(nameof(AccentBrush));
+                OnPropertyChanged(nameof(AccentForegroundBrush));
+                OnPropertyChanged(nameof(SurfaceBrush));
+                OnPropertyChanged(nameof(BackgroundBrush));
+                OnPropertyChanged(nameof(TextBrush));
+                OnPropertyChanged(nameof(BorderBrush));
+                OnPropertyChanged(nameof(MutedTextBrush));
+            }
+            finally
+            {
+                _isRefreshing = false;
+            }
         }
 
         /// <summary>§8 "Dark / light mode variant generator": derives a lighter or darker
@@ -86,8 +280,8 @@ namespace Spectrum.ViewModels
             var swatches = _shell.Palette.Select(s =>
             {
                 var derived = light
-                    ? ColorMathService.Mix(s.Color, Colors.White, 0.30)
-                    : ColorMathService.Mix(s.Color, Colors.Black, 0.35);
+                    ? ColorMathService.MixOklch(s.Color, Colors.White, 0.30)
+                    : ColorMathService.MixOklch(s.Color, Colors.Black, 0.35);
                 return new PaletteSwatchDto(
                     light ? $"{s.Name} tint" : $"{s.Name} shade",
                     derived.A, derived.R, derived.G, derived.B, s.IsLocked);
