@@ -21,6 +21,42 @@ namespace Spectrum.ViewModels
         Poster,
     }
 
+    /// <summary>One entry in a role's color dropdown: the color chip, its label and
+    /// hex. For "Auto" the chip is the derived default's *current* color, so the
+    /// entry previews what Auto resolves to instead of being a word with no color.</summary>
+    public partial class MockupOption : ObservableObject
+    {
+        public MockupOption(string label, Color color, bool isAuto = false)
+        {
+            Label = label;
+            IsAuto = isAuto;
+            Update(color);
+        }
+
+        public string Label { get; }
+        public bool IsAuto { get; }
+
+        /// <summary>Updated in place for Auto entries: replacing the item in the
+        /// collection instead would make the ComboBox drop its selection (and write
+        /// -1 back into SelectedOption).</summary>
+        [ObservableProperty]
+        private Color _color;
+
+        [ObservableProperty]
+        private string _hex = string.Empty;
+
+        /// <summary>Brush for the chip shown in the item and in the closed ComboBox.</summary>
+        [ObservableProperty]
+        private IBrush _swatch = Brushes.Transparent;
+
+        public void Update(Color color)
+        {
+            Color = color;
+            Hex = ColorMathService.ToHex(color);
+            Swatch = new SolidColorBrush(color);
+        }
+    }
+
     /// <summary>One semantic role in the mockup (Primary, Accent, Surface…), bound to
     /// a palette color by index — or to Auto (index 0) for the derived default.
     /// Options[0] is always "Auto"; options 1..n map to palette swatch i-1.</summary>
@@ -31,7 +67,21 @@ namespace Spectrum.ViewModels
 
         public string Name { get; init; } = string.Empty;
 
-        public ObservableCollection<string> Options { get; } = new();
+        public ObservableCollection<MockupOption> Options { get; } = new();
+
+        /// <summary>True while this role is pinned to a palette color instead of the
+        /// derived default — keeps the reset button's enabled state in step.</summary>
+        public bool IsOverridden => SelectedOption > 0;
+
+        /// <summary>Snap back to the derived default (Auto).</summary>
+        [RelayCommand]
+        private void ResetToAuto()
+        {
+            if (SelectedOption == 0) return;
+
+            // Deliberately not silent: the shell has to refresh the mockup brushes.
+            SelectedOption = 0;
+        }
 
         [ObservableProperty]
         private int _selectedOption;
@@ -60,6 +110,8 @@ namespace Spectrum.ViewModels
 
         partial void OnSelectedOptionChanged(int value)
         {
+            // Fires during silent rebuilds too — it is a pure view flag, unlike RoleChanged.
+            OnPropertyChanged(nameof(IsOverridden));
             if (!_suppressChangeNotification) RoleChanged?.Invoke();
         }
     }
@@ -220,16 +272,36 @@ namespace Spectrum.ViewModels
             {
                 var previous = role.SelectedOption;
                 role.Options.Clear();
-                role.Options.Add("Auto");
+                // Placeholder: the chip is patched in the second pass, once every
+                // selection has been restored (Auto's color may depend on them).
+                role.Options.Add(new MockupOption("Auto", Colors.Transparent, isAuto: true));
                 foreach (var swatch in _shell.Palette)
-                    role.Options.Add($"{swatch.Name}  {swatch.Hex}");
+                    role.Options.Add(new MockupOption(swatch.Name, swatch.Color));
 
                 // Keep the assignment when possible; fall back to Auto when the
                 // palette shrank below the stored index. Silent: the binding
                 // writebacks during Clear/Add above must not re-enter here.
                 role.SetSelectedOptionSilently(previous <= _shell.Palette.Count ? previous : 0);
             }
+
+            // Second pass: selections are final, so the derived defaults — which
+            // read them (Text contrasts against the resolved Background, Border
+            // mixes Text into Background) — can now be previewed accurately. Patched
+            // in place so the ComboBox's collection never changes here.
+            for (var i = 0; i < Roles.Count; i++)
+                Roles[i].Options[0].Update(AutoColorFor(i));
         }
+
+        /// <summary>The color role <paramref name="roleIndex"/> falls back to when it is Auto.</summary>
+        private Color AutoColorFor(int roleIndex) => roleIndex switch
+        {
+            0 => AutoPrimary,
+            1 => AutoAccent,
+            2 => AutoSurface,
+            3 => AutoBackground,
+            4 => AutoText,
+            _ => AutoBorder,
+        };
 
         /// <summary>Called by the shell whenever the palette or any swatch color changes
         /// so the role options, mockup brushes and chart follow. Reentrant-safe:

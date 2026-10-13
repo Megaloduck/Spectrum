@@ -60,21 +60,46 @@
                             <ItemsControl ItemsSource="{Binding Preview.Roles}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:MockupRole">
-                                        <Grid ColumnDefinitions="76,*" Margin="0,2">
+                                        <!-- Role · ComboBox (stretches, so every row lines up) · reset -->
+                                        <Grid ColumnDefinitions="76,*,Auto" Margin="0,3">
                                             <TextBlock Text="{Binding Name}" Classes="caption" FontSize="11"
                                                        VerticalAlignment="Center"/>
-                                            <ComboBox Grid.Column="1" MinWidth="0" Height="32" FontSize="12"
-                                                      Padding="8,4"
+
+                                            <ComboBox Grid.Column="1" MinWidth="0" Height="34" FontSize="12"
+                                                      Padding="8,5" Margin="8,0,0,0"
+                                                      HorizontalAlignment="Stretch"
                                                       ItemsSource="{Binding Options}"
                                                       SelectedIndex="{Binding SelectedOption, Mode=TwoWay}"
-                                                      ToolTip.Tip="Choose which palette color plays this role">
+                                                      ToolTip.Tip="Choose which palette color plays this role — the chip is the actual color">
                                                 <ComboBox.ItemTemplate>
-                                                    <DataTemplate x:DataType="x:String">
-                                                        <TextBlock Text="{Binding}" FontSize="12"
-                                                                   TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+                                                    <DataTemplate x:DataType="vm:MockupOption">
+                                                        <!-- The same template renders the closed box, so the
+                                                             current pick always shows its swatch too. -->
+                                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                                            <Border Width="14" Height="14" CornerRadius="4"
+                                                                    Background="{Binding Swatch}"
+                                                                    BorderBrush="{DynamicResource OutlineBrush}"
+                                                                    BorderThickness="1"
+                                                                    VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Label}"
+                                                                       FontSize="12" Margin="7,0"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding Hex}"
+                                                                       Classes="mono caption" FontSize="11"
+                                                                       Margin="8,0,0,0"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Grid>
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
+
+                                            <Button Grid.Column="2" Classes="iconOnly" Margin="5,0,0,0"
+                                                    Command="{Binding ResetToAutoCommand}"
+                                                    IsEnabled="{Binding !IsOverridden}"
+                                                    ToolTip.Tip="Reset this role to the derived default (Auto)">
+                                                <materialIcons:MaterialIcon Kind="Restore" Width="14" Height="14"/>
+                                            </Button>
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

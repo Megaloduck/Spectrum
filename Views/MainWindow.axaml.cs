@@ -30,6 +30,7 @@ namespace Spectrum.Views
                 if (_subscribedVm is not null)
                 {
                     _subscribedVm.PropertyChanged -= OnViewModelPropertyChanged;
+                    _subscribedVm.Library.RenameStarted -= OnPaletteRenameStarted;
                     _subscribedVm = null;
                 }
                 (DataContext as MainWindowViewModel)?.Detach();
@@ -43,6 +44,7 @@ namespace Spectrum.Views
                 if (_subscribedVm is not null)
                 {
                     _subscribedVm.PropertyChanged -= OnViewModelPropertyChanged;
+                    _subscribedVm.Library.RenameStarted -= OnPaletteRenameStarted;
                     _subscribedVm = null;
                 }
 
@@ -50,6 +52,7 @@ namespace Spectrum.Views
                 {
                     _subscribedVm = vm;
                     vm.PropertyChanged += OnViewModelPropertyChanged;
+                    vm.Library.RenameStarted += OnPaletteRenameStarted;
                 }
 
                 ApplyShellLayout();
@@ -194,37 +197,45 @@ namespace Spectrum.Views
             // Double-click on a palette row (or its name) opens inline rename.
             if (e.ClickCount != 2) return;
 
-            var row = sender as Control;
-            if (row is null) return;
-
-            var item = row.DataContext as PaletteItemViewModel;
+            var item = (sender as Control)?.DataContext as PaletteItemViewModel;
             if (item is null) return;
 
-            var library = DataContext as MainWindowViewModel;
-            if (library is null) return;
-
-            library.Library.RenamePaletteCommand.Execute(item);
-
-            // Enter inline-edit mode. The template flips the TextBlock for a
-            // TextBox; focus it so the user can type immediately.
-            item.IsRenaming = true;
-
-            // The visual tree needs a tick to re-render the TextBox before we
-            // can focus it, so post the focus call to the UI thread.
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (row.IsVisible && row.DataContext is PaletteItemViewModel pm)
-                {
-                    var editor = FindDescendantByName(row, "NameEditor") as TextBox;
-                    if (editor is not null)
-                    {
-                        editor.Focus();
-                        editor.SelectAll();
-                    }
-                }
-            }, DispatcherPriority.Render);
+            if (DataContext is MainWindowViewModel vm)
+                vm.Library.RenamePaletteCommand.Execute(item);
 
             e.Handled = true;
+        }
+
+        /// <summary>
+        /// The library ViewModel can flip a row into rename mode but cannot touch
+        /// controls, so it raises RenameStarted and this focuses (and selects) the
+        /// editor — whichever way rename was started: double-click, the pencil
+        /// button, F2 or the command palette.
+        /// </summary>
+        private void OnPaletteRenameStarted(PaletteItemViewModel item)
+        {
+            // The TextBox only exists once the row's containers have re-rendered
+            // with IsRenaming = true, so wait for the next layout/render tick.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!item.IsRenaming) return;
+
+                var container = FindContainer(item);
+                if (FindDescendantByName(container, "NameEditor") is not TextBox editor) return;
+
+                editor.Focus();
+                editor.SelectAll();
+            }, DispatcherPriority.Render);
+        }
+
+        private ListBoxItem? FindContainer(PaletteItemViewModel item)
+        {
+            foreach (var descendant in PaletteList.GetVisualDescendants())
+            {
+                if (descendant is ListBoxItem box && ReferenceEquals(box.DataContext, item))
+                    return box;
+            }
+            return null;
         }
 
         private static Control? FindDescendantByName(Visual? root, string name)
@@ -270,9 +281,9 @@ namespace Spectrum.Views
             }
             else if (e.Key == Key.Escape)
             {
-                // Revert: re-read Name from the DTO (the TwoWay binding already
-                // pushed Enter's text there), then exit edit mode.
-                item?.EndRename();
+                // Revert: the editor is two-way bound with PropertyChanged, so the
+                // typed text already reached the DTO — put the original back.
+                item?.CancelRename();
                 e.Handled = true;
             }
         }

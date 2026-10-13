@@ -31,6 +31,20 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private bool _isRenaming;
 
+        /// <summary>The name the palette had when the editor opened — Escape puts it back.</summary>
+        private string _nameBeforeRename = string.Empty;
+
+        /// <summary>Raised after an inline rename is committed or cancelled, so the owner
+        /// can re-apply search / sort. The sidebar list is deliberately *not* rebuilt
+        /// while <see cref="IsRenaming"/> is true: clearing and re-adding the rows would
+        /// throw the live TextBox away (taking focus with it) on every keystroke.</summary>
+        public Action? RenameEnded { get; set; }
+
+        partial void OnIsRenamingChanged(bool value)
+        {
+            if (value) _nameBeforeRename = Dto.Name;
+        }
+
         public string Name
         {
             get => Dto.Name;
@@ -47,8 +61,19 @@ namespace Spectrum.ViewModels
         /// <summary>Commits the current name and exits inline rename mode.</summary>
         public void EndRename()
         {
+            if (!IsRenaming) return; // Enter already ended it — the TextBox losing focus second must not re-run the commit.
             IsRenaming = false;
             OnPropertyChanged(nameof(Name));
+            RenameEnded?.Invoke();
+        }
+
+        /// <summary>Exits inline rename mode and restores the name the palette had
+        /// when the editor opened (Escape).</summary>
+        public void CancelRename()
+        {
+            if (!IsRenaming) return;
+            Name = _nameBeforeRename;
+            EndRename();
         }
 
         public bool IsPinned

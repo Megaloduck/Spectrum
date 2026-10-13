@@ -48,6 +48,10 @@ namespace Spectrum.ViewModels
         /// <summary>Fired when the user selects a different palette in the sidebar.</summary>
         public event Action<PaletteDto?>? ActivePaletteChanged;
 
+        /// <summary>Fired when a row enters inline rename mode. The view hooks this to
+        /// focus the name TextBox (the ViewModel cannot touch controls).</summary>
+        public event Action<PaletteItemViewModel>? RenameStarted;
+
         public PaletteLibraryViewModel()
         {
             PaletteLibraryService.Initialize();
@@ -168,7 +172,10 @@ namespace Spectrum.ViewModels
             item ??= SelectedPalette;
             if (item is null) return;
 
-            item.IsSelected = true;
+            // Flip the row into edit mode (the TextBox replaces the TextBlock) and
+            // let the view know so it can focus/select the editor for typing.
+            item.IsRenaming = true;
+            RenameStarted?.Invoke(item);
             StatusMessage($"Renaming \"{item.Name}\" — type a name and press Enter.");
         }
 
@@ -448,15 +455,27 @@ namespace Spectrum.ViewModels
 
         private PaletteItemViewModel CreateItem(PaletteDto dto)
         {
-            return new PaletteItemViewModel(dto)
+            var item = new PaletteItemViewModel(dto);
+
+            item.Changed = () =>
             {
-                Changed = () =>
-                {
-                    PaletteLibraryService.MarkDirty(dto);
-                    RefreshPreview(dto);
-                    RefreshVisible();
-                },
+                PaletteLibraryService.MarkDirty(dto);
+
+                // While the name editor is live the sidebar must not be rebuilt:
+                // VisiblePalettes.Clear() + re-add would replace the row's TextBox
+                // mid-typing (and steal its focus), so refreshes wait for the commit.
+                if (item.IsRenaming) return;
+
+                RefreshPreview(dto);
+                RefreshVisible();
             };
+            item.RenameEnded = () =>
+            {
+                RefreshPreview(dto);
+                RefreshVisible();
+            };
+
+            return item;
         }
 
         private void OnEdited() => SaveStateLabel = "Unsaved changes…";
