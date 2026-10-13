@@ -143,9 +143,9 @@
         </Border>
 
         <!-- ═══════════════════════════════════════════════════════════════════
-             CENTER · toolbar + scene gallery + palette board
+             CENTER · toolbar + scene gallery
              ═══════════════════════════════════════════════════════════════════ -->
-        <Grid Grid.Column="0" RowDefinitions="Auto,*,8,300">
+        <Grid Grid.Column="0" RowDefinitions="Auto,*">
 
             <!-- Toolbar -->
             <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
@@ -158,18 +158,6 @@
                                   ItemsSource="{Binding Preview.Scenes}"
                                   SelectedItem="{Binding Preview.SelectedScene}"
                                   ToolTip.Tip="Scene: the context your palette is judged in">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-
-                        <!-- View mode (§8 grid / list / compact) -->
-                        <ComboBox MinWidth="110" Height="38" Margin="0,0,4,0"
-                                  ItemsSource="{Binding ViewModes}"
-                                  SelectedItem="{Binding ViewMode}"
-                                  ToolTip.Tip="Board layout: Row / Grid / List / Compact">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
@@ -237,9 +225,8 @@
                                 </Border>
                             </Grid>
 
-                            <TextBlock FontSize="13" TextWrapping="Wrap"
-                                       Foreground="{Binding Preview.MutedTextBrush}"
-                                       Text="Body copy uses the most readable color the palette offers, so contrast problems show up here first."/>
+                            <TextBlock FontSize="13" TextWrapping="Wrap"                                               Foreground="{Binding Preview.MutedTextBrush}"
+                                               Text="Body copy uses the most readable color the palette offers, so contrast problems show up here first."/>
 
                             <!-- Stat cards -->
                             <Grid ColumnDefinitions="*,12,*" MaxWidth="520" HorizontalAlignment="Left">
@@ -560,13 +547,6 @@
                     </Panel>
                 </Border>
             </ScrollViewer>
-
-            <!-- Resizable split between gallery and board -->
-            <GridSplitter Grid.Row="2" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext"
-                          Background="Transparent" Height="8"/>
-
-            <!-- Palette board: still here so colors can be picked, locked, reordered -->
-            <local:PaletteBoardView Grid.Row="3"/>
 
         </Grid>
 

@@ -155,6 +155,8 @@ namespace Spectrum.Views
             Add("Add tints of base color", "color science", vm.Analyze.AddTintsCommand);
             Add("Add shades of base color", "color science", vm.Analyze.AddShadesCommand);
             Add("Add tones of base color", "color science", vm.Analyze.AddTonesCommand);
+            // "Delete palette" below removes the library entry + board together; the board-only
+            // removal path is "Clear palette" in the toolbar and command palette.
             Add("Clear palette", "remove all swatches", vm.ClearPaletteCommand);
             Add("Undo", "Ctrl+Z", vm.UndoCommand);
             Add("Redo", "Ctrl+Y", vm.RedoCommand);
