@@ -34,7 +34,9 @@
                     AutomationProperties.AutomationId="{Binding Hex}"
                     PointerPressed="OnSwatchPointerPressed"
                     PointerMoved="OnSwatchPointerMoved"
-                    PointerReleased="OnSwatchPointerReleased">
+                    PointerReleased="OnSwatchPointerReleased"
+                    PointerEntered="OnSwatchPointerEntered"
+                    PointerExited="OnSwatchPointerExited">
                 <ToolTip.Tip>
                     <StackPanel x:DataType="models:ColorSwatch" Width="220" Spacing="3" Margin="6">
                         <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
@@ -148,7 +150,8 @@
                     <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Spacing="2">
                         <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"
                                    TextWrapping="Wrap" Foreground="{Binding ForegroundBrush}"/>
-                        <TextBlock Text="HEX" FontSize="10" Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
+                        <TextBlock Text="HEX" FontSize="9.5" FontWeight="SemiBold" LetterSpacing="0.6"
+                                   Opacity="0.75" Foreground="{Binding ForegroundBrush}"/>
 
                         <!-- Click the hex to copy it (in the footer's selected format) -->
                         <Button Classes="iconOnly" HorizontalAlignment="Left" Margin="-4,0,0,0"
@@ -190,7 +193,9 @@
                     AutomationProperties.AutomationId="{Binding Hex}"
                     PointerPressed="OnSwatchPointerPressed"
                     PointerMoved="OnSwatchPointerMoved"
-                    PointerReleased="OnSwatchPointerReleased">
+                    PointerReleased="OnSwatchPointerReleased"
+                    PointerEntered="OnSwatchPointerEntered"
+                    PointerExited="OnSwatchPointerExited">
                 <Grid ColumnDefinitions="*,Auto" Margin="13,0">
                     <StackPanel VerticalAlignment="Center" Spacing="3">
                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -332,7 +337,7 @@
                         Spacing="10" MaxWidth="420">
                 <materialIcons:MaterialIcon Kind="PaletteOutline" Width="40" Height="40"
                                             HorizontalAlignment="Center" Opacity="0.5"/>
-                <TextBlock Text="This palette is empty" FontWeight="Bold" FontSize="18"
+                <TextBlock Text="This palette is empty" Classes="display small"
                            HorizontalAlignment="Center"/>
                 <TextBlock Classes="caption" TextAlignment="Center" TextWrapping="Wrap"
                            Text="Press Space to generate a fresh set of colors, or start from a picture or a single color."/>

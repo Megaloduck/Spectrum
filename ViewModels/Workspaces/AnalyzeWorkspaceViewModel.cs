@@ -41,6 +41,17 @@ namespace Spectrum.ViewModels
     /// <summary>A collapsible group of conversion rows (common vs. advanced spaces).</summary>
     public sealed record ValueSection(string Title, ObservableCollection<ColorValueRow> Rows);
 
+    /// <summary>One related-color rule in the reference record: the rule name,
+    /// the colors it generates from the current record color, and the command
+    /// that adds one of them to the palette (wired by the owning ViewModel,
+    /// same pattern as <see cref="ColorValueRow.CopyCommand"/>).</summary>
+    public partial class HarmonyRow : ObservableObject
+    {
+        public string Rule { get; init; } = string.Empty;
+        public ObservableCollection<Color> Colors { get; } = new();
+        public IRelayCommand<Color>? AddCommand { get; set; }
+    }
+
     /// <summary>Ctrl+3 · Analyze — the color *reference record* for the base color,
     /// restructured from a bare readout column into identity → values → usage:
     ///
@@ -69,32 +80,128 @@ namespace Spectrum.ViewModels
             _shell = shell;
             RebuildValueRows();
             RebuildRamp();
+            RebuildHarmonies();
         }
 
         private StudioWorkspaceViewModel Studio => _shell.Studio;
 
+        // ---------------- Current record color (hover preview aware) ----------------
+
+        /// <summary>Hover preview: while the pointer is over a board swatch the
+        /// whole reference record reads from this color instead of the committed
+        /// base color, then snaps back on leave. Null = no preview.</summary>
+        private Color? _hoverColor;
+
+        /// <summary>The color this dock currently documents: the hovered swatch
+        /// if there is one, otherwise the Studio base color. Every readout in this
+        /// ViewModel derives from this so hover and selection stay in lockstep.</summary>
+        public Color CurrentColor => _hoverColor ?? Studio.BaseColor;
+
+        /// <summary>True while a board hover is driving the record — the identity
+        /// card shows a "previewing" hint so click-to-keep feels intentional.</summary>
+        public bool IsHoverPreview => _hoverColor.HasValue;
+
+        /// <summary>Feeds the board's pointer-enter handler. No-ops when the color
+        /// is unchanged so rapid card-to-card moves only refresh once each.</summary>
+        public void SetHoverPreview(Color? color)
+        {
+            if (_hoverColor == color) return;
+            _hoverColor = color;
+            RefreshRecord();
+        }
+
+        /// <summary>True when a preview of exactly this color is active. The board's
+        /// leave handler uses it so a stale PointerExited from a previously hovered
+        /// card can't clear the card now under the pointer.</summary>
+        public bool IsHoverPreviewColor(Color color) => _hoverColor == color;
+
         // ---------------- Identity header ----------------
 
-        public string BaseName => Studio.BaseColorName;
+        public string BaseName => ColorNamingService.GetClosestName(CurrentColor);
 
         public string BaseHexForHeader =>
-            Studio.BaseColor.A == 255
-                ? ColorMathService.ToHex(Studio.BaseColor)
-                : $"{ColorMathService.ToHex(Studio.BaseColor)}{Studio.BaseColor.A:X2}";
+            CurrentColor.A == 255
+                ? ColorMathService.ToHex(CurrentColor)
+                : $"{ColorMathService.ToHex(CurrentColor)}{CurrentColor.A:X2}";
 
-        public IBrush BaseSwatchBrush => Studio.BaseColorBrush;
+        public IBrush BaseSwatchBrush => new SolidColorBrush(CurrentColor);
+
+        /// <summary>Contrast-aware foreground for text sitting on the identity
+        /// swatch — mirrors Studio's luminance rule but for <see cref="CurrentColor"/>.</summary>
+        public IBrush BaseForegroundBrush =>
+            (0.2126 * CurrentColor.R + 0.7152 * CurrentColor.G + 0.0722 * CurrentColor.B) / 255.0 > 0.6
+                ? new SolidColorBrush(Color.FromRgb(0x1E, 0x20, 0x25))
+                : Brushes.White;
 
         /// <summary>Character tags joined for a single header line (e.g. "Pastel · Warm · Orange").</summary>
         public string CharacterTags
         {
             get
             {
-                var tags = ColorCharacterService.Describe(Studio.BaseColor);
+                var tags = ColorCharacterService.Describe(CurrentColor);
                 return tags.Count == 0 ? "Neutral" : string.Join("  ·  ", tags);
             }
         }
 
-        public string CharacterNote => ColorCharacterService.Note(Studio.BaseColor);
+        public string CharacterNote => ColorCharacterService.Note(CurrentColor);
+
+        /// <summary>Short usage-first line for the identity card, derived from the
+        /// same HSL/OKLCH logic as the character tags. Kept separate from the
+        /// longer <see cref="CharacterNote"/> so the dock can stay compact.</summary>
+        private static string AnalyzeUsageNote(Color c)
+        {
+            var (h, s, l) = ColorMathService.RgbToHsl(c);
+            var family = HueFamilyForNote(h, s)?.ToLowerInvariant() ?? "neutral";
+            var vivid = s >= 0.70 && l is > 0.30 and < 0.75;
+            var deepMuted = s <= 0.25 && l <= 0.35;
+            var lightMuted = s <= 0.25 && l >= 0.65;
+
+            static string? HueFamilyForNote(double h, double s)
+            {
+                if (s <= 0.08)
+                    return h >= 340 || h < 20 ? "warm gray" : h < 70 ? "warm gray" : h < 160 ? "green gray"
+                        : h < 280 ? "blue gray" : "cool gray";
+
+                return h switch
+                {
+                    < 15 or >= 345 => "red",
+                    < 45 => "orange",
+                    < 70 => "yellow",
+                    < 160 => "green",
+                    < 200 => "cyan",
+                    < 255 => "blue",
+                    < 290 => "violet",
+                    < 345 => "magenta",
+                    _ => null,
+                };
+            }
+
+            if (vivid)
+                return $"Strong as an accent or call-to-action; check body-text contrast before using it on large areas.";
+            if (deepMuted)
+                return $"Works as a dark-mode surface or as text on light backgrounds.";
+            if (lightMuted)
+                return $"Calm enough for large surfaces and cards behind content.";
+            if (l >= 0.93)
+                return $"Best as a page or card background, never as text.";
+            if (l <= 0.07)
+                return $"Reads as text on light surfaces; too heavy for large fills.";
+
+            return $"A balanced {family} — useful for buttons, links and highlights.";
+        }
+
+        /// <summary>Breadcrumb-style reference path segments for the Analyze dock:
+        /// workspace › palette › current color (last segment styled as current).
+        /// This is the same "reference object" language as the spec — the dock is
+        /// not a random readout, it is the current color record.</summary>
+        public string ReferenceWorkspace => "Studio";
+
+        public string ReferencePalette => _shell.Library.SelectedPalette?.Name ?? "Palette";
+
+        public string ReferenceColor => BaseName;
+
+        public string ReferencePath =>
+            $"{ReferenceWorkspace} › {ReferencePalette} › {ReferenceColor}";
 
         // ---------------- Conversion table ----------------
 
@@ -102,7 +209,7 @@ namespace Spectrum.ViewModels
 
         private void RebuildValueRows()
         {
-            var c = Studio.BaseColor;
+            var c = CurrentColor;
             var (h, s, l) = ColorMathService.RgbToHsl(c);
             var hsv = ColorMathService.RgbToHsv(c);
             var hwb = ColorMathService.RgbToHwb(c);
@@ -194,9 +301,9 @@ namespace Spectrum.ViewModels
         public IBrush ContrastBackgroundBrush => new SolidColorBrush(ContrastBackground);
 
         public string ContrastPairLabel =>
-            $"{ColorMathService.ToHex(Studio.BaseColor)} text on {ColorMathService.ToHex(ContrastBackground)}";
+            $"{ColorMathService.ToHex(CurrentColor)} text on {ColorMathService.ToHex(ContrastBackground)}";
 
-        public double ContrastRatioNow => ContrastService.ContrastRatio(Studio.BaseColor, ContrastBackground);
+        public double ContrastRatioNow => ContrastService.ContrastRatio(CurrentColor, ContrastBackground);
 
         public string ContrastRatioLabel => $"{ContrastRatioNow:N2}:1";
 
@@ -219,9 +326,13 @@ namespace Spectrum.ViewModels
             }
         }
 
-        public double ApcaNow => ContrastService.Apca(Studio.BaseColor, ContrastBackground);
+        public double ApcaNow => ContrastService.Apca(CurrentColor, ContrastBackground);
         public string ApcaLabel => $"Lc {ApcaNow:N0}";
         public string ApcaRatingLabel => ContrastService.RateApca(ApcaNow);
+
+        /// <summary>Color reference note for the identity card, kept short enough for
+        /// the dock but useful as the color's "why this color" line.</summary>
+        public string UsageNote => AnalyzeUsageNote(CurrentColor);
 
         partial void OnContrastBackgroundChanged(Color value) => RaiseContrastPropertiesChanged();
 
@@ -277,7 +388,39 @@ namespace Spectrum.ViewModels
                 Collisions.Add(collision);
 
             OnPropertyChanged(nameof(HasCollisions));
+            OnPropertyChanged(nameof(ReferencePalette));
+            OnPropertyChanged(nameof(ReferencePath));
             OnPropertyChanged(nameof(CollisionsSummary));
+        }
+
+        // ---------------- Related colors (harmonies) ----------------
+
+        /// <summary>Complementary / triadic / analogous strips derived from the
+        /// record color — the "related colors" section of a reference page.</summary>
+        public ObservableCollection<HarmonyRow> Harmonies { get; } = new();
+
+        private void RebuildHarmonies()
+        {
+            Harmonies.Clear();
+            AddHarmonyRule("COMPLEMENTARY", HarmonyType.Complementary);
+            AddHarmonyRule("TRIADIC", HarmonyType.Triadic);
+            AddHarmonyRule("ANALOGOUS", HarmonyType.Analogous);
+        }
+
+        private void AddHarmonyRule(string rule, HarmonyType type)
+        {
+            var row = new HarmonyRow { Rule = rule };
+            row.AddCommand = AddRampStepCommand;
+
+            foreach (var c in ColorHarmonyService.Generate(CurrentColor, type))
+            {
+                // Most rules return the base color first — the record itself is
+                // already on screen, so the strip only shows the related ones.
+                if (c.R == CurrentColor.R && c.G == CurrentColor.G && c.B == CurrentColor.B) continue;
+                row.Colors.Add(c);
+            }
+
+            Harmonies.Add(row);
         }
 
         // ---------------- OKLCH ramp ----------------
@@ -286,7 +429,7 @@ namespace Spectrum.ViewModels
 
         private void RebuildRamp()
         {
-            var steps = ColorMathService.RampOklch(Studio.BaseColor);
+            var steps = ColorMathService.RampOklch(CurrentColor);
 
             // Index-set in place when the strip already exists (slider drag) —
             // one PropertyChanged per step instead of Clear + 9 Adds per tick.
@@ -312,32 +455,44 @@ namespace Spectrum.ViewModels
 
         // ---------------- Generators (now OKLCH-interpolated) ----------------
 
-        [RelayCommand] private void AddTints() => AppendGenerated(ColorMathService.TintsOklch(Studio.BaseColor), "tint");
-        [RelayCommand] private void AddShades() => AppendGenerated(ColorMathService.ShadesOklch(Studio.BaseColor), "shade");
-        [RelayCommand] private void AddTones() => AppendGenerated(ColorMathService.TonesOklch(Studio.BaseColor), "tone");
+        [RelayCommand] private void AddTints() => AppendGenerated(ColorMathService.TintsOklch(CurrentColor), "tint");
+        [RelayCommand] private void AddShades() => AppendGenerated(ColorMathService.ShadesOklch(CurrentColor), "shade");
+        [RelayCommand] private void AddTones() => AppendGenerated(ColorMathService.TonesOklch(CurrentColor), "tone");
 
         private void AppendGenerated(List<Color> colors, string kind)
         {
             _shell.PushHistory();
             foreach (var c in colors)
                 _shell.Palette.Add(_shell.CreateSwatch(c, ColorNamingService.GetClosestName(c)));
-            _shell.StatusMessage = $"Added {colors.Count} OKLCH {kind}s derived from {ColorMathService.ToHex(Studio.BaseColor)}.";
+            _shell.StatusMessage = $"Added {colors.Count} OKLCH {kind}s derived from {ColorMathService.ToHex(CurrentColor)}.";
         }
 
         // ---------------- Refresh + contrast matrix ----------------
 
         /// <summary>Refreshes every readout that derives from the Studio base color.
         /// Wired to <see cref="StudioWorkspaceViewModel.BaseColorChanged"/> by the shell.</summary>
-        public void RefreshForBaseColor()
+        public void RefreshForBaseColor() => RefreshRecord();
+
+        /// <summary>Re-raises everything that derives from <see cref="CurrentColor"/> —
+        /// shared by base-color edits and board hover previews so both paths
+        /// always produce the same record.</summary>
+        private void RefreshRecord()
         {
             RebuildValueRows();
             RebuildRamp();
+            RebuildHarmonies();
 
+            OnPropertyChanged(nameof(CurrentColor));
+            OnPropertyChanged(nameof(IsHoverPreview));
             OnPropertyChanged(nameof(BaseName));
             OnPropertyChanged(nameof(BaseHexForHeader));
             OnPropertyChanged(nameof(BaseSwatchBrush));
+            OnPropertyChanged(nameof(BaseForegroundBrush));
             OnPropertyChanged(nameof(CharacterTags));
             OnPropertyChanged(nameof(CharacterNote));
+            OnPropertyChanged(nameof(ReferencePath));
+            OnPropertyChanged(nameof(ReferenceColor));
+            OnPropertyChanged(nameof(UsageNote));
             RaiseContrastPropertiesChanged();
         }
 

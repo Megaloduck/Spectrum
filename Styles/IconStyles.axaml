@@ -1,0 +1,13 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ===================== Icon baseline ===================== -->
+  <!-- Material+Icons is the current workhorse for chrome and actions.
+       The intent is a single consistent stroke weight and size budget, so
+       tiny utility icons never feel larger than the labels beside them. -->    
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+
+</Styles>

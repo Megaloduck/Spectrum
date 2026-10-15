@@ -10,9 +10,21 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
   
+    <Application.Resources>
+        <!-- Display face (wordmark, workspace titles, empty-state headlines).
+             The fragment after '#' must be the font's name-table family name
+             (ID 1), not its full name — that is what Avalonia indexes
+             embedded fonts by (EmbeddedFontCollection). -->
+        <FontFamily x:Key="Cabazon">avares://Spectrum/Assets/Cabazon W01 Regular.ttf#CabazonW01-Regular, cursive</FontFamily>
+        <!-- Data/code face (hex, ratios, ΔE, export source). OFL-licensed
+             Fragment Mono, bundled rather than system-aliased so every
+             platform renders the same metrics. -->
+        <FontFamily x:Key="FragmentMono">avares://Spectrum/Assets/Fragment-Mono-Regular.ttf#Fragment Mono, Consolas, monospace</FontFamily>
+    </Application.Resources>
     <Application.Styles>
         <FluentTheme />
         <materialIcons:MaterialIconStyles />
         <StyleInclude Source="avares://Spectrum/Styles/Theme.axaml"/>
+        <StyleInclude Source="avares://Spectrum/Styles/IconStyles.axaml"/>
     </Application.Styles>
 </Application>
