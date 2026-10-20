@@ -79,6 +79,13 @@ namespace Spectrum.ViewModels
         /// delete / undo so the button state stays current.</summary>
         public bool UndoLastDeleteCanExecute => PaletteLibraryService.CanUndoLastDelete;
 
+        /// <summary>Rail state: "No palettes match" when search/filter hides everything.</summary>
+        public bool IsLibraryEmpty => VisiblePalettes.Count == 0;
+
+        /// <summary>How many palettes the current search/filter leaves visible.</summary>
+        public string PaletteCountLabel =>
+            VisiblePalettes.Count == 1 ? "1 palette" : $"{VisiblePalettes.Count} palettes";
+
         // ---------------- Commands ----------------
 
         [RelayCommand]
@@ -397,6 +404,9 @@ namespace Spectrum.ViewModels
                     SelectedPalette = selected;
                 _refreshing = false;
             }
+
+            OnPropertyChanged(nameof(IsLibraryEmpty));
+            OnPropertyChanged(nameof(PaletteCountLabel));
         }
 
         private void RebuildVisible(PaletteItemViewModel? keepSelected)
@@ -474,6 +484,12 @@ namespace Spectrum.ViewModels
                 RefreshPreview(dto);
                 RefreshVisible();
             };
+
+            // The rail's context flyout binds to these directly.
+            item.RenameCommand = new RelayCommand(() => RenamePalette(item));
+            item.DuplicateCommand = new RelayCommand(() => DuplicatePalette(item));
+            item.DeleteCommand = new RelayCommand(() => DeletePalette(item));
+            item.TogglePinCommand = new RelayCommand(() => TogglePin(item));
 
             return item;
         }

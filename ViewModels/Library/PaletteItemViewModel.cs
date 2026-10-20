@@ -3,7 +3,9 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Spectrum.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 
 namespace Spectrum.ViewModels
 {
@@ -96,6 +98,11 @@ namespace Spectrum.ViewModels
         public string VersionsLabel =>
             Dto.Versions.Count == 0 ? "No saved versions yet" : $"{Dto.Versions.Count} saved version(s)";
 
+        /// <summary>Newest few snapshots — enough to restore from without turning
+        /// the library flyout into an endless history log.</summary>
+        public IEnumerable<PaletteVersionDto> RecentVersions =>
+            Dto.Versions.OrderByDescending(v => v.SavedUtc).Take(5);
+
         /// <summary>
         /// Hard-stop horizontal gradient of the first colors — a miniature of
         /// the palette used as the sidebar thumbnail (no extra controls needed).
@@ -129,6 +136,14 @@ namespace Spectrum.ViewModels
             }
         }
 
+        // ---- Commands wired by PaletteLibraryViewModel (same pattern as
+        // ---- ColorSwatch): the rail's context flyout binds straight to the
+        // ---- item, so a flyout never needs to reach out to the parent VM.
+        public ICommand? RenameCommand { get; set; }
+        public ICommand? DuplicateCommand { get; set; }
+        public ICommand? DeleteCommand { get; set; }
+        public ICommand? TogglePinCommand { get; set; }
+
         public void Refresh()
         {
             OnPropertyChanged(nameof(Name));
@@ -136,6 +151,7 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(CountLabel));
             OnPropertyChanged(nameof(UpdatedLabel));
             OnPropertyChanged(nameof(VersionsLabel));
+            OnPropertyChanged(nameof(RecentVersions));
             OnPropertyChanged(nameof(PreviewBrush));
         }
 

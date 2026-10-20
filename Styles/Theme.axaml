@@ -638,6 +638,83 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
+  <!-- ===================== Palette rail =====================
+       Discord-style navigation: thumbnails only, a pill for the active
+       palette, per-palette actions on right-click, utility chips below.
+       ========================================================== -->
+
+  <Style Selector="ListBox.paletteRail">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0,6"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteRail ListBoxItem">
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="CornerRadius" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+  </Style>
+
+  <!-- The rail item itself never paints a row highlight; the pill does. -->
+  <Style Selector="ListBox.paletteRail ListBoxItem /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteRail ListBoxItem:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteRail ListBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="Border.railPill">
+    <Setter Property="Opacity" Value="0"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <anim:DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Hover hints at the pill; selection commits it (Discord's cue). -->
+  <Style Selector="ListBox.paletteRail ListBoxItem:pointerover Border.railPill">
+    <Setter Property="Opacity" Value="0.3"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteRail ListBoxItem:selected Border.railPill">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+
+  <!-- Discord's tiles round off as you point at them: square at rest,
+       softer on hover, softest while it is the open palette. -->
+  <Style Selector="Border.railTileFace">
+    <Setter Property="Transitions">
+      <Transitions>
+        <anim:CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.12"/>
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <Style Selector="ListBox.paletteRail ListBoxItem:pointerover Border.railTileFace">
+    <Setter Property="CornerRadius" Value="14"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteRail ListBoxItem:selected Border.railTileFace">
+    <Setter Property="CornerRadius" Value="16"/>
+  </Style>
+
+  <Style Selector="Button.railAction">
+    <Setter Property="Width" Value="40"/>
+    <Setter Property="Height" Value="40"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="CornerRadius" Value="20"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+
   <!-- ===================== Library list ===================== -->
   <!-- Fluent paints the selected row with the accent; the library wants a
        neutral highlight so the palette thumbnails stay the only color. -->

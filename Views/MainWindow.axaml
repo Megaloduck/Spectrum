@@ -22,15 +22,15 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <!-- The shell is three things: the app bar, the palette library, and the
+    <!-- The shell is three things: the app bar, the palette rail, and the
          active workspace. Everything task-specific lives in Views/Workspaces. -->
-    <Grid x:Name="RootGrid" RowDefinitions="Auto,*" Margin="22">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*" Margin="0,10,10,10">
 
         <!-- ═══════════════════ APP BAR · brand · workspaces · actions ═══════════════════ -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16">
 
             <!-- Brand: gradient palette mark, wordmark, open palette + size -->
-            <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center" Margin="10,0,0,0">
                 <Border Width="37" Height="37" CornerRadius="11"
                         Background="{DynamicResource SurfaceRaisedBrush}"
                         BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
@@ -86,7 +86,7 @@
             <!-- Quick actions: panels · history · appearance -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                 <Button Classes="iconChip ghost" Command="{Binding ToggleLibraryPanelCommand}"
-                        ToolTip.Tip="Show / hide the palette library (Ctrl+B)">
+                        ToolTip.Tip="Show / hide the palette rail (Ctrl+B)">
                     <materialIcons:MaterialIcon Kind="PageLayoutSidebarLeft" Width="17" Height="17"/>
                 </Button>
                 <Button Classes="iconChip ghost" Command="{Binding ToggleInspectorCommand}"
@@ -120,174 +120,241 @@
             </StackPanel>
         </Grid>
 
-        <!-- ═══════════════════ BODY · library · workspace ═══════════════════
-             Columns are separated by a GridSplitter so the library is
-             resizable; each workspace owns its own toolbar, board and dock. -->
-        <Grid Grid.Row="1" x:Name="BodyGrid" ColumnDefinitions="250,12,*">
+        <!-- ═══════════════════ BODY · palette rail · workspace ═══════════════════ -->
+        <Grid Grid.Row="1" x:Name="BodyGrid" ColumnDefinitions="68,10,*">
 
-            <GridSplitter Grid.Column="1" x:Name="LibrarySplitter" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
-                          Background="Transparent" Width="12" IsVisible="{Binding LibraryVisible}"
-                          ToolTip.Tip="Drag to resize the library"/>
+            <!-- ============ PALETTE RAIL ============
+                 Discord-style navigation: one thumbnail per palette, a selection
+                 pill on the left, management on right-click, and utility actions
+                 pinned to the bottom. -->
+            <Grid Grid.Column="0" x:Name="LibraryPanel" IsVisible="{Binding LibraryVisible}"
+                  RowDefinitions="*,Auto">
 
-            <!-- ============ PALETTE LIBRARY SIDEBAR ============ -->
-            <Border Grid.Column="0" x:Name="LibraryPanel" Classes="panel" Padding="12"
-                    IsVisible="{Binding LibraryVisible}">
-                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
-
-                    <Grid ColumnDefinitions="*,Auto,Auto">
-                        <TextBlock Text="LIBRARY" Classes="eyebrow" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                        <Button Grid.Column="1" Classes="iconChip ghost" Width="28" Height="28"
-                                Command="{Binding Library.NewPaletteCommand}"
-                                ToolTip.Tip="New palette (Ctrl+N)">
-                            <materialIcons:MaterialIcon Kind="Plus" Width="16" Height="16"/>
-                        </Button>
-                        <Button Grid.Column="2" Classes="iconChip ghost" Width="28" Height="28"
-                                Command="{Binding ToggleLibraryPanelCommand}"
-                                ToolTip.Tip="Collapse the library panel (Ctrl+B)">
-                            <materialIcons:MaterialIcon Kind="ChevronLeft" Width="16" Height="16"/>
-                        </Button>
-                    </Grid>
-
-                    <TextBox Grid.Row="1" Text="{Binding Library.SearchText}" Watermark="Search palettes…"
-                             Margin="0,10,0,0" FontSize="12" Padding="9,6"/>
-
-                    <ComboBox Grid.Row="2" ItemsSource="{Binding Library.Filters}"
-                              SelectedItem="{Binding Library.SelectedFilter}"
-                              Margin="0,6,0,0" Height="30" Padding="9,4" FontSize="11.5"
-                              HorizontalAlignment="Stretch"
-                              ToolTip.Tip="All / Pinned / Recent palettes">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"
-                                           FontSize="11.5"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <ListBox Grid.Row="3" ItemsSource="{Binding Library.VisiblePalettes}"
+                <ScrollViewer Grid.Row="0"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <ListBox x:Name="PaletteList"
+                             Classes="paletteRail"
+                             ItemsSource="{Binding Library.VisiblePalettes}"
                              SelectedItem="{Binding Library.SelectedPalette}"
-                             Classes="paletteList"
-                             Background="Transparent" Margin="0,8,0,0"
-                             AutoScrollToSelectedItem="True"
-                             x:Name="PaletteList">
+                             AutoScrollToSelectedItem="True">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PaletteItemViewModel">
-                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="7,6"
+                                <Grid ColumnDefinitions="4,44" Margin="0,3"
                                       Background="Transparent"
-                                      PointerPressed="OnPaletteItemPointerPressed"
-                                      x:Name="Row">
-                                    <Border Grid.Column="0" Width="38" Height="38" CornerRadius="6"
-                                            Background="{Binding PreviewBrush}"
-                                            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
-                                            AutomationProperties.Name="{Binding Name} palette preview"
-                                            ToolTip.Tip="Palette preview"/>
+                                      PointerPressed="OnPaletteItemPointerPressed">
 
-                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="2"
-                                                PointerPressed="OnPaletteNamePointerPressed">
-                                        <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 Classes="swatchName"
-                                                 IsVisible="{Binding IsRenaming}"
-                                                 x:Name="NameEditor"
-                                                 Padding="0,4"
-                                                 FontWeight="SemiBold" FontSize="12.5"
-                                                 LostFocus="OnNameEditorLostFocus"
-                                                 KeyDown="OnNameEditorKeyDown"/>
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   x:Name="NameText"
-                                                   Cursor="Hand"/>
-                                        <TextBlock Text="{Binding CountLabel}" Classes="caption mono" FontSize="10.5"/>
-                                    </StackPanel>
+                                    <!-- Discord's selection pill: quiet until selected -->
+                                    <Border Classes="railPill" Width="3" Height="20" CornerRadius="2"
+                                            VerticalAlignment="Center" HorizontalAlignment="Left"
+                                            Background="{DynamicResource TextPrimaryBrush}"/>
 
-                                    <!-- Pin stays readable at rest; rename/delete fade in on hover -->
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="1"
-                                                VerticalAlignment="Center">
-                                        <ToggleButton Classes="iconOnly" Padding="4"
-                                                      IsChecked="{Binding IsPinned, Mode=TwoWay}"
-                                                      ToolTip.Tip="Pin this palette (stays at the top)">
-                                            <materialIcons:MaterialIcon Kind="PinOutline" Width="13" Height="13"/>
-                                        </ToggleButton>
+                                    <Grid x:Name="PaletteTile" Grid.Column="1"
+                                          Width="44" Height="44" Background="Transparent">
+                                        <ToolTip.Tip>
+                                            <StackPanel x:DataType="vm:PaletteItemViewModel" Width="190" Spacing="3" Margin="4">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
+                                                <TextBlock Text="{Binding CountLabel}" Classes="caption mono" FontSize="10.5"/>
+                                                <TextBlock Text="{Binding UpdatedLabel}" Classes="caption" FontSize="10.5"/>
+                                                <Separator/>
+                                                <TextBlock Text="Click to open · right-click to manage"
+                                                           Classes="caption" FontSize="10.5"/>
+                                            </StackPanel>
+                                        </ToolTip.Tip>
 
-                                        <Button Classes="iconOnly paletteRail"
-                                                Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).Library.RenamePaletteCommand}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip.Tip="Rename this palette">
-                                            <materialIcons:MaterialIcon Kind="Pencil" Width="13" Height="13"/>
-                                        </Button>
+                                        <!-- The palette itself -->
+                                        <Border Classes="railTileFace" CornerRadius="5"
+                                                Background="{Binding PreviewBrush}"
+                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
 
-                                        <Button Classes="iconOnly paletteRail"
-                                                Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).Library.DeletePaletteCommand}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip.Tip="Delete this palette">
-                                            <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="13" Height="13"/>
-                                        </Button>
-                                    </StackPanel>
+                                        <!-- Empty palettes still read as a slot -->
+                                        <materialIcons:MaterialIcon Kind="PaletteOutline" Width="17" Height="17"
+                                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                    Opacity="0.4"
+                                                                    IsVisible="{Binding PreviewBrush, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                                        <!-- Pinned palettes float to the top; mark them -->
+                                        <Border IsVisible="{Binding IsPinned}"
+                                                Width="14" Height="14" CornerRadius="4" Margin="2"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                BoxShadow="0 1 3 0 #30000000">
+                                            <materialIcons:MaterialIcon Kind="Pin" Width="9" Height="9"
+                                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- Per-palette actions: rename, pin, duplicate, delete -->
+                                        <Grid.ContextFlyout>
+                                            <Flyout Placement="Right">
+                                                <StackPanel x:DataType="vm:PaletteItemViewModel" Width="238"
+                                                            Spacing="8" Margin="2">
+                                                    <StackPanel Orientation="Horizontal" Spacing="9">
+                                                        <Border Width="36" Height="36" CornerRadius="9"
+                                                                Background="{Binding PreviewBrush}"
+                                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"
+                                                                       TextTrimming="CharacterEllipsis" MaxWidth="170"/>
+                                                            <TextBlock Text="{Binding CountLabel}" Classes="caption mono" FontSize="10.5"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="NAME" Classes="eyebrow" Margin="0,4,0,0"/>
+                                                    <TextBox x:Name="NameEditor"
+                                                             Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Watermark="Palette name"
+                                                             LostFocus="OnNameEditorLostFocus"
+                                                             KeyDown="OnNameEditorKeyDown"/>
+
+                                                    <Separator/>
+
+                                                    <Button Classes="menuItem" Command="{Binding TogglePinCommand}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <materialIcons:MaterialIcon Kind="Pin" Width="14" Height="14"/>
+                                                            <TextBlock Text="Pin / unpin" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="menuItem" Command="{Binding DuplicateCommand}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="14" Height="14"/>
+                                                            <TextBlock Text="Duplicate palette" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="menuItem" Command="{Binding DeleteCommand}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <materialIcons:MaterialIcon Kind="Close" Width="14" Height="14"
+                                                                                        Foreground="{DynamicResource DangerBrush}"/>
+                                                            <TextBlock Text="Delete palette" VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource DangerBrush}"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Flyout>
+                                        </Grid.ContextFlyout>
+                                    </Grid>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                </ScrollViewer>
 
-                    <!-- Save state + library menu -->
-                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="2,8,0,0">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
-                                    VerticalAlignment="Center">
-                            <Border Width="6" Height="6" CornerRadius="3" VerticalAlignment="Center"
-                                    Background="{DynamicResource SuccessBrush}"/>
-                            <TextBlock Text="{Binding Library.SaveStateLabel}" Classes="caption" FontSize="10.5"
-                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                       ToolTip.Tip="Autosaved locally — no cloud, no account"/>
-                        </StackPanel>
-                        <Button Grid.Column="1" Classes="iconChip ghost" Width="28" Height="28"
-                                ToolTip.Tip="Library options (versions, import/export)">
-                            <materialIcons:MaterialIcon Kind="DotsVertical" Width="16" Height="16"/>
-                            <Button.Flyout>
-                                <Flyout>
-                                    <StackPanel x:DataType="vm:MainWindowViewModel" Width="260" Spacing="8" Margin="4">
-                                        <TextBlock Text="PALETTE VERSIONS" Classes="eyebrow"/>
-                                        <TextBlock Text="{Binding Library.SelectedPalette.VersionsLabel}"
-                                                   Classes="caption"
-                                                   IsVisible="{Binding Library.SelectedPalette, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                                        <ItemsControl ItemsSource="{Binding Library.SelectedPalette.Dto.Versions}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="models:PaletteVersionDto">
-                                                    <Grid ColumnDefinitions="*,Auto" Margin="0,3">
-                                                        <TextBlock FontSize="12" VerticalAlignment="Center"
-                                                                   Text="{Binding SavedUtc, Converter={x:Static converters:VersionTimeConverter.Instance}}"/>
-                                                        <Button Grid.Column="1" Classes="ghost small"
-                                                                Command="{Binding $parent[ItemsControl].((vm:PaletteLibraryViewModel)DataContext).RestoreVersionCommand}"
-                                                                CommandParameter="{Binding}">Restore</Button>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <Separator/>
-                                        <TextBlock Text="FILES" Classes="eyebrow"/>
-                                        <Button Classes="iconOnly" Command="{Binding Library.ImportPaletteFileCommand}"
-                                                ToolTip.Tip="Import a palette file (CSS / GPL / ASE / ACO)">
-                                            <materialIcons:MaterialIcon Kind="Upload" Width="18" Height="18"/>
-                                        </Button>
-                                        <Button Classes="iconOnly" Command="{Binding Library.ExportLibraryCommand}"
-                                                ToolTip.Tip="Export the whole library">
-                                            <materialIcons:MaterialIcon Kind="CloudDownloadOutline" Width="18" Height="18"/>
-                                        </Button>
-                                        <Button Classes="iconOnly" Command="{Binding Library.ImportLibraryCommand}"
-                                                ToolTip.Tip="Import a library from a file">
-                                            <materialIcons:MaterialIcon Kind="FolderUploadOutline" Width="18" Height="18"/>
-                                        </Button>
-                                        <Separator/>
-                                        <Button Classes="iconOnly" Command="{Binding Library.UndoLastDeleteCommand}"
-                                                ToolTip.Tip="Undo last deleted palette"
-                                                IsEnabled="{Binding Library.UndoLastDeleteCanExecute}">
-                                            <materialIcons:MaterialIcon Kind="Undo" Width="18" Height="18"/>
-                                        </Button>
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                    </Grid>
+                <!-- No matches (search/filter is in the library flyout) -->
+                <TextBlock Grid.Row="0" Text="No palettes match"
+                           Classes="caption" FontSize="10" TextAlignment="Center"
+                           TextWrapping="Wrap" Margin="6,18"
+                           IsVisible="{Binding Library.IsLibraryEmpty}"
+                           HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
-                </Grid>
-            </Border>
+                <!-- Utility actions: new · manage/search · settings (hide lives in
+                     the app bar and on Ctrl+B, so the rail stays three chips wide) -->
+                <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,4"
+                            HorizontalAlignment="Center">
+                    <Border Width="34" Height="1" Margin="0,4,0,6"
+                            Background="{DynamicResource HairlineBrush}"/>
+
+                    <Button Classes="railAction" Command="{Binding Library.NewPaletteCommand}"
+                            ToolTip.Tip="New palette (Ctrl+N)">
+                        <materialIcons:MaterialIcon Kind="Plus" Width="18" Height="18"/>
+                    </Button>
+
+                    <Button Classes="railAction"
+                            ToolTip.Tip="Search, versions, import / export">
+                        <materialIcons:MaterialIcon Kind="Magnify" Width="17" Height="17"/>
+                        <Button.Flyout>
+                            <!-- Bottom-aligned so the panel grows *up* from the chip:
+                                 anchored at the top it ran past the window edge. -->
+                            <Flyout Placement="RightEdgeAlignedBottom"
+                                    Opened="OnLibraryFlyoutOpened">
+                                <!-- History can be long; the height is capped to the
+                                     window in OnLibraryFlyoutOpened. -->
+                                <ScrollViewer x:Name="LibraryFlyoutScroll" MaxHeight="560"
+                                              Padding="0,0,4,6"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:DataType="vm:MainWindowViewModel" Width="272"
+                                            Spacing="8" Margin="2">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="LIBRARY" Classes="eyebrow" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Library.PaletteCountLabel}"
+                                                   Classes="caption mono" FontSize="10"/>
+                                    </Grid>
+
+                                    <TextBox Text="{Binding Library.SearchText}"
+                                             Watermark="Search palettes and colors…"/>
+
+                                    <ComboBox ItemsSource="{Binding Library.Filters}"
+                                              SelectedItem="{Binding Library.SelectedFilter}"
+                                              HorizontalAlignment="Stretch"
+                                              ToolTip.Tip="All / Pinned / Recent palettes">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"
+                                                           FontSize="11.5"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <TextBlock Text="{Binding Library.SaveStateLabel}" Classes="caption" FontSize="10.5"/>
+
+                                    <Separator/>
+                                    <TextBlock Text="VERSIONS · SELECTED PALETTE" Classes="eyebrow"/>
+                                    <TextBlock Text="{Binding Library.SelectedPalette.VersionsLabel}"
+                                               Classes="caption" FontSize="10.5"
+                                               IsVisible="{Binding Library.SelectedPalette, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                    <ItemsControl ItemsSource="{Binding Library.SelectedPalette.RecentVersions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:PaletteVersionDto">
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                                    <TextBlock FontSize="11.5" VerticalAlignment="Center"
+                                                               Text="{Binding SavedUtc, Converter={x:Static converters:VersionTimeConverter.Instance}}"/>
+                                                    <Button Grid.Column="1" Classes="ghost small"
+                                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Library.RestoreVersionCommand}"
+                                                            CommandParameter="{Binding}">Restore</Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Separator/>
+                                    <TextBlock Text="FILES" Classes="eyebrow"/>
+                                    <Button Classes="menuItem" Command="{Binding Library.ImportPaletteFileCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="Upload" Width="14" Height="14"/>
+                                            <TextBlock Text="Import palette file…" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Classes="menuItem" Command="{Binding Library.ExportLibraryCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="CloudDownloadOutline" Width="14" Height="14"/>
+                                            <TextBlock Text="Export whole library…" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Classes="menuItem" Command="{Binding Library.ImportLibraryCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="FolderUploadOutline" Width="14" Height="14"/>
+                                            <TextBlock Text="Import library…" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Classes="menuItem" Command="{Binding Library.UndoLastDeleteCommand}"
+                                            IsEnabled="{Binding Library.UndoLastDeleteCanExecute}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="Undo" Width="14" Height="14"/>
+                                            <TextBlock Text="Undo last delete" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                </StackPanel>
+                                </ScrollViewer>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <Button Classes="railAction" Command="{Binding OpenSettingsCommand}"
+                            ToolTip.Tip="Settings (Ctrl+,)">
+                        <materialIcons:MaterialIcon Kind="CogOutline" Width="17" Height="17"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
 
             <!-- ============ WORKSPACES ============
                  Only the active one is on screen; each brings its own toolbar,

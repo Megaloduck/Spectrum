@@ -75,9 +75,11 @@ namespace Spectrum.Views
         {
             var open = _subscribedVm is { LibraryVisible: true };
 
+            // The palette rail is a fixed-width navigation strip; the second
+            // column is just the gutter between the rail and the workspace.
             var columns = BodyGrid.ColumnDefinitions;
-            columns[0].Width = new GridLength(open ? 250 : 0);
-            columns[1].Width = new GridLength(open ? 12 : 0);
+            columns[0].Width = new GridLength(open ? 68 : 0);
+            columns[1].Width = new GridLength(open ? 10 : 0);
         }
 
         private void OnWindowKeyDown(object? sender, KeyEventArgs e)
@@ -192,6 +194,23 @@ namespace Spectrum.Views
             await palette.ShowDialog(this);
         }
 
+        /// <summary>
+        /// The library flyout grows upward from the rail's search chip, so its
+        /// height has to fit whatever is left above that chip — a fixed height
+        /// clipped the last rows on shorter windows.
+        /// </summary>
+        private void OnLibraryFlyoutOpened(object? sender, EventArgs e)
+        {
+            if (sender is not Flyout { Content: { } content }) return;
+
+            var scroll = content as ScrollViewer
+                         ?? FindDescendantByName(content as Visual, "LibraryFlyoutScroll") as ScrollViewer;
+            if (scroll is null) return;
+
+            var windowHeight = TopLevel.GetTopLevel(this)?.Bounds.Height ?? 800;
+            scroll.MaxHeight = Math.Clamp(windowHeight - 150, 300, 560);
+        }
+
         private void OnPaletteItemPointerPressed(object? sender, PointerPressedEventArgs e)
         {
             // Double-click on a palette row (or its name) opens inline rename.
@@ -206,26 +225,46 @@ namespace Spectrum.Views
             e.Handled = true;
         }
 
+        /// <summary>The flyout whose name editor is currently open, if any.</summary>
+        private Flyout? _renameFlyout;
+
         /// <summary>
-        /// The library ViewModel can flip a row into rename mode but cannot touch
-        /// controls, so it raises RenameStarted and this focuses (and selects) the
-        /// editor — whichever way rename was started: double-click, the pencil
-        /// button, F2 or the command palette.
+        /// The library ViewModel can flip a palette into rename mode but cannot
+        /// touch controls, so it raises RenameStarted. In the rail there is no
+        /// inline text: the palette's context flyout carries the editor, so this
+        /// opens that flyout and focuses the field — whichever way rename was
+        /// started: double-click, F2 or the command palette.
         /// </summary>
         private void OnPaletteRenameStarted(PaletteItemViewModel item)
         {
-            // The TextBox only exists once the row's containers have re-rendered
-            // with IsRenaming = true, so wait for the next layout/render tick.
             Dispatcher.UIThread.Post(() =>
             {
                 if (!item.IsRenaming) return;
 
                 var container = FindContainer(item);
-                if (FindDescendantByName(container, "NameEditor") is not TextBox editor) return;
+                if (FindDescendantByName(container, "PaletteTile") is not Control tile) return;
+                if (tile.ContextFlyout is not Flyout flyout) return;
 
-                editor.Focus();
-                editor.SelectAll();
+                flyout.ShowAt(tile);
+                _renameFlyout = flyout;
+
+                // The editor only exists once the flyout content is realized.
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (flyout.Content is Visual content &&
+                        FindDescendantByName(content, "NameEditor") is TextBox editor)
+                    {
+                        editor.Focus();
+                        editor.SelectAll();
+                    }
+                }, DispatcherPriority.Render);
             }, DispatcherPriority.Render);
+        }
+
+        private void HideRenameFlyout()
+        {
+            _renameFlyout?.Hide();
+            _renameFlyout = null;
         }
 
         private ListBoxItem? FindContainer(PaletteItemViewModel item)
@@ -250,16 +289,6 @@ namespace Spectrum.Views
             return null;
         }
 
-        private void OnPaletteNamePointerPressed(object? sender, PointerPressedEventArgs e)
-        {
-            // Let the ListBox handle single clicks for selection, but double-clicks
-            // still open rename via the row handler above.
-            if (e.ClickCount == 2)
-            {
-                OnPaletteItemPointerPressed(sender, e);
-            }
-        }
-
         private void OnNameEditorLostFocus(object? sender, RoutedEventArgs e)
         {
             if (sender is not TextBox editor) return;
@@ -277,6 +306,7 @@ namespace Spectrum.Views
                 // The TwoWay binding already wrote the text back to
                 // PaletteItemViewModel.Name, which pushed it into the DTO.
                 item?.EndRename();
+                HideRenameFlyout();
                 e.Handled = true;
             }
             else if (e.Key == Key.Escape)
@@ -284,6 +314,7 @@ namespace Spectrum.Views
                 // Revert: the editor is two-way bound with PropertyChanged, so the
                 // typed text already reached the DTO — put the original back.
                 item?.CancelRename();
+                HideRenameFlyout();
                 e.Handled = true;
             }
         }
