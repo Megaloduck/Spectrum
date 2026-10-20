@@ -76,7 +76,7 @@ namespace Spectrum.Views
             var open = _subscribedVm is { LibraryVisible: true };
 
             var columns = BodyGrid.ColumnDefinitions;
-            columns[0].Width = new GridLength(open ? 264 : 0);
+            columns[0].Width = new GridLength(open ? 250 : 0);
             columns[1].Width = new GridLength(open ? 12 : 0);
         }
 

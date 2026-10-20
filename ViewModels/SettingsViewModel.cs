@@ -38,8 +38,10 @@ namespace Spectrum.ViewModels
 
         // ---------------- Defaults ----------------
 
-        [ObservableProperty] private string _defaultCopyFormat;
-        [ObservableProperty] private string _defaultExportFormat;
+        // Enum-typed so the ComboBoxes can actually match their ItemsSource
+        // (the persisted form stays a string).
+        [ObservableProperty] private CopyFormat _defaultCopyFormat = CopyFormat.Hex;
+        [ObservableProperty] private ExportFormat _defaultExportFormat = ExportFormat.Json;
 
         // ---------------- Hotkey ----------------
 
@@ -69,8 +71,10 @@ namespace Spectrum.ViewModels
             _theme = s.Theme;
             _accentHex = s.AccentHex;
             _density = s.Density;
-            _defaultCopyFormat = s.DefaultCopyFormat;
-            _defaultExportFormat = s.DefaultExportFormat;
+            if (Enum.TryParse<CopyFormat>(s.DefaultCopyFormat, out var copyFormat))
+                _defaultCopyFormat = copyFormat;
+            if (Enum.TryParse<ExportFormat>(s.DefaultExportFormat, out var exportFormat))
+                _defaultExportFormat = exportFormat;
             _hotkeyKey = s.HotkeyKey;
             _hotkeyCtrl = s.HotkeyCtrl;
             _hotkeyAlt = s.HotkeyAlt;
@@ -101,16 +105,16 @@ namespace Spectrum.ViewModels
             PersistAndApply();
         }
 
-        partial void OnDefaultCopyFormatChanged(string value)
+        partial void OnDefaultCopyFormatChanged(CopyFormat value)
         {
-            SettingsService.Settings.DefaultCopyFormat = value;
+            SettingsService.Settings.DefaultCopyFormat = value.ToString();
             PushDefaultsToMainWindow();
             SettingsService.Save();
         }
 
-        partial void OnDefaultExportFormatChanged(string value)
+        partial void OnDefaultExportFormatChanged(ExportFormat value)
         {
-            SettingsService.Settings.DefaultExportFormat = value;
+            SettingsService.Settings.DefaultExportFormat = value.ToString();
             PushDefaultsToMainWindow();
             SettingsService.Save();
         }

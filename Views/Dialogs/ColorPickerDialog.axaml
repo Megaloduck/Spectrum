@@ -74,7 +74,7 @@
         <Grid Height="36">
             <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
                     Background="{Binding HueTrackBrush}"/>
-            <Slider Minimum="0" Maximum="360" Value="{Binding Hue}" Background="Transparent"/>
+            <Slider Classes="overlay" Minimum="0" Maximum="360" Value="{Binding Hue}" Background="Transparent"/>
         </Grid>
 
         <!-- Opacity -->
@@ -85,7 +85,7 @@
         <Grid Height="36">
             <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
                     Background="{Binding AlphaTrackBrush}"/>
-            <Slider Minimum="0" Maximum="100" Value="{Binding Alpha}" Background="Transparent"/>
+            <Slider Classes="overlay" Minimum="0" Maximum="100" Value="{Binding Alpha}" Background="Transparent"/>
         </Grid>
 
         <!-- Manual inputs: HEX / RGB / HSL / HSV (§2) -->

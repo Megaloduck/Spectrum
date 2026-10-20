@@ -1,30 +1,30 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Spectrum.ViewModels"
-             xmlns:models="using:Spectrum.Models"
              xmlns:converters="using:Spectrum.Converters"
              xmlns:materialIcons="using:Material.Icons.Avalonia"
-             xmlns:local="using:Spectrum.Views"
              x:Class="Spectrum.Views.ToolbarGlobalsView"
              x:DataType="vm:MainWindowViewModel">
 
-    <!-- Undo / redo: board history (add/remove/clear/generate/extract/load). -->
-    <StackPanel Orientation="Horizontal" Spacing="0">
-        <Button Height="38" Margin="0,0,4,0"
-                Command="{Binding UndoCommand}"
-                ToolTip.Tip="Undo last change (Ctrl+Z)">
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <materialIcons:MaterialIcon Kind="ArrowLeft" Width="16" Height="16"/>
-                <TextBlock Text="Undo" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Button>
-        <Button Height="38" Margin="0,0,4,0"
-                Command="{Binding RedoCommand}"
-                ToolTip.Tip="Redo (Ctrl+Y)">
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <materialIcons:MaterialIcon Kind="ArrowRight" Width="16" Height="16"/>
-                <TextBlock Text="Redo" VerticalAlignment="Center"/>
-            </StackPanel>
+    <!-- Shared right-hand cluster on every workspace toolbar: the notation a
+         swatch copies as, then one click to copy the whole palette. -->
+    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+        <ComboBox Width="104" Height="34"
+                  ItemsSource="{Binding CopyFormats}"
+                  SelectedItem="{Binding SelectedCopyFormat}"
+                  ToolTip.Tip="Notation used when you copy a swatch (HEX, RGB, OKLCH…)">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"
+                               FontSize="12"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <Button Classes="iconChip" Height="34" Width="34"
+                Command="{Binding CopyAllHexCommand}"
+                ToolTip.Tip="Copy the whole palette to the clipboard">
+            <materialIcons:MaterialIcon Kind="ContentCopy" Width="16" Height="16"/>
         </Button>
     </StackPanel>
 

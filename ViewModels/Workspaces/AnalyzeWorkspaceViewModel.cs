@@ -194,7 +194,7 @@ namespace Spectrum.ViewModels
         /// workspace › palette › current color (last segment styled as current).
         /// This is the same "reference object" language as the spec — the dock is
         /// not a random readout, it is the current color record.</summary>
-        public string ReferenceWorkspace => "Studio";
+        public string ReferenceWorkspace => _shell.WorkspaceMode.ToString();
 
         public string ReferencePalette => _shell.Library.SelectedPalette?.Name ?? "Palette";
 
@@ -202,6 +202,14 @@ namespace Spectrum.ViewModels
 
         public string ReferencePath =>
             $"{ReferenceWorkspace} › {ReferencePalette} › {ReferenceColor}";
+
+        /// <summary>Re-raises the breadcrumb after a workspace switch so the
+        /// record always names the workspace the reader is actually in.</summary>
+        public void RefreshReferencePath()
+        {
+            OnPropertyChanged(nameof(ReferenceWorkspace));
+            OnPropertyChanged(nameof(ReferencePath));
+        }
 
         // ---------------- Conversion table ----------------
 
@@ -441,6 +449,17 @@ namespace Spectrum.ViewModels
 
             Ramp.Clear();
             foreach (var color in steps) Ramp.Add(color);
+        }
+
+        /// <summary>The dock's one action: send the documented color to the palette.</summary>
+        [RelayCommand]
+        private void AddCurrentColorToPalette()
+        {
+            var color = CurrentColor;
+            _shell.PushHistory();
+            var name = ColorNamingService.GetClosestName(color);
+            _shell.Palette.Add(_shell.CreateSwatch(color, name));
+            _shell.StatusMessage = $"Added {ColorMathService.ToHex(color)} ({name}) to the palette.";
         }
 
         /// <summary>Click a ramp step to add that exact color to the palette.</summary>

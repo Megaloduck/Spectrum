@@ -1,4 +1,4 @@
-    <UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Spectrum.ViewModels"
              xmlns:converters="using:Spectrum.Converters"
@@ -12,92 +12,139 @@
 
     <Grid RowDefinitions="Auto,*">
 
-        <!-- Toolbar: no workspace-specific controls — only the shared actions. -->
-        <Border Grid.Row="0" Classes="panel" Padding="16,10" Margin="0,0,0,12">
+        <!-- Toolbar: no workspace-specific controls — status + shared actions. -->
+        <Border Grid.Row="0" Classes="panel" Padding="12,8" Margin="0,0,0,10">
             <Grid ColumnDefinitions="*,Auto">
-                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                     <TextBlock Grid.Column="2" Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center"/>
-                </WrapPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="4,0,0,0">
+                    <TextBlock Text="{Binding Library.SelectedPalette.Name}"
+                               Classes="caption" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="·" Classes="caption"/>
+                    <TextBlock Text="{Binding StatusMessage}" Classes="caption mono" FontSize="10.5"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="520"/>
+                </StackPanel>
                 <local:ToolbarGlobalsView Grid.Column="1"/>
             </Grid>
         </Border>
 
-        <!-- ============ EXPORT WORKSPACE (§5 import / §6 export) ============ -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,14,*">
+        <Grid Grid.Row="1" ColumnDefinitions="1.35*,10,*">
 
-            <Border Classes="panel" Padding="22">
+            <!-- ═══ EXPORT ═══ -->
+            <Border Grid.Column="0" Classes="panel" Padding="18">
                 <Grid RowDefinitions="Auto,Auto,*,Auto">
                     <StackPanel Spacing="2">
                         <TextBlock Text="EXPORT PALETTE" Classes="eyebrow"/>
-                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                        <TextBlock Classes="caption" TextWrapping="Wrap"
                                    Text="Text formats build a preview you can copy; ASE / ACO and the PNG sheet write straight to a file."/>
                     </StackPanel>
 
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto" Margin="0,14,0,0">
-                        <ComboBox MinWidth="160" Height="38"
+                        <ComboBox MinWidth="168" Height="34"
                                   ItemsSource="{Binding Export.ExportFormats}"
                                   SelectedItem="{Binding Export.SelectedExportFormat}"
                                   ToolTip.Tip="Format used by Build preview / Save / Copy">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"/>
+                                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"
+                                               FontSize="12"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Grid.Column="1" Classes="iconOnly" Margin="8,0,0,0" Height="38"
+                        <Button Grid.Column="1" Height="34" Margin="6,0,0,0" FontWeight="SemiBold"
                                 Command="{Binding Export.BuildExportPreviewCommand}"
                                 ToolTip.Tip="Build the export preview">
-                            <materialIcons:MaterialIcon Kind="ViewList" Width="18" Height="18"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="ViewList" Width="15" Height="15"/>
+                                <TextBlock Text="Build preview" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                     </Grid>
 
-                    <TextBox Grid.Row="2" Text="{Binding Export.ExportPreview}" AcceptsReturn="True"
-                             IsReadOnly="True" Margin="0,12,0,0" MinHeight="140"
-                             TextWrapping="Wrap" Classes="mono" FontSize="12"
-                             Watermark="Press Build preview to see the generated source"/>
+                    <!-- Code: always mono, on a quiet inset surface. -->
+                    <Border Grid.Row="2" Classes="well" Margin="0,12,0,0">
+                        <TextBox Text="{Binding Export.ExportPreview}" AcceptsReturn="True"
+                                 IsReadOnly="True"
+                                 Background="Transparent" BorderThickness="0"
+                                 Padding="12,10"
+                                 TextWrapping="Wrap" Classes="mono" FontSize="11.5"
+                                 VerticalContentAlignment="Top"
+                                 Watermark="Press Build preview to see the generated source"/>
+                    </Border>
 
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
-                        <Button Classes="iconOnly" Command="{Binding Export.CopyExportCommand}"
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <Button Height="34" Command="{Binding Export.CopyExportCommand}"
                                 ToolTip.Tip="Copy the export to the clipboard">
-                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="18" Height="18"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14"/>
+                                <TextBlock Text="Copy" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
-                        <Button Classes="iconOnly" Command="{Binding Export.ExportToFileCommand}"
+                        <Button Height="34" Command="{Binding Export.ExportToFileCommand}"
                                 ToolTip.Tip="ASE / ACO and other binary formats always write to disk (Ctrl+E)">
-                            <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="18" Height="18"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="14" Height="14"/>
+                                <TextBlock Text="Save file" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
-                        <Button Classes="iconOnly" Command="{Binding Export.ExportPngCommand}"
+                        <Button Height="34" Command="{Binding Export.ExportPngCommand}"
                                 ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)">
-                            <materialIcons:MaterialIcon Kind="Image" Width="18" Height="18"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="Image" Width="14" Height="14"/>
+                                <TextBlock Text="PNG sheet" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Classes="panel" Padding="22">
+            <!-- ═══ IMPORT ═══ -->
+            <Border Grid.Column="2" Classes="panel" Padding="18">
                 <Grid RowDefinitions="Auto,*">
                     <StackPanel Spacing="2">
                         <TextBlock Text="IMPORT" Classes="eyebrow"/>
-                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                        <TextBlock Classes="caption" TextWrapping="Wrap"
                                    Text="Bring palettes in, or move the whole library between machines."/>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="1" Spacing="10" Margin="0,14,0,0">
-                        <Button Content="Import palette file…  (CSS / GPL / ASE / ACO)"
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding Library.ImportPaletteFileCommand}"/>
-                        <Button Content="Load palette from file…  (Ctrl+O)"
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding LoadPaletteCommand}"/>
+                    <StackPanel Grid.Row="1" Spacing="6" Margin="0,14,0,0">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Height="34"
+                                Command="{Binding Library.ImportPaletteFileCommand}"
+                                ToolTip.Tip="Import a CSS / GPL / ASE / ACO palette file">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="FileImportOutline" Width="15" Height="15"/>
+                                <TextBlock Text="Import palette file…" VerticalAlignment="Center"/>
+                                <TextBlock Text="CSS · GPL · ASE · ACO" Classes="caption mono" FontSize="10"
+                                           VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Height="34"
+                                Command="{Binding LoadPaletteCommand}"
+                                ToolTip.Tip="Load a palette from a JSON file (Ctrl+O)">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="15" Height="15"/>
+                                <TextBlock Text="Load palette from file…" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Separator Margin="0,8,0,0"/>
+                        <Separator Margin="0,10,0,2"/>
                         <TextBlock Text="WHOLE LIBRARY" Classes="eyebrow"/>
-                        <Button Content="Export whole library…" HorizontalAlignment="Stretch"
-                                Command="{Binding Library.ExportLibraryCommand}"/>
-                        <Button Content="Import library…" HorizontalAlignment="Stretch"
-                                Command="{Binding Library.ImportLibraryCommand}"/>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Height="34"
+                                Command="{Binding Library.ExportLibraryCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="CloudDownloadOutline" Width="15" Height="15"/>
+                                <TextBlock Text="Export whole library…" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Height="34"
+                                Command="{Binding Library.ImportLibraryCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="FolderUploadOutline" Width="15" Height="15"/>
+                                <TextBlock Text="Import library…" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Separator Margin="0,8,0,0"/>
-                        <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
+                        <Separator Margin="0,10,0,2"/>
+                        <TextBlock Classes="caption" TextWrapping="Wrap"
                                    Text="Everything is stored locally — JSON or SQLite, switchable in Settings. No account, no cloud."/>
                     </StackPanel>
                 </Grid>

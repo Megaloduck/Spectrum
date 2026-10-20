@@ -1,92 +1,141 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:anim="using:Avalonia.Animation">
+        xmlns:anim="using:Avalonia.Animation"
+        xmlns:materialIcons="using:Material.Icons.Avalonia">
 
-  <!-- ===================== Design tokens ===================== -->
+  <!-- =========================================================================
+       SPECTRUM DESIGN SYSTEM
+       One file owns the whole look: color tokens, the type scale, and the
+       component families (panel, card, button, chip, field, slider).
+
+       Principles
+         · Color is the event. Chrome stays quiet: hairline strokes and soft
+           neutral fills instead of heavy black outlines.
+         · Controls read as one family of grey "chips"; only the single primary
+           action in a view carries a filled, inverted surface.
+         · Cabazon for display moments, Inter for reading, Fragment Mono for
+           anything numeric or code-like.
+       ========================================================================= -->
+
   <Styles.Resources>
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
 
+        <!-- ===================== Light ===================== -->
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="CanvasBrush" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="CanvasBrush" Color="#FAFAFB"/>
           <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
-          <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#F5F5F5"/>
-          <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#EFEFEF"/>
-          <SolidColorBrush x:Key="SurfacePressedBrush" Color="#E0E0E0"/>
-          <SolidColorBrush x:Key="OutlineBrush" Color="#000000"/>
-          <!-- Color twin of OutlineBrush: SolidColorBrush.Color can only bind a
-               Color resource, not the brush itself. -->
-          <Color x:Key="OutlineColor">#000000</Color>
-          <SolidColorBrush x:Key="HairlineBrush" Color="#E2E2E2"/>
-          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#000000"/>
-          <SolidColorBrush x:Key="TextMutedBrush" Color="#6B6B6B"/>
+          <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#F5F5F7"/>
+          <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#EDEDF1"/>
+          <SolidColorBrush x:Key="SurfacePressedBrush" Color="#E2E2E8"/>
 
-          <!-- Fluent's own text-field state colors, pinned to our surfaces so a
-               focused / hovered field never flips to a hard-coded light fill. -->
+          <!-- The control family: every button / combo / chip fill. -->
+          <SolidColorBrush x:Key="ChromeBrush" Color="#F1F1F4"/>
+          <SolidColorBrush x:Key="ChromeHoverBrush" Color="#E8E8ED"/>
+          <SolidColorBrush x:Key="ChromePressedBrush" Color="#DDDDE4"/>
+
+          <!-- Hairline stroke for panels and cards (quiet chrome). -->
+          <SolidColorBrush x:Key="OutlineBrush" Color="#E2E2E8"/>
+          <Color x:Key="OutlineColor">#E2E2E8</Color>
+          <SolidColorBrush x:Key="HairlineBrush" Color="#EEEEF2"/>
+          <SolidColorBrush x:Key="CardStrokeBrush" Color="#E7E7EC"/>
+          <SolidColorBrush x:Key="CardStrokeActiveBrush" Color="#15151A"/>
+
+          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#141418"/>
+          <SolidColorBrush x:Key="TextSecondaryBrush" Color="#4A4A53"/>
+          <SolidColorBrush x:Key="TextMutedBrush" Color="#7A7A85"/>
+
+          <!-- Feedback -->
+          <SolidColorBrush x:Key="SuccessBrush" Color="#15803D"/>
+          <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E8F5EC"/>
+          <SolidColorBrush x:Key="DangerBrush" Color="#D93A3F"/>
+          <SolidColorBrush x:Key="DangerSoftBrush" Color="#FBEDED"/>
+          <SolidColorBrush x:Key="AccentBrush" Color="#0F766E"/>
+
+          <!-- Fluent's own control state colors, pinned to our surfaces so a
+               focused / hovered field never flips to a hard-coded fill. -->
           <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF"/>
-          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#000000"/>
-          <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#000000"/>
-          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#EFEFEF"/>
-          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#E0E0E0"/>
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#141418"/>
+          <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#141418"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#F1F1F4"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#E8E8ED"/>
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#E2E2E8"/>
+
+          <!-- Flyouts and menus share the panel surface, not Fluent's chrome. -->
+          <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="#E2E2E8"/>
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#E2E2E8"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemBackground" Color="Transparent"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#ECECF0"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#E2E2E8"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#141418"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#141418"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#141418"/>
         </ResourceDictionary>
 
+        <!-- ===================== Dark ===================== -->
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="CanvasBrush" Color="#121212"/>
-          <SolidColorBrush x:Key="SurfaceBrush" Color="#1B1B1B"/>
-          <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#242424"/>
-          <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#2C2C2C"/>
-          <SolidColorBrush x:Key="SurfacePressedBrush" Color="#383838"/>
-          <SolidColorBrush x:Key="OutlineBrush" Color="#FFFFFF"/>
-          <Color x:Key="OutlineColor">#FFFFFF</Color>
-          <SolidColorBrush x:Key="HairlineBrush" Color="#3A3A3A"/>
-          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F2F2"/>
-          <SolidColorBrush x:Key="TextMutedBrush" Color="#A0A0A0"/>
+          <SolidColorBrush x:Key="CanvasBrush" Color="#0D0D0F"/>
+          <SolidColorBrush x:Key="SurfaceBrush" Color="#151518"/>
+          <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#1C1C20"/>
+          <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#26262B"/>
+          <SolidColorBrush x:Key="SurfacePressedBrush" Color="#303036"/>
 
-          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#1B1B1B"/>
-          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#1B1B1B"/>
-          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#F2F2F2"/>
-          <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#F2F2F2"/>
-          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#2C2C2C"/>
-          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#383838"/>
+          <SolidColorBrush x:Key="ChromeBrush" Color="#1E1E22"/>
+          <SolidColorBrush x:Key="ChromeHoverBrush" Color="#28282E"/>
+          <SolidColorBrush x:Key="ChromePressedBrush" Color="#323239"/>
+
+          <SolidColorBrush x:Key="OutlineBrush" Color="#2B2B31"/>
+          <Color x:Key="OutlineColor">#2B2B31</Color>
+          <SolidColorBrush x:Key="HairlineBrush" Color="#232328"/>
+          <SolidColorBrush x:Key="CardStrokeBrush" Color="#2E2E35"/>
+          <SolidColorBrush x:Key="CardStrokeActiveBrush" Color="#F2F2F5"/>
+
+          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F4F4F6"/>
+          <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B9B9C2"/>
+          <SolidColorBrush x:Key="TextMutedBrush" Color="#8C8C97"/>
+
+          <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80"/>
+          <SolidColorBrush x:Key="SuccessSoftBrush" Color="#12301D"/>
+          <SolidColorBrush x:Key="DangerBrush" Color="#FF6B6F"/>
+          <SolidColorBrush x:Key="DangerSoftBrush" Color="#331417"/>
+          <SolidColorBrush x:Key="AccentBrush" Color="#2DD4BF"/>
+
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#151518"/>
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#151518"/>
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#F4F4F6"/>
+          <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#F4F4F6"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#28282E"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#323239"/>
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1C1C20"/>
+          <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2E2E35"/>
+
+          <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#1C1C20"/>
+          <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="#2E2E35"/>
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#1C1C20"/>
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2E2E35"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemBackground" Color="Transparent"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#2C2C31"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#36363C"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#F4F4F6"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#F4F4F6"/>
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#F4F4F6"/>
         </ResourceDictionary>
 
       </ResourceDictionary.ThemeDictionaries>
 
-      <!-- =====================================================================
-           Global tokens
-           DangerBrush is deliberately NOT a theme dictionary entry: it is a
-           hard-coded foreground tint used only inside controlled warning /
-           confirmation surfaces (library delete button, Settings reset
-           panel, ColorPickerDialog input feedback). Giving it a token lets
-           grep verify the red #E5484D no longer leaks into chrome.
-           AccentBrush defaults to teal (#0F766E) and is what SettingsService
-           .ApplyAccent swaps at runtime. Focus rings on text fields and
-           combo boxes follow it; the BoxShadow rings on buttons cannot bind
-           a brush, so they stay teal.
-           ===================================================================== -->
-      <SolidColorBrush x:Key="DangerBrush" Color="#E5484D"/>
-
-      <SolidColorBrush x:Key="AccentBrush" Color="#0F766E"/>
-
-      <!-- Pass/fail verdict fill for contrast role rows — the one "good state"
-           color, themed so it stays legible on both canvases. -->
-      <SolidColorBrush x:Key="SuccessBrush" Color="#15803D"/>
-
-      <!-- Card chrome — quieter than the panel outline so color stays the event. -->
-      <SolidColorBrush x:Key="CardStrokeBrush" Color="{DynamicResource OutlineColor}">
-        <SolidColorBrush.Opacity>0.55</SolidColorBrush.Opacity>
-      </SolidColorBrush>
-
-      <SolidColorBrush x:Key="CardStrokeActiveBrush" Color="{DynamicResource OutlineColor}"/>
-
+      <!-- ===================== Radii ===================== -->
       <CornerRadius x:Key="CardRadius">14</CornerRadius>
       <CornerRadius x:Key="SoftRadius">10</CornerRadius>
+      <CornerRadius x:Key="ControlRadius">9</CornerRadius>
       <CornerRadius x:Key="PillRadius">999</CornerRadius>
     </ResourceDictionary>
   </Styles.Resources>
 
-  <!-- ===================== Density ===================== -->
+  <!-- ===================== Shell density ===================== -->
   <Style Selector="Window.compact">
     <Setter Property="FontSize" Value="12"/>
   </Style>
@@ -101,145 +150,236 @@
     <Setter Property="FontFamily" Value="Inter"/>
   </Style>
 
-  <!-- Body size: the default for anything not carrying a type class. Declared
-       here, before the typography classes, so .caption / .display / .label
-       always win over it. -->
   <Style Selector="TextBlock">
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="FontSize" Value="13"/>
   </Style>
 
-  <!-- Density: compact shrinks unstyled body text. Declared after the base
-       but before the type classes, so the scale itself still wins. -->
   <Style Selector="Window.compact TextBlock">
     <Setter Property="FontSize" Value="12"/>
   </Style>
 
+  <!-- ===================== Typography =====================
+       display      Cabazon — wordmark, workspace titles, empty-state headlines
+       title        Inter   — panel/section titles
+       sectionHeader Inter  — sub-section titles
+       eyebrow      Inter   — uppercase section kickers, muted + tracked
+       label        Inter   — small field labels
+       caption      Inter   — muted supporting copy
+       mono         Fragment Mono — every hex, ratio, ΔE and code string
+       ====================================================== -->
 
-  <!-- ===================== Typography ===================== -->
   <Style Selector="TextBlock.display">
     <Setter Property="FontFamily" Value="{DynamicResource Cabazon}"/>
-    <Setter Property="FontSize" Value="34"/>
+    <Setter Property="FontSize" Value="32"/>
     <Setter Property="FontWeight" Value="Normal"/>
     <Setter Property="LetterSpacing" Value="0"/>
   </Style>
 
   <Style Selector="TextBlock.display.small">
-    <Setter Property="FontSize" Value="24"/>
+    <Setter Property="FontSize" Value="22"/>
+  </Style>
+
+  <Style Selector="Window.compact TextBlock.display">
+    <Setter Property="FontSize" Value="26"/>
   </Style>
 
   <Style Selector="TextBlock.title">
-    <Setter Property="FontSize" Value="22"/>
-    <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="LetterSpacing" Value="-0.3"/>
+    <Setter Property="FontSize" Value="17"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="LetterSpacing" Value="-0.2"/>
   </Style>
 
   <Style Selector="TextBlock.sectionHeader">
-    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="FontSize" Value="14"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="LetterSpacing" Value="-0.1"/>
   </Style>
 
   <Style Selector="TextBlock.eyebrow">
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontSize" Value="10.5"/>
     <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="LetterSpacing" Value="0.8"/>
+    <Setter Property="LetterSpacing" Value="1.1"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+  </Style>
+
+  <Style Selector="TextBlock.eyebrow.strong">
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.label">
-    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontSize" Value="11.5"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="LetterSpacing" Value="0.6"/>
+    <Setter Property="LetterSpacing" Value="0.2"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.label.subtle">
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    <Setter Property="FontWeight" Value="Normal"/>
   </Style>
 
-  <!-- caption / subtitle: the muted voice of the scale. Both were part of the
-       original type system and are still used across the shell and dialogs. -->
   <Style Selector="TextBlock.subtitle">
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.caption">
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontSize" Value="11.5"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
   </Style>
 
-  <!-- mono: every hex, ratio, ΔE and code string reads in Fragment Mono. The
-       resource is the bundled font; the setter takes the DynamicResource as its
-       whole value so the family actually resolves at runtime. -->
-  <Style Selector="TextBlock.mono">
-    <Setter Property="FontFamily" Value="{DynamicResource FragmentMono}"/>
+  <Style Selector="TextBlock.value">
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
   </Style>
 
-  <!-- Density: display type also shrinks under compact. Declared last so it
-       beats the .display class above. -->
-  <Style Selector="Window.compact TextBlock.display">
-    <Setter Property="FontSize" Value="26"/>
+  <Style Selector="TextBlock.mono">
+    <Setter Property="FontFamily" Value="{DynamicResource FragmentMono}"/>
   </Style>
 
   <!-- ===================== Panels / cards ===================== -->
   <Style Selector="Border.panel">
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
-    <Setter Property="BorderThickness" Value="1.5"/>
-    <Setter Property="CornerRadius" Value="18"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="16"/>
   </Style>
 
-  <!-- ===================== Buttons ===================== -->
-  <!-- Reference-design buttons are flat and outlined: the action is the label,
-       not a filled surface. This keeps the palette the visual event. -->
-  <Style Selector="Button, Button.primary">
-    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  <!-- A softer panel that sits inside another surface (code preview, wells). -->
+  <Style Selector="Border.well">
+    <Setter Property="Background" Value="{DynamicResource CanvasBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
-    <Setter Property="BorderThickness" Value="1.2"/>
-    <Setter Property="CornerRadius" Value="9"/>
-    <Setter Property="Padding" Value="14,8"/>
-    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}"/>
+  </Style>
+
+  <!-- A card is a raised surface with a faint outline. Color-based cards rely
+       on the swatch itself for identity, so the chrome stays quiet. -->
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}"/>
+  </Style>
+
+  <Style Selector="Border.card.flat">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="Border.card.dock">
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}"/>
+  </Style>
+
+  <!-- ===================== Buttons =====================
+       Base button = chrome chip. Neutral fill, no stroke, quiet at rest.
+       .ghost      transparent (dense chrome, overlay actions)
+       .cta        the one filled, inverted action in a view
+       .iconOnly   square icon hit area on colored surfaces
+       .wsTab      workspace segment inside the pill switcher
+       ===================================================== -->
+
+  <Style Selector="Button">
+    <Setter Property="Background" Value="{DynamicResource ChromeBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}"/>
+    <Setter Property="Padding" Value="12,7"/>
+    <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="MinHeight" Value="0"/>
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
-  </Style>
-
-  <!-- Ghost button: no stroke, used for dense chrome and overlay actions. -->
-  <Style Selector="Button.ghost.small">
-    <Setter Property="Padding" Value="8,4"/>
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <anim:BrushTransition Property="Background" Duration="0:0:0.12"/>
+      </Transitions>
+    </Setter>
   </Style>
 
   <Style Selector="Button:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}"/>
   </Style>
 
-  <!-- Pressed used to fill with OutlineBrush (black in light theme), which made
-       the label black-on-black while the mouse was down. A slightly deeper
-       surface keeps the text readable in both themes. -->
   <Style Selector="Button:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource SurfacePressedBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource ChromePressedBrush}"/>
   </Style>
 
   <Style Selector="Button:focus-visible /template/ ContentPresenter">
-    <!-- BoxShadow is applied to the ContentPresenter; it doesn't move the button. -->
-    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E, inset 0 0 0 1 #FFFFFF"/>
+    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
   </Style>
 
   <Style Selector="Button:disabled /template/ ContentPresenter">
-    <Setter Property="Opacity" Value="0.4"/>
+    <!-- Clear Fluent's grey disabled fill: a ghost chip should fade, not gain a box. -->
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Opacity" Value="0.35"/>
   </Style>
 
-  <!-- Ghost pill buttons -->
+  <!-- Ghost: no fill at rest. -->
   <Style Selector="Button.ghost">
     <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+  </Style>
+
+  <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+  </Style>
+
+  <Style Selector="Button.ghost.small">
+    <Setter Property="Padding" Value="8,4"/>
+    <Setter Property="FontSize" Value="11.5"/>
+  </Style>
+
+  <!-- The single filled action in a view. Inverts with the theme. -->
+  <Style Selector="Button.cta">
+    <Setter Property="Background" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource CanvasBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Height" Value="40"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="Button.cta:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+
+  <Style Selector="Button.cta:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Opacity" Value="0.86"/>
+  </Style>
+
+  <!-- Text and icons inside a filled action follow its inverted foreground. -->
+  <Style Selector="Button.cta TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource CanvasBrush}"/>
+  </Style>
+
+  <Style Selector="Button.cta materialIcons|MaterialIcon">
+    <Setter Property="Foreground" Value="{DynamicResource CanvasBrush}"/>
   </Style>
 
   <Style Selector="Button.pill">
     <Setter Property="CornerRadius" Value="20"/>
+  </Style>
+
+  <!-- Compact square icon button used in toolbars, dock headers and rails. -->
+  <Style Selector="Button.iconChip">
+    <Setter Property="Background" Value="{DynamicResource ChromeBrush}"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Width" Value="34"/>
+    <Setter Property="Height" Value="34"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="Button.iconChip.ghost">
+    <Setter Property="Background" Value="Transparent"/>
   </Style>
 
   <!-- Small overlay icon/text buttons on top of a colored swatch bar.
@@ -267,6 +407,33 @@
     <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
   </Style>
 
+  <!-- ToggleButton joins the same control family. -->
+  <Style Selector="ToggleButton">
+    <Setter Property="Background" Value="{DynamicResource ChromeBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}"/>
+    <Setter Property="Padding" Value="12,7"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}"/>
+  </Style>
+
+  <Style Selector="ToggleButton:checked /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfacePressedBrush}"/>
+  </Style>
+
+  <Style Selector="ToggleButton:focus-visible /template/ ContentPresenter">
+    <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
+  </Style>
+
   <Style Selector="ToggleButton.iconOnly">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
@@ -286,6 +453,10 @@
     <Setter Property="Background" Value="#22000000"/>
   </Style>
 
+  <Style Selector="ToggleButton.iconOnly:checked /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1A000000"/>
+  </Style>
+
   <Style Selector="ToggleButton.iconOnly:pressed /template/ ContentPresenter">
     <Setter Property="Background" Value="#44000000"/>
   </Style>
@@ -294,13 +465,13 @@
     <Setter Property="BoxShadow" Value="0 0 0 2 #0F766E"/>
   </Style>
 
-  <!-- ===================== Workspace nav / app bar ===================== -->
+  <!-- ===================== Workspace nav ===================== -->
   <Style Selector="Button.wsTab">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="CornerRadius" Value="9"/>
-    <Setter Property="Padding" Value="16,7"/>
-    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Padding" Value="18,6"/>
+    <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
     <Setter Property="MinWidth" Value="0"/>
@@ -321,11 +492,17 @@
 
   <Style Selector="Button.wsTab.active">
     <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
 
-  <!-- ===================== Swatch selection + menu items ===================== -->
+  <Style Selector="Button.wsTab.active:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+  </Style>
+
+  <!-- ===================== Swatch cards + rails ===================== -->
   <!-- Every swatch card reserves a 3px transparent border so selecting one only
        recolors the ring — nothing in the card shifts. -->
   <Style Selector="Border.swatchCard">
@@ -337,40 +514,6 @@
     <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeActiveBrush}"/>
   </Style>
 
-  <!-- ===================== Cards ===================== -->
-  <!-- A card is a soft raised surface with a faint outline. Color-based cards
-       rely on the swatch itself for identity, so the chrome stays quiet. -->
-  <Style Selector="Border.card">
-    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource CardRadius}"/>
-  </Style>
-
-  <!-- Raised action card, for panels that want a stronger surface. -->
-  <Style Selector="Border.card.raised">
-    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
-  </Style>
-
-  <!-- Docked workspace panels reuse the card surface but keep a softer radius. -->
-  <Style Selector="Border.card.dock">
-    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}"/>
-  </Style>
-
-  <!-- Text rows inside the swatch "more" flyout. -->
-  <Style Selector="Button.menuItem">
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="HorizontalAlignment" Value="Stretch"/>
-    <Setter Property="HorizontalContentAlignment" Value="Left"/>
-    <Setter Property="Padding" Value="8,6"/>
-    <Setter Property="FontSize" Value="12.5"/>
-    <Setter Property="FontWeight" Value="Normal"/>
-  </Style>
-
-  <!-- ===================== Swatch cards + rails ===================== -->
-  <!-- Every swatch card reserves a transparent 3px border so selecting one only
-       recolors the ring — nothing in the card shifts. -->
   <Style Selector="Border.swatchCard StackPanel.swatchRail">
     <Setter Property="Opacity" Value="0"/>
     <Setter Property="IsHitTestVisible" Value="False"/>
@@ -422,42 +565,123 @@
     <Setter Property="FontSize" Value="13"/>
   </Style>
 
+  <!-- Text rows inside the swatch "more" flyout. -->
+  <Style Selector="Button.menuItem">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="8,6"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+  </Style>
+
   <!-- ===================== Inputs ===================== -->
   <Style Selector="TextBox">
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
-    <Setter Property="BorderThickness" Value="1.3"/>
-    <Setter Property="CornerRadius" Value="10"/>
-    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}"/>
+    <Setter Property="Padding" Value="10,7"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
+  <Style Selector="TextBox:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
+  </Style>
+
   <Style Selector="TextBox:focus">
-    <!-- Follows the accent setting. The fill stays on the theme surface (it used
-         to be a hard-coded #FFFFFF, which gave light text on white in dark mode). -->
+    <!-- Follows the accent setting; keeps the theme surface so light text never
+         lands on a hard-coded white fill in dark mode. -->
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="1.5"/>
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-    <Setter Property="BorderThickness" Value="2"/>
   </Style>
 
   <Style Selector="ComboBox">
-    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
-    <Setter Property="BorderThickness" Value="1.3"/>
-    <Setter Property="CornerRadius" Value="10"/>
-    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="Background" Value="{DynamicResource ChromeBrush}"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}"/>
+    <Setter Property="Padding" Value="10,6"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+
+  <Style Selector="ComboBox:pointerover">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}"/>
   </Style>
 
   <Style Selector="ComboBox:focus-visible">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-    <Setter Property="BorderThickness" Value="2"/>
+    <Setter Property="BorderThickness" Value="1.5"/>
+    <Setter Property="Background" Value="{DynamicResource ChromeBrush}"/>
   </Style>
 
+  <Style Selector="ComboBoxItem">
+    <Setter Property="Padding" Value="10,7"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="CornerRadius" Value="6"/>
+  </Style>
+
+  <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <!-- ===================== Library list ===================== -->
+  <!-- Fluent paints the selected row with the accent; the library wants a
+       neutral highlight so the palette thumbnails stay the only color. -->
+  <Style Selector="ListBox.paletteList ListBoxItem">
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Margin" Value="0,1"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteList ListBoxItem:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteList ListBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <Style Selector="ListBox.paletteList ListBoxItem:selected:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfacePressedBrush}"/>
+  </Style>
+
+  <!-- ===================== Flyouts / menus ===================== -->
+  <Style Selector="FlyoutPresenter">
+    <Setter Property="CornerRadius" Value="14"/>
+  </Style>
+
+  <Style Selector="MenuFlyoutPresenter">
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="Padding" Value="4"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+
+  <Style Selector="MenuItem">
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Padding" Value="8,6"/>
+  </Style>
+
+  <!-- ===================== Separators ===================== -->
   <Style Selector="Separator">
     <Setter Property="Background" Value="{DynamicResource HairlineBrush}"/>
     <Setter Property="Height" Value="1"/>
-    <Setter Property="Margin" Value="0,4"/>
+    <Setter Property="Margin" Value="0,8"/>
   </Style>
 
   <!-- ===================== Hierarchy helpers ===================== -->
@@ -466,9 +690,6 @@
     <Setter Property="VerticalAlignment" Value="Center"/>
   </Style>
 
-  <!-- Grid rows with a label/value split are defined inline per panel —
-       there is no single Grid.ColumnDefinitions style setter. -->
-
   <!-- ===================== Breadcrumb ===================== -->
   <Style Selector="StackPanel.breadcrumb">
     <Setter Property="Orientation" Value="Horizontal"/>
@@ -476,7 +697,7 @@
   </Style>
 
   <Style Selector="TextBlock.breadcrumb">
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontSize" Value="11.5"/>
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
   </Style>
@@ -487,21 +708,62 @@
   </Style>
 
   <!-- ===================== Sliders ===================== -->
+  <!-- The gradient track is drawn by the view behind a transparent Slider; the
+       control itself only contributes the circular handle. -->
   <Style Selector="Slider:horizontal">
-    <Setter Property="Height" Value="44"/>
-    <!-- Hide the default slider track -->
-    <Style Selector="^ Track RepeatButton">
-      <Setter Property="Background" Value="Transparent"/>
-    </Style>
+    <Setter Property="Height" Value="26"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
   </Style>
 
-  <!-- CUSTOM THUMB -->
-  <Style Selector="Slider:horizontal /template/ Thumb">
-    <Setter Property="Width" Value="5"/>
-    <Setter Property="Height" Value="18"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-    <Setter Property="Background" Value="{DynamicResource TextPrimaryBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="4"/>
+  <!-- A slider painting over its own gradient strip (hue, opacity, temperature):
+       Fluent tints the decrease side with Slider.Foreground, which would draw an
+       accent line under the gradient. Clear it so the strip is the only track. -->
+  <Style Selector="Slider.overlay">
+    <Setter Property="Foreground" Value="Transparent"/>
+    <Setter Property="Background" Value="Transparent"/>
   </Style>
+
+  <Style Selector="Slider /template/ RepeatButton">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <Style Selector="Slider /template/ Border">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <!-- Fluent draws the slider line inside a Track control's own template, so
+       its parts need their own selectors or the accent track shows through the
+       gradient the view paints behind the control. -->
+  <Style Selector="Track /template/ Border">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <Style Selector="Track /template/ Rectangle">
+    <Setter Property="Fill" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="Track /template/ RepeatButton">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <Style Selector="Slider:horizontal /template/ Thumb">
+    <Setter Property="Width" Value="16"/>
+    <Setter Property="Height" Value="16"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource TextPrimaryBrush}"
+                BorderThickness="1.5"
+                CornerRadius="8"
+                BoxShadow="0 1 4 0 #33000000"/>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+
 </Styles>

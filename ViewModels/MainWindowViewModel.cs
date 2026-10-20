@@ -86,6 +86,10 @@ namespace Spectrum.ViewModels
 
         partial void OnViewModeChanged(ViewMode value) => ViewModeRequested?.Invoke();
 
+        /// <summary>Board layout from the Studio toolbar's overflow menu.</summary>
+        [RelayCommand]
+        private void SetViewMode(ViewMode mode) => ViewMode = mode;
+
         [ObservableProperty]
         private ColorBlindMode _selectedColorBlindMode = ColorBlindMode.None;
 
@@ -111,6 +115,9 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(IsPreviewMode));
             OnPropertyChanged(nameof(IsAnalyzeMode));
             OnPropertyChanged(nameof(IsExportMode));
+
+            // The Analyze breadcrumb names the workspace you are in.
+            Analyze?.RefreshReferencePath();
         }
 
         public bool IsStudioMode => WorkspaceMode == WorkspaceMode.Studio;
