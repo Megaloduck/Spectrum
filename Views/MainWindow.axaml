@@ -29,8 +29,11 @@
         <!-- ═══════════════════ APP BAR · brand · workspaces · actions ═══════════════════ -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16">
 
-            <!-- Brand: gradient palette mark, wordmark, open palette + size -->
-            <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center" Margin="10,0,0,0">
+            <!-- Brand: gradient palette mark, wordmark, open palette + size.
+                 The mark shares the rail tile's 44px box and left edge (the rail
+                 column is 4px of selection pill + the 44px tile), so the app icon
+                 sits exactly on top of the palette tiles below it. -->
+            <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center" Margin="14,0,0,0">
                 <Border Width="44" Height="44" CornerRadius="11"                        
                         Background="{DynamicResource SurfaceRaisedBrush}"
                         BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
