@@ -149,30 +149,6 @@ namespace Spectrum.Views
             return -1;
         }
 
-        // ---------------- Hover → Analyze reference record ----------------
-        // Entering a card previews that swatch's color in the Analyze dock
-        // (SetHoverPreview is a no-op when unchanged, so card-to-card moves
-        // refresh once each). Leaving clears the preview — guarded by color so
-        // an out-of-order exit event from the previous card can never clobber
-        // the card now under the pointer.
-
-        private void OnSwatchPointerEntered(object? sender, PointerEventArgs e)
-        {
-            if (sender is not Border border || border.DataContext is not ColorSwatch swatch) return;
-            if (DataContext is not MainWindowViewModel vm) return;
-
-            vm.Analyze.SetHoverPreview(swatch.Color);
-        }
-
-        private void OnSwatchPointerExited(object? sender, PointerEventArgs e)
-        {
-            if (sender is not Border border || border.DataContext is not ColorSwatch swatch) return;
-            if (DataContext is not MainWindowViewModel vm) return;
-
-            // Only clear if this card is still the one being previewed.
-            if (vm.Analyze.IsHoverPreviewColor(swatch.Color)) vm.Analyze.SetHoverPreview(null);
-        }
-
         private void OnSwatchPointerReleased(object? sender, PointerReleasedEventArgs e)
         {
             if (_draggedBorder is not null)

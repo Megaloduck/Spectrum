@@ -34,9 +34,7 @@
                     AutomationProperties.AutomationId="{Binding Hex}"
                     PointerPressed="OnSwatchPointerPressed"
                     PointerMoved="OnSwatchPointerMoved"
-                    PointerReleased="OnSwatchPointerReleased"
-                    PointerEntered="OnSwatchPointerEntered"
-                    PointerExited="OnSwatchPointerExited">
+                    PointerReleased="OnSwatchPointerReleased">
                 <ToolTip.Tip>
                     <StackPanel x:DataType="models:ColorSwatch" Width="220" Spacing="3" Margin="6">
                         <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
@@ -194,9 +192,7 @@
                     AutomationProperties.AutomationId="{Binding Hex}"
                     PointerPressed="OnSwatchPointerPressed"
                     PointerMoved="OnSwatchPointerMoved"
-                    PointerReleased="OnSwatchPointerReleased"
-                    PointerEntered="OnSwatchPointerEntered"
-                    PointerExited="OnSwatchPointerExited">
+                    PointerReleased="OnSwatchPointerReleased">
                 <Grid ColumnDefinitions="*,Auto" Margin="13,0">
                     <StackPanel VerticalAlignment="Center" Spacing="3">
                         <StackPanel Orientation="Horizontal" Spacing="10">

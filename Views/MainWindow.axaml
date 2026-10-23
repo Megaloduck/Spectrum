@@ -31,7 +31,7 @@
 
             <!-- Brand: gradient palette mark, wordmark, open palette + size -->
             <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center" Margin="10,0,0,0">
-                <Border Width="37" Height="37" CornerRadius="11"
+                <Border Width="44" Height="44" CornerRadius="11"                        
                         Background="{DynamicResource SurfaceRaisedBrush}"
                         BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
                     <materialIcons:MaterialIcon Kind="Palette" Width="21" Height="21"
@@ -90,6 +90,7 @@
                     <materialIcons:MaterialIcon Kind="PageLayoutSidebarLeft" Width="17" Height="17"/>
                 </Button>
                 <Button Classes="iconChip ghost" Command="{Binding ToggleInspectorCommand}"
+                        IsVisible="{Binding ShowDockToggle}"
                         ToolTip.Tip="Show / hide the workspace dock (Ctrl+I)">
                     <materialIcons:MaterialIcon Kind="DockRight" Width="17" Height="17"/>
                 </Button>

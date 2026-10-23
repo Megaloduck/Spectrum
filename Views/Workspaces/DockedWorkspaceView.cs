@@ -7,11 +7,11 @@ using System.ComponentModel;
 namespace Spectrum.Views
 {
     /// <summary>
-    /// Base class for the workspaces that own a right-hand dock (Studio, Preview
-    /// and Analyze). Each of them is a grid of <c>center · splitter · dock</c>, and
+    /// Base class for the workspaces that own a right-hand dock (Studio and
+    /// Preview). Each of them is a grid of <c>center · splitter · dock</c>, and
     /// the only layout logic they share is collapsing/restoring that dock column
     /// when Ctrl+I toggles <see cref="MainWindowViewModel.InspectorVisible"/> —
-    /// so it lives here once instead of being repeated three times.
+    /// so it lives here once instead of being repeated in each workspace.
     /// </summary>
     public abstract class DockedWorkspaceView : UserControl
     {

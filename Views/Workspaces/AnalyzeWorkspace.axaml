@@ -1,17 +1,55 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Spectrum.ViewModels"
+             xmlns:models="using:Spectrum.Models"
              xmlns:services="using:Spectrum.Services"
              xmlns:av="using:Avalonia.Media"
              xmlns:converters="using:Spectrum.Converters"
              xmlns:materialIcons="using:Material.Icons.Avalonia"
              xmlns:local="using:Spectrum.Views"
+             xmlns:sys="using:System"
              x:Class="Spectrum.Views.Workspaces.AnalyzeWorkspace"
              x:DataType="vm:MainWindowViewModel">
 
-    <!-- Ctrl+3 — Analyze as a color *reference record*: identity, values,
-         usage verdicts, vision collisions and an OKLCH ramp. The right dock is
-         the record; the board on the left is how you browse it. -->
+    <!-- Ctrl+3 — Analyze evaluates ONE color: the selected board swatch (or the
+         Studio base color when nothing is selected). The board leads the center,
+         palette context follows it, and the evaluation record closes the page;
+         the right dock is gone. -->
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="StrengthPointTemplate" x:DataType="services:EvaluationPoint">
+            <Border Background="{DynamicResource SurfaceRaisedBrush}" CornerRadius="8"
+                    Padding="9,7" Margin="0,0,0,4">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Headline}" FontWeight="SemiBold" FontSize="11.5"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Reason}" Classes="caption" FontSize="10.5"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="WeaknessPointTemplate" x:DataType="services:EvaluationPoint">
+            <Border Background="{DynamicResource SurfaceRaisedBrush}"
+                    BorderBrush="{DynamicResource DangerBrush}" BorderThickness="2,0,0,0"
+                    CornerRadius="8" Padding="9,7" Margin="0,0,0,4">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Headline}" FontWeight="SemiBold" FontSize="11.5"
+                               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Reason}" Classes="caption" FontSize="10.5"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TagChipTemplate" x:DataType="sys:String">
+            <Border Background="{DynamicResource SurfaceRaisedBrush}" CornerRadius="999"
+                    Padding="9,3" Margin="0,0,5,5">
+                <TextBlock Text="{Binding}" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
 
     <UserControl.Styles>
         <!-- Verdict chips: color reinforces the label (Pass/Fail stays readable
@@ -30,374 +68,572 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid x:Name="WorkspaceRoot" ColumnDefinitions="*,12,340">
+    <Grid x:Name="WorkspaceRoot" RowDefinitions="Auto,*">
 
-        <GridSplitter Grid.Column="1" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
-                      Background="Transparent" Width="12"
-                      IsVisible="{Binding InspectorVisible}"
-                      ToolTip.Tip="Drag to resize the workspace dock"/>
+        <!-- ═══════════════════ TOOLBAR · Analyze-only controls ═══════════════════ -->
+        <Border Grid.Row="0" Classes="panel" Padding="12,8" Margin="0,0,0,10">
+            <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
 
-        <!-- ═══════════════════ DOCK · REFERENCE RECORD ═══════════════════ -->
-        <Border Grid.Column="2" Classes="panel" IsVisible="{Binding InspectorVisible}">
-            <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Color Blind Mode -->
+                    <ComboBox MinWidth="146" Height="34" Margin="0,0,4,0"
+                              ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
+                              ToolTip.Tip="Preview the board as someone with this color vision would see it">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"
+                                           FontSize="12"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                <Grid ColumnDefinitions="*,Auto" Margin="18,16,12,6">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="COLOR REFERENCE" Classes="eyebrow"/>
-                        <TextBlock Text="{Binding Analyze.ReferencePath}" Classes="mono"
-                                   FontSize="10.5" TextTrimming="CharacterEllipsis"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    </StackPanel>
-                    <Button Grid.Column="1" Classes="iconChip ghost" Width="28" Height="28"
-                            VerticalAlignment="Top"
-                            Command="{Binding ToggleInspectorCommand}"
-                            ToolTip.Tip="Collapse the dock (Ctrl+I)">
-                        <materialIcons:MaterialIcon Kind="ChevronRight" Width="16" Height="16"/>
+                    <!-- Contrast overlay on swatches -->
+                    <ToggleButton Height="34" Margin="0,0,4,0" Padding="10,0"
+                                  IsChecked="{Binding ShowContrastOverlay}"
+                                  ToolTip.Tip="Overlay every swatch with its WCAG + APCA contrast verdicts">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="ScaleBalance" Width="15" Height="15"/>
+                            <TextBlock Text="Aa overlay" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <!-- Contrast matrix: every pair at a glance -->
+                    <Button Height="34" Margin="0,0,4,0"
+                            Command="{Binding Analyze.OpenContrastMatrixCommand}"
+                            ToolTip.Tip="Every text-on-background pair scored side by side (WCAG + APCA)">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="ViewGrid" Width="15" Height="15"/>
+                            <TextBlock Text="Matrix" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
-                </Grid>
 
-                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Spacing="12" Margin="18,4,18,16">
-
-                        <!-- Hover preview: the board is pointing at a swatch that isn't the
-                             base yet — say so, and say how to keep it. -->
-                        <Border IsVisible="{Binding Analyze.IsHoverPreview}" CornerRadius="8" Padding="9,6"
-                                Background="{DynamicResource SurfaceRaisedBrush}" HorizontalAlignment="Stretch">
-                            <StackPanel Orientation="Horizontal" Spacing="7">
-                                <materialIcons:MaterialIcon Kind="Eye" Width="13" Height="13"
-                                                            VerticalAlignment="Center"/>
-                                <TextBlock Text="Previewing a board color — click it to keep."
-                                           Classes="caption" FontSize="10.5" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- ── Identity: swatch + name + hex + character tags + note ── -->
-                        <Border Background="{Binding Analyze.BaseSwatchBrush}" CornerRadius="12" Height="96"
-                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
-                            <Grid Margin="15,13" RowDefinitions="Auto,Auto,*">
-                                <TextBlock Text="{Binding Analyze.BaseName}" FontWeight="Bold" FontSize="17"
-                                           Foreground="{Binding Analyze.BaseForegroundBrush}" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Row="1" Text="{Binding Analyze.BaseHexForHeader}"
-                                           Classes="mono" FontSize="12" Opacity="0.8"
-                                           Foreground="{Binding Analyze.BaseForegroundBrush}"/>
-                                <TextBlock Grid.Row="2" Text="{Binding Analyze.CharacterTags}" FontSize="10.5"
-                                           VerticalAlignment="Bottom" Opacity="0.85" FontWeight="SemiBold"
-                                           TextTrimming="CharacterEllipsis"
-                                           Foreground="{Binding Analyze.BaseForegroundBrush}"/>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="{Binding Analyze.UsageNote}" Classes="value" FontSize="11.5"
-                                   TextWrapping="Wrap"/>
-
-                        <!-- ── Conversion table: common spaces, then advanced ── -->
-                        <Separator Margin="0,2,0,0"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="VALUES" Classes="eyebrow"/>
-                            <Button Grid.Column="1" Classes="ghost" Padding="6,2"
-                                    Command="{Binding Analyze.CopyAllValuesCommand}"
-                                    ToolTip.Tip="Copy every conversion at once">
-                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="13" Height="13"/>
-                            </Button>
-                        </Grid>
-
-                        <ItemsControl ItemsSource="{Binding Analyze.ValueSections}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:ValueSection">
-                                    <StackPanel Spacing="1" Margin="0,0,0,5">
-                                        <TextBlock Text="{Binding Title}" FontSize="9.5" FontWeight="Bold"
-                                                   LetterSpacing="1" Opacity="0.5" Margin="2,1,0,3"/>
-                                        <ItemsControl ItemsSource="{Binding Rows}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:ColorValueRow">
-                                                    <Button Classes="iconOnly" HorizontalAlignment="Stretch"
-                                                            HorizontalContentAlignment="Stretch"
-                                                            Command="{Binding CopyCommand}" CommandParameter="{Binding}"
-                                                            ToolTip.Tip="{Binding ToolTip}">
-                                                        <Grid ColumnDefinitions="50,*,Auto" Height="23">
-                                                            <TextBlock Text="{Binding Label}" Classes="caption"
-                                                                       FontSize="10.5" VerticalAlignment="Center"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding Value}"
-                                                                       Classes="mono value" FontSize="11.5"
-                                                                       VerticalAlignment="Center"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                            <materialIcons:MaterialIcon Grid.Column="2" Kind="ContentCopy"
-                                                                                        Width="11" Height="11" Opacity="0.35"
-                                                                                        VerticalAlignment="Center"/>
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- ── Contrast: preview + ratio + role verdicts + APCA ── -->
-                        <Separator Margin="0,2,0,0"/>
-                        <TextBlock Text="CONTRAST" Classes="eyebrow"/>
-                        <TextBlock Text="{Binding Analyze.ContrastPairLabel}" Classes="mono"
-                                   FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}"/>
-
-                        <Border Background="{Binding Analyze.ContrastBackgroundBrush}" CornerRadius="10" Height="58"
-                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="Aa — sample text" FontWeight="Bold" FontSize="15"
-                                           Foreground="{Binding Analyze.BaseSwatchBrush}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Small body copy 14px" FontSize="10.5"
-                                           Foreground="{Binding Analyze.BaseSwatchBrush}" HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Analyze.ContrastRatioLabel}" Classes="mono"
-                                           FontWeight="Bold" FontSize="19"/>
-                                <TextBlock Text="{Binding Analyze.ApcaRatingLabel}" Classes="value"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{Binding Analyze.ApcaLabel}" Classes="mono"
-                                       FontSize="11" VerticalAlignment="Center"
-                                       ToolTip.Tip="APCA lightness contrast — positive = dark on light"/>
-                        </Grid>
-
-                        <!-- Role verdicts: the three roles WCAG actually defines. -->
-                        <ItemsControl ItemsSource="{Binding Analyze.ContrastRoles}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:ContrastRole">
-                                    <Grid ColumnDefinitions="*,Auto" Margin="0,2">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Role}" FontSize="11.5" FontWeight="SemiBold"
-                                                       VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Requirement}" Classes="caption" FontSize="10"
-                                                       VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                        <Border Grid.Column="1" CornerRadius="6" Padding="8,3"
-                                                VerticalAlignment="Center"
-                                                Classes="verdict"
-                                                Classes.pass="{Binding Passed}"
-                                                Classes.fail="{Binding !Passed}">
-                                            <TextBlock Text="{Binding Verdict}" FontSize="10.5" FontWeight="Bold"/>
-                                        </Border>
+                    <!-- Glossary: on-demand definitions, never part of the evaluation flow -->
+                    <Button Height="34" ToolTip.Tip="Color glossary">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="BookOpenVariant" Width="15" Height="15"/>
+                            <TextBlock Text="Glossary" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                                <StackPanel x:DataType="vm:MainWindowViewModel" Width="420"
+                                            Spacing="8" Margin="2">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="GLOSSARY" Classes="eyebrow"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Analyze.GlossaryCountLabel}"
+                                                   Classes="caption mono" FontSize="10"/>
                                     </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
-                            <Button Classes="iconChip ghost" Width="28" Height="28"
-                                    Command="{Binding Analyze.UseWhiteContrastBackgroundCommand}"
-                                    ToolTip.Tip="Use white as the contrast background">
-                                <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="15" Height="15"/>
-                            </Button>
-                            <Button Classes="iconChip ghost" Width="28" Height="28"
-                                    Command="{Binding Analyze.UseBlackContrastBackgroundCommand}"
-                                    ToolTip.Tip="Use black as the contrast background">
-                                <materialIcons:MaterialIcon Kind="WeatherNight" Width="15" Height="15"/>
-                            </Button>
-                            <Button Classes="iconChip ghost" Width="28" Height="28"
-                                    Command="{Binding Analyze.PickContrastBackgroundCommand}"
-                                    ToolTip.Tip="Pick a contrast background">
-                                <materialIcons:MaterialIcon Kind="Eyedropper" Width="15" Height="15"/>
-                            </Button>
-                        </StackPanel>
-
-                        <!-- ── Color-vision collisions: named pairs, worst first ── -->
-                        <Separator Margin="0,2,0,0"/>
-                        <TextBlock Text="COLOR VISION COLLISIONS" Classes="eyebrow"/>
-                        <TextBlock Text="{Binding Analyze.CollisionsSummary}" Classes="caption"
-                                   TextWrapping="Wrap"/>
-
-                        <ItemsControl ItemsSource="{Binding Analyze.Collisions}" IsVisible="{Binding Analyze.HasCollisions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="services:VisionCollision">
-                                    <Border Background="{DynamicResource SurfaceRaisedBrush}" CornerRadius="9"
-                                            Padding="10,8" Margin="0,2">
-                                        <StackPanel Spacing="5">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-                                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                                    <materialIcons:MaterialIcon Kind="Alert" Width="12" Height="12"
-                                                                                Foreground="{DynamicResource DangerBrush}"/>
-                                                    <TextBlock Text="{Binding Mode}" FontSize="10.5" FontWeight="Bold"/>
-                                                </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
-                                                           Classes="caption mono" FontSize="10"/>
-                                            </Grid>
-                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                <Border Width="13" Height="13" CornerRadius="4"
-                                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
-                                                        Background="{Binding FirstColor, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                <TextBlock Text="{Binding FirstName}" FontSize="11"
-                                                           TextTrimming="CharacterEllipsis" MaxWidth="86"/>
-                                                <TextBlock Text="and" Classes="caption" FontSize="10"/>
-                                                <Border Width="13" Height="13" CornerRadius="4"
-                                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
-                                                        Background="{Binding SecondColor, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                <TextBlock Text="{Binding SecondName}" FontSize="11"
-                                                           TextTrimming="CharacterEllipsis" MaxWidth="86"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- ── Related colors: the harmony strips of a reference page ── -->
-                        <Separator Margin="0,2,0,0"/>
-                        <TextBlock Text="RELATED COLORS" Classes="eyebrow"/>
-                        <TextBlock Text="Complementary, triadic and analogous — click to add"
-                                   Classes="caption"/>
-
-                        <ItemsControl ItemsSource="{Binding Analyze.Harmonies}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:HarmonyRow">
-                                    <StackPanel Spacing="4" Margin="0,1,0,4">
-                                        <TextBlock Text="{Binding Rule}" FontSize="9.5" FontWeight="Bold"
-                                                   LetterSpacing="1" Opacity="0.5"/>
-                                        <ItemsControl ItemsSource="{Binding Colors}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal" Spacing="5"/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
+                                    <TextBox Text="{Binding Analyze.GlossarySearchText}"
+                                             Watermark="Search terms and definitions…"/>
+                                    <ScrollViewer MaxHeight="520"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding Analyze.GlossaryTerms}">
                                             <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="av:Color">
-                                                    <Button Classes="iconOnly" Padding="0" Width="30" Height="30"
-                                                            Command="{Binding $parent[ItemsControl].((vm:HarmonyRow)DataContext).AddCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip.Tip="{Binding}">
-                                                        <Border Width="30" Height="30" CornerRadius="7"
-                                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
-                                                                Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                    </Button>
+                                                <DataTemplate x:DataType="models:GlossaryTerm">
+                                                    <StackPanel Spacing="2" Margin="0,0,0,9">
+                                                        <TextBlock Text="{Binding Term}" FontWeight="SemiBold"
+                                                                   FontSize="12" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Definition}" Classes="caption"
+                                                                   FontSize="11" TextWrapping="Wrap"/>
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- ── OKLCH ramp: tints → base → shades, click to add ── -->
-                        <Separator Margin="0,2,0,0"/>
-                        <TextBlock Text="OKLCH RAMP" Classes="eyebrow"/>
-                        <TextBlock Text="Perceptually even steps — click one to add it" Classes="caption"/>
-
-                        <ItemsControl ItemsSource="{Binding Analyze.Ramp}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="av:Color">
-                                    <Button Classes="iconOnly" Padding="0" Margin="0,0,5,5" Width="30" Height="30"
-                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Analyze.AddRampStepCommand}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip.Tip="{Binding}">
-                                        <Border Width="30" Height="30" CornerRadius="7"
-                                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
-                                                Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- Tints / shades / tones generators (OKLCH-interpolated) -->
-                        <TextBlock Text="GENERATE FROM BASE" Classes="eyebrow"/>
-                        <Grid ColumnDefinitions="*,4,*,4,*">
-                            <Button Grid.Column="0" Height="30" FontSize="11"
-                                    Command="{Binding Analyze.AddTintsCommand}"
-                                    ToolTip.Tip="Add lighter OKLCH steps (toward white) to the palette">
-                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                    <materialIcons:MaterialIcon Kind="Flashlight" Width="13" Height="13"/>
-                                    <TextBlock Text="Tints" FontSize="11" VerticalAlignment="Center"/>
+                                    </ScrollViewer>
+                                    <TextBlock Text="No terms match that search." Classes="caption"
+                                               FontSize="10.5" IsVisible="{Binding Analyze.IsGlossaryEmpty}"/>
                                 </StackPanel>
-                            </Button>
-                            <Button Grid.Column="2" Height="30" FontSize="11"
-                                    Command="{Binding Analyze.AddShadesCommand}"
-                                    ToolTip.Tip="Add darker OKLCH steps (toward black) to the palette">
-                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                    <materialIcons:MaterialIcon Kind="NightLight" Width="13" Height="13"/>
-                                    <TextBlock Text="Shades" FontSize="11" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="4" Height="30" FontSize="11"
-                                    Command="{Binding Analyze.AddTonesCommand}"
-                                    ToolTip.Tip="Add desaturated OKLCH steps (toward gray) to the palette">
-                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                    <materialIcons:MaterialIcon Kind="Equalizer" Width="13" Height="13"/>
-                                    <TextBlock Text="Tones" FontSize="11" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- The record's one action: send this color to the palette. -->
-                <Border Grid.Row="2" Padding="18,12,18,16"
-                        BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0">
-                    <Button Classes="cta" Command="{Binding Analyze.AddCurrentColorToPaletteCommand}"
-                            ToolTip.Tip="Add the documented color to the palette">
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <materialIcons:MaterialIcon Kind="Add" Width="16" Height="16"/>
-                            <TextBlock Text="Add to Palette" VerticalAlignment="Center"/>
-                        </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
                     </Button>
-                </Border>
 
+                </WrapPanel>
+
+                <local:ToolbarGlobalsView Grid.Column="1"/>
             </Grid>
         </Border>
 
-        <!-- ═══════════════════ CENTRE · toolbar + board ═══════════════════ -->
-        <Grid Grid.Column="0" RowDefinitions="Auto,*">
+        <!-- ═══════════════════ CENTRE · board → palette context → evaluation ═══════════════════ -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
 
-            <Border Grid.Row="0" Classes="panel" Padding="12,8" Margin="0,0,0,10">
-                <Grid ColumnDefinitions="*,Auto">
-                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- ───────────────────────── BOARD ───────────────────────── -->
+                <Grid ColumnDefinitions="*,Auto" Margin="2,2,2,0">
+                    <StackPanel Spacing="1">
+                        <TextBlock Text="{Binding Analyze.BoardHeaderLabel}" Classes="sectionHeader"
+                                   FontSize="13"/>
+                        <TextBlock Text="{Binding Analyze.BoardHint}" Classes="caption" FontSize="10.5"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="PALETTE" Classes="eyebrow" VerticalAlignment="Center"/>
+                </Grid>
 
-                        <!-- Color Blind Mode -->
-                        <ComboBox MinWidth="146" Height="34" Margin="0,0,4,0"
-                                  ItemsSource="{Binding ColorBlindModes}" SelectedItem="{Binding SelectedColorBlindMode}"
-                                  ToolTip.Tip="Preview the board as someone with this color vision would see it">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={x:Static converters:EnumSpacedConverter.Instance}}"
-                                               FontSize="12"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                <local:PaletteBoardView/>
 
-                        <!-- Contrast overlay on swatches (§8) -->
-                        <ToggleButton Height="34" Margin="0,0,4,0" Padding="10,0"
-                                      IsChecked="{Binding ShowContrastOverlay}"
-                                      ToolTip.Tip="Overlay every swatch with its WCAG + APCA contrast verdicts">
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                <materialIcons:MaterialIcon Kind="ScaleBalance" Width="15" Height="15"/>
-                                <TextBlock Text="Aa overlay" FontSize="12" VerticalAlignment="Center"/>
+                <!-- ───────────────────────── PALETTE CONTEXT ───────────────────────── -->
+                <Border Classes="panel" Padding="14,12">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="PALETTE CONTEXT" Classes="eyebrow"/>
+                                <TextBlock Text="How the evaluated color behaves with the rest of the palette."
+                                           Classes="caption" FontSize="10.5"/>
                             </StackPanel>
-                        </ToggleButton>
+                            <TextBlock Grid.Column="1" Text="{Binding Analyze.ReferencePalette}"
+                                       Classes="mono" FontSize="10" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                        </Grid>
 
-                        <!-- Contrast matrix (§4/§8): every pair at a glance -->
-                        <Button Height="34"
-                                Command="{Binding Analyze.OpenContrastMatrixCommand}"
-                                ToolTip.Tip="Every text-on-background pair scored side by side (WCAG + APCA)">
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                <materialIcons:MaterialIcon Kind="ViewGrid" Width="15" Height="15"/>
-                                <TextBlock Text="Matrix" FontSize="12" VerticalAlignment="Center"/>
+                        <WrapPanel Orientation="Horizontal">
+
+                            <!-- Collisions involving the selected color -->
+                            <Border Width="308" Padding="11,9" CornerRadius="10"
+                                    Background="{DynamicResource SurfaceRaisedBrush}"
+                                    Margin="0,0,10,10">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="VISION COLLISIONS" Classes="eyebrow" FontSize="9.5"/>
+                                    <TextBlock Text="{Binding Analyze.CollisionsSummary}" Classes="caption"
+                                               FontSize="10" TextWrapping="Wrap"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.CollisionsForSelection}"
+                                                  IsVisible="{Binding Analyze.HasCollisionsForSelection}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="services:VisionCollision">
+                                                <StackPanel Spacing="3" Margin="0,0,0,5">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock Text="{Binding Mode, Converter={x:Static converters:EnumSpacedConverter.Instance}}"
+                                                                   FontSize="9.5" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
+                                                                   Classes="mono caption" FontSize="9.5"/>
+                                                    </Grid>
+                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                        <Border Width="14" Height="14" CornerRadius="4"
+                                                                BorderBrush="{DynamicResource OutlineBrush}"
+                                                                BorderThickness="1"
+                                                                Background="{Binding FirstColor, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                                        <TextBlock Text="{Binding FirstName}" FontSize="10"
+                                                                   MaxWidth="86" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="↔" Classes="caption" FontSize="9"/>
+                                                        <Border Width="14" Height="14" CornerRadius="4"
+                                                                BorderBrush="{DynamicResource OutlineBrush}"
+                                                                BorderThickness="1"
+                                                                Background="{Binding SecondColor, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                                        <TextBlock Text="{Binding SecondName}" FontSize="10"
+                                                                   MaxWidth="86" TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Related colors: click to add -->
+                            <Border Width="308" Padding="11,9" CornerRadius="10"
+                                    Background="{DynamicResource SurfaceRaisedBrush}"
+                                    Margin="0,0,10,10">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="RELATED COLORS" Classes="eyebrow" FontSize="9.5"/>
+                                    <TextBlock Text="Harmony rules from this color — click a swatch to add it."
+                                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.Harmonies}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:HarmonyRow">
+                                                <StackPanel Spacing="3" Margin="0,0,0,5">
+                                                    <TextBlock Text="{Binding Rule}" FontSize="9"
+                                                               FontWeight="Bold" LetterSpacing="0.8"
+                                                               Opacity="0.55"/>
+                                                    <ItemsControl ItemsSource="{Binding Colors}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="av:Color">
+                                                                <Button Classes="iconOnly" Padding="0"
+                                                                        Width="24" Height="24"
+                                                                        Command="{Binding $parent[ItemsControl].((vm:HarmonyRow)DataContext).AddCommand}"
+                                                                        CommandParameter="{Binding}"
+                                                                        ToolTip.Tip="{Binding}">
+                                                                    <Border Width="24" Height="24" CornerRadius="6"
+                                                                            BorderBrush="{DynamicResource OutlineBrush}"
+                                                                            BorderThickness="1"
+                                                                            Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Nearest palette neighbors -->
+                            <Border Width="308" Padding="11,9" CornerRadius="10"
+                                    Background="{DynamicResource SurfaceRaisedBrush}"
+                                    Margin="0,0,10,10">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="NEAREST NEIGHBORS" Classes="eyebrow" FontSize="9.5"/>
+                                    <TextBlock Text="Closest colors already on the board, by CIE76 ΔE."
+                                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.PaletteNeighbors}"
+                                                  IsVisible="{Binding Analyze.HasPaletteNeighbors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="services:PaletteNeighbor">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
+                                                    <Border Width="18" Height="18" CornerRadius="5"
+                                                            BorderBrush="{DynamicResource OutlineBrush}"
+                                                            BorderThickness="1"
+                                                            Background="{Binding Color, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Name}"
+                                                               FontSize="10.5" Margin="7,0,0,0"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
+                                                               Classes="mono caption" FontSize="9.5"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="No other colors on the board yet." Classes="caption"
+                                               FontSize="10" IsVisible="{Binding !Analyze.HasPaletteNeighbors}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Ramp + generators -->
+                            <Border Width="308" Padding="11,9" CornerRadius="10"
+                                    Background="{DynamicResource SurfaceRaisedBrush}"
+                                    Margin="0,0,10,10">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="RAMP &amp; GENERATORS" Classes="eyebrow" FontSize="9.5"/>
+                                    <TextBlock Text="Perceptually even OKLCH steps — click one to add it."
+                                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
+
+                                    <ItemsControl ItemsSource="{Binding Analyze.Ramp}" Margin="0,2,0,0">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="av:Color">
+                                                <Button Classes="iconOnly" Padding="0" Margin="0,0,5,5"
+                                                        Width="26" Height="26"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Analyze.AddRampStepCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="{Binding}">
+                                                    <Border Width="26" Height="26" CornerRadius="6"
+                                                            BorderBrush="{DynamicResource OutlineBrush}"
+                                                            BorderThickness="1"
+                                                            Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Grid ColumnDefinitions="*,4,*,4,*">
+                                        <Button Grid.Column="0" Height="28" FontSize="10.5"
+                                                Command="{Binding Analyze.AddTintsCommand}"
+                                                ToolTip.Tip="Add lighter OKLCH steps (toward white)">
+                                            <TextBlock Text="Tints" FontSize="10.5" VerticalAlignment="Center"/>
+                                        </Button>
+                                        <Button Grid.Column="2" Height="28" FontSize="10.5"
+                                                Command="{Binding Analyze.AddShadesCommand}"
+                                                ToolTip.Tip="Add darker OKLCH steps (toward black)">
+                                            <TextBlock Text="Shades" FontSize="10.5" VerticalAlignment="Center"/>
+                                        </Button>
+                                        <Button Grid.Column="4" Height="28" FontSize="10.5"
+                                                Command="{Binding Analyze.AddTonesCommand}"
+                                                ToolTip.Tip="Add desaturated OKLCH steps (toward gray)">
+                                            <TextBlock Text="Tones" FontSize="10.5" VerticalAlignment="Center"/>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ───────────────────────── EVALUATION ───────────────────────── -->
+                <Border Classes="panel" Padding="18,16">
+                    <StackPanel Spacing="14">
+
+                        <!-- Header: the record + which swatch it owns -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="EVALUATION" Classes="eyebrow"/>
+                                <TextBlock Text="{Binding Analyze.ReferencePath}" Classes="mono"
+                                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" VerticalAlignment="Center"
+                                    Background="{DynamicResource SurfaceRaisedBrush}" CornerRadius="999"
+                                    Padding="10,4">
+                                <TextBlock Text="{Binding Analyze.EvaluationTargetBadge}"
+                                           FontSize="10.5" FontWeight="SemiBold"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Identity: swatch + name + hex -->
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Width="64" Height="64" CornerRadius="14"
+                                    Background="{Binding Analyze.EvaluationSwatchBrush}"
+                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" Spacing="3">
+                                <TextBlock Text="{Binding Analyze.EvaluationName}" FontWeight="Bold"
+                                           FontSize="20" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Analyze.EvaluationHex}" Classes="mono"
+                                           FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding Analyze.EvaluationTargetHint}" Classes="caption"
+                                           FontSize="10.5" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="2" Classes="iconChip ghost" VerticalAlignment="Top"
+                                    Command="{Binding Analyze.CopyEvaluationHexCommand}"
+                                    ToolTip.Tip="Copy the evaluated color's hex">
+                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="15" Height="15"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Character -->
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="CHARACTER" Classes="eyebrow"/>
+                            <ItemsControl ItemsSource="{Binding Analyze.EvaluationTags}"
+                                          ItemTemplate="{StaticResource TagChipTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                            <TextBlock Text="{Binding Analyze.EvaluationOneLine}" FontSize="13"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Separator Margin="0,2"/>
+
+                        <!-- Strengths / weaknesses: two axes each, strongest first -->
+                        <Grid ColumnDefinitions="*,20,*">
+                            <StackPanel Spacing="9">
+                                <TextBlock Text="STRENGTHS" Classes="eyebrow"/>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding Analyze.HasDesignStrengths}">
+                                    <TextBlock Text="Design use" Classes="label" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.DesignStrengths}"
+                                                  ItemTemplate="{StaticResource StrengthPointTemplate}"/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding Analyze.HasAccessibilityStrengths}">
+                                    <TextBlock Text="Accessibility" Classes="label" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.AccessibilityStrengths}"
+                                                  ItemTemplate="{StaticResource StrengthPointTemplate}"/>
+                                </StackPanel>
+
+                                <TextBlock Text="No clear strengths at this setting." Classes="caption"
+                                           TextWrapping="Wrap" IsVisible="{Binding !Analyze.HasAnyStrengths}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="9">
+                                <TextBlock Text="WEAKNESSES" Classes="eyebrow"/>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding Analyze.HasAccessibilityWeaknesses}">
+                                    <TextBlock Text="Accessibility" Classes="label" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.AccessibilityWeaknesses}"
+                                                  ItemTemplate="{StaticResource WeaknessPointTemplate}"/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding Analyze.HasDesignWeaknesses}">
+                                    <TextBlock Text="Design use" Classes="label" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding Analyze.DesignWeaknesses}"
+                                                  ItemTemplate="{StaticResource WeaknessPointTemplate}"/>
+                                </StackPanel>
+
+                                <TextBlock Text="No notable weaknesses in this palette." Classes="caption"
+                                           TextWrapping="Wrap" IsVisible="{Binding !Analyze.HasAnyWeaknesses}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Details: the proof, kept out of the first read -->
+                        <Border BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0"
+                                Padding="0,10,0,0">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <ToggleButton Background="Transparent" Padding="0,2"
+                                                  HorizontalAlignment="Left"
+                                                  IsChecked="{Binding Analyze.ShowDetails, Mode=TwoWay}"
+                                                  ToolTip.Tip="Conversions and contrast math behind the evaluation">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <materialIcons:MaterialIcon Kind="ChevronDown"
+                                                                        Width="14" Height="14"/>
+                                            <TextBlock Text="{Binding Analyze.DetailsToggleLabel}"
+                                                       FontSize="11.5" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <TextBlock Grid.Column="1" Text="{Binding Analyze.ContrastRatioLabel}"
+                                               Classes="mono" FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               ToolTip.Tip="Contrast of the evaluated color against the chosen background"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,20,*" IsVisible="{Binding Analyze.ShowDetails}">
+
+                                    <!-- Values -->
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="VALUES" Classes="eyebrow"/>
+                                            <Button Grid.Column="1" Classes="ghost" Padding="6,2"
+                                                    Command="{Binding Analyze.CopyAllValuesCommand}"
+                                                    ToolTip.Tip="Copy every conversion at once">
+                                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="13" Height="13"/>
+                                            </Button>
+                                        </Grid>
+
+                                        <ItemsControl ItemsSource="{Binding Analyze.ValueSections}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ValueSection">
+                                                    <StackPanel Spacing="1" Margin="0,0,0,6">
+                                                        <TextBlock Text="{Binding Title}" FontSize="9.5"
+                                                                   FontWeight="Bold" LetterSpacing="1"
+                                                                   Opacity="0.5" Margin="2,1,0,3"/>
+                                                        <ItemsControl ItemsSource="{Binding Rows}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="vm:ColorValueRow">
+                                                                    <Button Classes="iconOnly"
+                                                                            HorizontalAlignment="Stretch"
+                                                                            HorizontalContentAlignment="Stretch"
+                                                                            Command="{Binding CopyCommand}"
+                                                                            CommandParameter="{Binding}"
+                                                                            ToolTip.Tip="{Binding ToolTip}">
+                                                                        <Grid ColumnDefinitions="56,*,Auto" Height="22">
+                                                                            <TextBlock Text="{Binding Label}"
+                                                                                       Classes="caption" FontSize="10.5"
+                                                                                       VerticalAlignment="Center"/>
+                                                                            <TextBlock Grid.Column="1" Text="{Binding Value}"
+                                                                                       Classes="mono value" FontSize="11.5"
+                                                                                       VerticalAlignment="Center"
+                                                                                       TextTrimming="CharacterEllipsis"/>
+                                                                            <materialIcons:MaterialIcon Grid.Column="2"
+                                                                                Kind="ContentCopy" Width="11" Height="11"
+                                                                                Opacity="0.35" VerticalAlignment="Center"/>
+                                                                        </Grid>
+                                                                    </Button>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <!-- Contrast -->
+                                    <StackPanel Grid.Column="2" Spacing="6">
+                                        <TextBlock Text="CONTRAST" Classes="eyebrow"/>
+                                        <TextBlock Text="{Binding Analyze.ContrastPairLabel}" Classes="mono"
+                                                   FontSize="10.5"
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
+
+                                        <Border Background="{Binding Analyze.ContrastBackgroundBrush}"
+                                                CornerRadius="10" Height="58"
+                                                BorderBrush="{DynamicResource OutlineBrush}"
+                                                BorderThickness="1">
+                                            <StackPanel VerticalAlignment="Center"
+                                                        HorizontalAlignment="Center" Spacing="1">
+                                                <TextBlock Text="Aa — sample text" FontWeight="Bold"
+                                                           FontSize="15"
+                                                           Foreground="{Binding Analyze.EvaluationSwatchBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Small body copy 14px" FontSize="10.5"
+                                                           Foreground="{Binding Analyze.EvaluationSwatchBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Analyze.ContrastRatioLabel}"
+                                                           Classes="mono" FontWeight="Bold" FontSize="18"/>
+                                                <TextBlock Text="{Binding Analyze.ApcaRatingLabel}"
+                                                           Classes="value" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding Analyze.ApcaLabel}"
+                                                       Classes="mono" FontSize="11" VerticalAlignment="Center"
+                                                       ToolTip.Tip="APCA lightness contrast — positive = dark on light"/>
+                                        </Grid>
+
+                                        <ItemsControl ItemsSource="{Binding Analyze.ContrastRoles}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ContrastRole">
+                                                    <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                                                    VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Role}" FontSize="11.5"
+                                                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Requirement}" Classes="caption"
+                                                                       FontSize="10" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                        <Border Grid.Column="1" CornerRadius="6" Padding="8,3"
+                                                                VerticalAlignment="Center" Classes="verdict"
+                                                                Classes.pass="{Binding Passed}"
+                                                                Classes.fail="{Binding !Passed}">
+                                                            <TextBlock Text="{Binding Verdict}" FontSize="10.5"
+                                                                       FontWeight="Bold"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                                    HorizontalAlignment="Right">
+                                            <Button Classes="iconChip ghost" Width="28" Height="28"
+                                                    Command="{Binding Analyze.UseWhiteContrastBackgroundCommand}"
+                                                    ToolTip.Tip="Use white as the contrast background">
+                                                <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="15" Height="15"/>
+                                            </Button>
+                                            <Button Classes="iconChip ghost" Width="28" Height="28"
+                                                    Command="{Binding Analyze.UseBlackContrastBackgroundCommand}"
+                                                    ToolTip.Tip="Use black as the contrast background">
+                                                <materialIcons:MaterialIcon Kind="WeatherNight" Width="15" Height="15"/>
+                                            </Button>
+                                            <Button Classes="iconChip ghost" Width="28" Height="28"
+                                                    Command="{Binding Analyze.PickContrastBackgroundCommand}"
+                                                    ToolTip.Tip="Pick a contrast background">
+                                                <materialIcons:MaterialIcon Kind="Eyedropper" Width="15" Height="15"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Fallback only: the evaluated color is the base color, not on the board -->
+                        <Button Classes="cta" Width="230" HorizontalAlignment="Left"
+                                IsVisible="{Binding Analyze.IsEvaluatingBaseColor}"
+                                Command="{Binding Analyze.AddCurrentColorToPaletteCommand}"
+                                ToolTip.Tip="Add the base color to the palette">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="Add" Width="16" Height="16"/>
+                                <TextBlock Text="Add base color" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                    </WrapPanel>
+                    </StackPanel>
+                </Border>
 
-                    <local:ToolbarGlobalsView Grid.Column="1"/>
-                </Grid>
-            </Border>
-
-            <local:PaletteBoardView Grid.Row="1"/>
-
-        </Grid>
+            </StackPanel>
+        </ScrollViewer>
 
     </Grid>
 </UserControl>

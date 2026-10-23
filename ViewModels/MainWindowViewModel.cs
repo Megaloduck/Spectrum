@@ -42,7 +42,7 @@ namespace Spectrum.ViewModels
         /// <summary>Ctrl+2 · Preview: mockup, variants, comparison.</summary>
         public PreviewWorkspaceViewModel Preview { get; }
 
-        /// <summary>Ctrl+3 · Analyze: color science, contrast, matrix.</summary>
+        /// <summary>Ctrl+3 · Analyze: a single-color evaluation of the selected swatch.</summary>
         public AnalyzeWorkspaceViewModel Analyze { get; }
 
         /// <summary>Ctrl+4 · Export: formats, preview, file output.</summary>
@@ -62,7 +62,7 @@ namespace Spectrum.ViewModels
 
         /// <summary>Keeps each swatch's IsSelected flag in step so its card can draw a
         /// selection ring, and loads the clicked color into the color panel — which
-        /// drives the Analyze reference record — so the right dock always shows the
+        /// retargets the Analyze evaluation — so Analyze always documents the
         /// swatch you clicked instead of whatever the panel last held.</summary>
         partial void OnSelectedSwatchChanged(ColorSwatch? oldValue, ColorSwatch? newValue)
         {
@@ -72,7 +72,15 @@ namespace Spectrum.ViewModels
                 newValue.IsSelected = true;
                 Studio?.ApplyToBaseColor(newValue.Color);
             }
+
+            // Analyze evaluates the selected swatch (or the base color when the
+            // selection is cleared), so a selection change retargets the record.
+            Analyze?.RefreshEvaluation();
         }
+
+        /// <summary>The Analyze workspace has no dock, so its app-bar toggle would
+        /// be a no-op there. Hidden only for Analyze; other workspaces keep it.</summary>
+        public bool ShowDockToggle => !IsAnalyzeMode;
 
         // ---------------- §8 Preview & visualization ----------------
 
@@ -115,6 +123,7 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(IsPreviewMode));
             OnPropertyChanged(nameof(IsAnalyzeMode));
             OnPropertyChanged(nameof(IsExportMode));
+            OnPropertyChanged(nameof(ShowDockToggle));
 
             // The Analyze breadcrumb names the workspace you are in.
             Analyze?.RefreshReferencePath();
@@ -139,7 +148,7 @@ namespace Spectrum.ViewModels
             {
                 WorkspaceMode.Studio => "Studio — generate and edit the palette.",
                 WorkspaceMode.Preview => "Preview — mockup, variants and side-by-side compare.",
-                WorkspaceMode.Analyze => "Analyze — contrast, conversions and color-vision simulation.",
+                WorkspaceMode.Analyze => "Analyze — evaluate the selected color.",
                 _ => "Export — send the palette out, or bring files in.",
             };
             _suppressToast = previous;

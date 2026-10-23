@@ -192,7 +192,7 @@ namespace Spectrum.Views
             // Workspaces
             Add("Workspace: Studio — build the palette", "Ctrl+1", vm.SetWorkspaceCommand, WorkspaceMode.Studio);
             Add("Workspace: Preview — mockup & compare", "Ctrl+2", vm.SetWorkspaceCommand, WorkspaceMode.Preview);
-            Add("Workspace: Analyze — contrast & science", "Ctrl+3", vm.SetWorkspaceCommand, WorkspaceMode.Analyze);
+            Add("Workspace: Analyze — evaluate the selected color", "Ctrl+3", vm.SetWorkspaceCommand, WorkspaceMode.Analyze);
             Add("Workspace: Export — files in and out", "Ctrl+4", vm.SetWorkspaceCommand, WorkspaceMode.Export);
 
             // Analyze & studio tools
