@@ -447,6 +447,10 @@ namespace Spectrum.ViewModels
             {
                 swatch.ColorBlindMode = value;
             }
+
+            // The Preview scenes render role-mapped colors, so they have to follow
+            // the simulation too instead of only the swatch cards doing it.
+            Preview?.RaiseMockupPropertiesChanged();
         }
 
         // Wires each swatch's card buttons back to this ViewModel's commands

@@ -116,8 +116,11 @@ namespace Spectrum.ViewModels
         }
     }
 
-    /// <summary>One bar in the chart scene (pixel height, already scaled).</summary>
-    public sealed record ChartBar(double Height, IBrush Brush);
+    /// <summary>One bar in the chart scene: its axis label, the value printed above
+    /// the bar, the pixel height (already scaled) and the palette color it encodes.
+    /// <c>LabelBrush</c> carries the resolved Text role so the axis follows the map
+    /// instead of reaching up the visual tree with an ancestor binding.</summary>
+    public sealed record ChartBar(string Label, string Value, double Height, IBrush Brush, IBrush LabelBrush);
 
     /// <summary>Ctrl+2 · Preview — the palette rendered as a *context gallery*:
     ///
@@ -174,6 +177,8 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(IsSceneMobile));
             OnPropertyChanged(nameof(IsSceneChart));
             OnPropertyChanged(nameof(IsScenePoster));
+            OnPropertyChanged(nameof(SceneTitle));
+            OnPropertyChanged(nameof(SceneHint));
         }
 
         public bool IsSceneDashboard => SelectedScene == MockupScene.Dashboard;
@@ -182,19 +187,59 @@ namespace Spectrum.ViewModels
         public bool IsSceneChart => SelectedScene == MockupScene.Chart;
         public bool IsScenePoster => SelectedScene == MockupScene.Poster;
 
+        /// <summary>Scene tabs on the toolbar — a named command keeps the segment
+        /// buttons declarative with a CommandParameter.</summary>
+        [RelayCommand]
+        private void SelectScene(MockupScene scene) => SelectedScene = scene;
+
+        /// <summary>Scene name shown above the gallery, outside the mockup.</summary>
+        public string SceneTitle => SelectedScene switch
+        {
+            MockupScene.Dashboard => "Dashboard",
+            MockupScene.Landing => "Landing",
+            MockupScene.Mobile => "Mobile",
+            MockupScene.Chart => "Chart",
+            _ => "Poster",
+        };
+
+        /// <summary>What to look at in this scene — guidance lives here, not inside
+        /// the mockup, so the preview never reads like a tutorial about itself.</summary>
+        public string SceneHint => SelectedScene switch
+        {
+            MockupScene.Dashboard =>
+                "Surface cards, hairline borders and a primary action on the page background — check the button label and the card edges.",
+            MockupScene.Landing =>
+                "Big type on the page background and a primary call to action — check the hero headline and the nav at a glance.",
+            MockupScene.Mobile =>
+                "A small screen: list rows on a surface card with muted metadata and a primary tab. Check legibility at 10–12 px.",
+            MockupScene.Chart =>
+                "Palette colors as data — check whether neighbouring bars stay distinguishable and whether the axis reads on the plot.",
+            _ =>
+                "Primary becomes the field and the on-primary color becomes the voice — check the small print and the date chip.",
+        };
+
+        /// <summary>Drives the gallery ↔ empty-state swap: Auto fallbacks would
+        /// otherwise render a plausible grey mockup for an empty palette.</summary>
+        public bool HasPalette => _shell.Palette.Count > 0;
+
         // ---------------- Role resolution ----------------
+
+        /// <summary>Every color the scenes draw goes through the color-blind simulation
+        /// (when one is selected in Analyze), exactly like the swatch cards do — a
+        /// preview that ignored the setting would flatter the palette.</summary>
+        private Color Simulated(Color color) => ColorBlindnessService.Simulate(color, _shell.SelectedColorBlindMode);
 
         private Color ResolveRole(int roleIndex, Color autoColor)
         {
             var option = Roles[roleIndex].SelectedOption;
             if (option < 1 || option > _shell.Palette.Count) return autoColor;
-            return _shell.Palette[option - 1].Color;
+            return Simulated(_shell.Palette[option - 1].Color);
         }
 
         private Color PaletteAt(int index, Color fallback) =>
             _shell.Palette.Count == 0
                 ? fallback
-                : _shell.Palette[Math.Clamp(index, 0, _shell.Palette.Count - 1)].Color;
+                : Simulated(_shell.Palette[Math.Clamp(index, 0, _shell.Palette.Count - 1)].Color);
 
         private Color LastColor => PaletteAt(_shell.Palette.Count - 1, Colors.White);
 
@@ -213,7 +258,7 @@ namespace Spectrum.ViewModels
                 if (_shell.Palette.Count == 0) return Color.FromRgb(0x1E, 0x20, 0x25);
                 var background = ResolveRole(3, AutoBackground);
                 return _shell.Palette
-                    .Select(s => s.Color)
+                    .Select(s => Simulated(s.Color))
                     .OrderByDescending(c => ContrastService.ContrastRatio(c, background))
                     .First();
             }
@@ -231,6 +276,19 @@ namespace Spectrum.ViewModels
         public IBrush PrimaryForegroundBrush => new SolidColorBrush(ReadableOn(ResolveRole(0, AutoPrimary)));
         public IBrush AccentForegroundBrush => new SolidColorBrush(ReadableOn(ResolveRole(1, AutoAccent)));
 
+        /// <summary>Secondary copy on a Primary field (the Poster scene). Derived by
+        /// mixing the on-primary color toward Primary so it is a real color the
+        /// palette owns — not the resolved color dimmed with Opacity, which would
+        /// make the preview lie about contrast.</summary>
+        public IBrush PrimaryMutedForegroundBrush
+        {
+            get
+            {
+                var primary = ResolveRole(0, AutoPrimary);
+                return new SolidColorBrush(ColorMathService.MixOklch(ReadableOn(primary), primary, 0.22));
+            }
+        }
+
         /// <summary>Muted body copy: the resolved text color at reduced strength on the
         /// resolved background, so secondary text can be judged too.</summary>
         public IBrush MutedTextBrush =>
@@ -247,15 +305,40 @@ namespace Spectrum.ViewModels
 
         private static readonly double[] ChartHeights = { 0.55, 0.82, 0.38, 1.0, 0.64, 0.76 };
 
+        /// <summary>Plot height in pixels; the tallest bar fills it exactly.</summary>
+        private const double ChartPlotHeight = 140;
+
         private void RebuildChartBars()
         {
             ChartBars.Clear();
             if (_shell.Palette.Count == 0) return;
 
+            // Axis labels follow the Text role, like every other string in the scene.
+            var labelBrush = new SolidColorBrush(ResolveRole(4, AutoText));
+            var used = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
             for (var i = 0; i < ChartHeights.Length; i++)
             {
-                var color = _shell.Palette[i % _shell.Palette.Count].Color;
-                ChartBars.Add(new ChartBar(ChartHeights[i] * 150, new SolidColorBrush(color)));
+                var swatch = _shell.Palette[i % _shell.Palette.Count];
+                var label = swatch.Name;
+
+                // Duplicate swatch names would make two bars share an axis label.
+                if (used.TryGetValue(label, out var seen))
+                {
+                    used[label] = ++seen;
+                    label = $"{label} {seen}";
+                }
+                else
+                {
+                    used[label] = 1;
+                }
+
+                ChartBars.Add(new ChartBar(
+                    label,
+                    $"{ChartHeights[i] * 100:N0}%",
+                    ChartHeights[i] * ChartPlotHeight,
+                    new SolidColorBrush(Simulated(swatch.Color)),
+                    labelBrush));
             }
         }
 
@@ -315,8 +398,10 @@ namespace Spectrum.ViewModels
                 RebuildRoleOptions();
                 RebuildChartBars();
 
+                OnPropertyChanged(nameof(HasPalette));
                 OnPropertyChanged(nameof(PrimaryBrush));
                 OnPropertyChanged(nameof(PrimaryForegroundBrush));
+                OnPropertyChanged(nameof(PrimaryMutedForegroundBrush));
                 OnPropertyChanged(nameof(AccentBrush));
                 OnPropertyChanged(nameof(AccentForegroundBrush));
                 OnPropertyChanged(nameof(SurfaceBrush));

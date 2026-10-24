@@ -64,7 +64,10 @@
 - Sidebar + resizable/collapsible panels (splitters everywhere), **Ctrl+K command palette**, full keyboard-shortcut map, **tabs**, **system tray** with quick access, multi-window detach, rich **tooltips with color info**
 
 **Preview & visualization (§8)**
+- **Preview workspace scenes as tabs** — **Dashboard · Landing · Mobile · Chart · Poster** — each rendered from a **role map** (Primary, Accent, Surface, Background, Text, Border), with its guidance kept outside the mockup so the scene stays judgeable
+- Scene fidelity: the chart plot, gridlines and axis labels are painted from the roles; the phone screen is a real list with a tab bar; poster small print is a derived on-primary color rather than dimmed text; scenes honour the **color-blind simulation**
 - **Live UI mockup** (buttons, cards, body text) rendered in your palette
+- **Empty-state preview** that says so instead of rendering Auto fallbacks for a palette with no colors
 - **Side-by-side comparison** with any palette in the library, **swatch zoom view**, **contrast overlay badges** (WCAG + APCA) on every card
 - **Row / Grid / List / Compact view modes**, **dark/light variant generator**
 - Swatch cards read as **color + name + hex at rest**; the per-swatch action rail fades in on hover (lock stays visible)
