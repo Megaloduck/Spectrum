@@ -65,7 +65,10 @@
 
 **Preview & visualization (§8)**
 - **Preview workspace scenes as tabs** — **Dashboard · Landing · Mobile · Chart · Poster** — each rendered from a **role map** (Primary, Accent, Surface, Background, Text, Border), with its guidance kept outside the mockup so the scene stays judgeable
-- Scene fidelity: the chart plot, gridlines and axis labels are painted from the roles; the phone screen is a real list with a tab bar; poster small print is a derived on-primary color rather than dimmed text; scenes honour the **color-blind simulation**
+- **Light / dark preview switch** (toolbar and dock) — the same role map painted on a near-white or a near-black canvas; the dark canvas is set at a fixed OKLCH lightness so a bright and a dark palette stay visibly different, instead of both collapsing to black
+- **Custom canvas colors per theme** in the dock: pick the light and dark canvas independently (the app's color picker), with Auto derived from the palette accent and a per-theme reset; Surface, Text and Border re-derive from whatever canvas is in play
+- Scene fidelity: pages carry window chrome; the dashboard has an app bar, three KPI cards, activity and team panes; the landing page pairs a hero with a palette panel, logo strip and testimonial; the phone is a real list with filters and a tab bar; the chart scene carries four charts — vertical bars with a target rule, a stacked channel split, ranked pages and a trend line with an area fill — all painted from the roles; poster small print is a derived on-primary color rather than dimmed text; scenes honour the **color-blind simulation**
+- **Dock as scene setup**: theme segments, light/dark canvas pickers, a grouped role map with per-role hints and **Reset all**, and labelled **Lighter / Darker** palette variants
 - **Live UI mockup** (buttons, cards, body text) rendered in your palette
 - **Empty-state preview** that says so instead of rendering Auto fallbacks for a palette with no colors
 - **Side-by-side comparison** with any palette in the library, **swatch zoom view**, **contrast overlay badges** (WCAG + APCA) on every card

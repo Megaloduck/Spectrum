@@ -8,7 +8,8 @@
              x:DataType="vm:MainWindowViewModel">
 
     <!-- Ctrl+2 — Preview as a *context gallery*: assign palette colors to
-         semantic roles once, then judge them across five real scenes.
+         semantic roles once, then judge them across five real scenes in either
+         a light or a dark canvas.
 
          Guidance lives in the scene header above the gallery, never inside the
          mockup: a preview that explains itself is harder to judge. The stage is
@@ -62,6 +63,53 @@
         <Style Selector="Button.sceneTab.active materialIcons|MaterialIcon">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         </Style>
+
+        <!-- Light / dark segments. Shared by the toolbar pill and the dock's
+             theme block so both always agree on what "active" looks like. -->
+        <Style Selector="Button.themeTab">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.themeTab:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+        </Style>
+
+        <Style Selector="Button.themeTab.active">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="Button.themeTab.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        </Style>
+
+        <Style Selector="Button.themeTab TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        </Style>
+
+        <Style Selector="Button.themeTab.active TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+
+        <Style Selector="Button.themeTab materialIcons|MaterialIcon">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        </Style>
+
+        <Style Selector="Button.themeTab.active materialIcons|MaterialIcon">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
     </UserControl.Styles>
 
     <Grid x:Name="WorkspaceRoot" ColumnDefinitions="*,12,330">
@@ -75,17 +123,21 @@
                       ToolTip.Tip="Drag to resize the workspace dock"/>
 
         <!-- ═══════════════════════════════════════════════════════════════════
-             DOCK · PREVIEW : role mapping + variants
+             DOCK · PREVIEW : theme, role mapping, variants
              ═══════════════════════════════════════════════════════════════════ -->
         <Border Grid.Column="2" Classes="panel" IsVisible="{Binding InspectorVisible}">
             <Grid RowDefinitions="Auto,*">
 
-                <!-- Dock header -->
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="18,16,12,10">
-                    <StackPanel Spacing="2">
+                <!-- Dock header: what is being previewed, and the way out. -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="18,16,14,12">
+                    <StackPanel Spacing="3">
                         <TextBlock Text="PREVIEW" Classes="eyebrow"/>
-                        <TextBlock Text="Role mapping and variants"
-                                   Classes="caption"/>
+                        <TextBlock Text="Scene setup" FontSize="14" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding Library.SelectedPalette.Name}"
+                                   Classes="caption mono" FontSize="10.5"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="230"
+                                   HorizontalAlignment="Left"
+                                   ToolTip.Tip="The palette the scenes are rendering"/>
                     </StackPanel>
                     <Button Grid.Column="1"
                             Classes="iconChip ghost" Width="28" Height="28"
@@ -103,93 +155,197 @@
                     <!-- Margins live on the panel content, not as ScrollViewer
                          padding: padding is not subtracted from the measure
                          width, so wrapping text would clip mid-word. -->
-                    <StackPanel Spacing="12" HorizontalAlignment="Stretch"
+                    <StackPanel Spacing="13" HorizontalAlignment="Stretch"
                                 Margin="18,0,18,18">
 
-                        <!-- Role mapping: assign swatches to semantic roles once;
-                             every scene follows the map. Auto = derived default. -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="ROLE MAPPING" Classes="eyebrow"/>
-                            <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap"
-                                       Text="Bind palette colors to UI roles. Every scene follows the map; Auto keeps the derived default."/>
+                        <Separator Margin="0,0,0,1"/>
 
-                            <ItemsControl ItemsSource="{Binding Preview.Roles}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:MockupRole">
-                                        <!-- Role · ComboBox (stretches, so every row lines up) · reset -->
-                                        <Grid ColumnDefinitions="66,*,Auto" Margin="0,2">
-                                            <TextBlock Text="{Binding Name}" Classes="caption" FontSize="11"
-                                                       VerticalAlignment="Center"/>
+                        <!-- THEME: which canvas the scenes are painted on. Kept
+                             separate from the app theme — the gallery is the
+                             thing under test. -->
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="THEME COLOR" Classes="eyebrow"/>                            
 
-                                            <ComboBox Grid.Column="1" MinWidth="0" Height="30" FontSize="11.5"
-                                                      Padding="8,3" Margin="6,0,0,0"
-                                                      HorizontalAlignment="Stretch"
-                                                      ItemsSource="{Binding Options}"
-                                                      SelectedIndex="{Binding SelectedOption, Mode=TwoWay}"
-                                                      ToolTip.Tip="Choose which palette color plays this role — the chip is the actual color">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate x:DataType="vm:MockupOption">
-                                                        <!-- The same template renders the closed box, so the
-                                                             current pick always shows its swatch too.
-                                                             The hex lives in the row tooltip to keep the
-                                                             control narrow enough for the dock. -->
-                                                        <Grid ColumnDefinitions="Auto,*">
-                                                            <Border Width="13" Height="13" CornerRadius="4"
-                                                                    Background="{Binding Swatch}"
-                                                                    BorderBrush="{DynamicResource OutlineBrush}"
-                                                                    BorderThickness="1"
-                                                                    VerticalAlignment="Center"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding Label}"
-                                                                       FontSize="11.5" Margin="7,0,0,0"
-                                                                       VerticalAlignment="Center"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
+                            <TextBlock Classes="caption" FontSize="10.5" TextWrapping="Wrap"
+                                       Text="{Binding Preview.ThemeCaption}"/>
 
-                                            <Button Grid.Column="2" Classes="iconOnly" Width="22" Padding="2"
-                                                    Margin="3,0,0,0"
-                                                    Command="{Binding ResetToAutoCommand}"
-                                                    IsEnabled="{Binding !IsOverridden}"
-                                                    ToolTip.Tip="Reset this role to the derived default (Auto)">
-                                                <materialIcons:MaterialIcon Kind="Restore" Width="13" Height="13"/>
-                                            </Button>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <!-- Canvas colors: one per theme. Auto derives them from the
+                                 palette's accent; picking a color pins that canvas and the
+                                 Surface/Text/Border roles re-derive from it. -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+                                <Border Width="16" Height="16" CornerRadius="5" VerticalAlignment="Center"
+                                        Background="{Binding Preview.LightCanvasSwatch}"
+                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                <Button Grid.Column="1" Classes="ghost small" Padding="6,2" Margin="7,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        AutomationProperties.Name="Light canvas color"
+                                        AutomationProperties.AutomationId="PickLightCanvas"
+                                        Command="{Binding Preview.PickLightCanvasCommand}"
+                                        ToolTip.Tip="Pick the light canvas color">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Light canvas" FontSize="10.5" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Preview.LightCanvasHex}" Classes="mono"
+                                                   FontSize="9.5" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Classes="iconOnly" Width="22" Padding="2"
+                                        AutomationProperties.Name="Reset light canvas"
+                                        Command="{Binding Preview.ResetLightCanvasCommand}"
+                                        IsEnabled="{Binding Preview.HasLightCanvasColor}"
+                                        ToolTip.Tip="Back to the light canvas derived from the palette">
+                                    <materialIcons:MaterialIcon Kind="Restore" Width="12" Height="12"/>
+                                </Button>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Width="16" Height="16" CornerRadius="5" VerticalAlignment="Center"
+                                        Background="{Binding Preview.DarkCanvasSwatch}"
+                                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"/>
+                                <Button Grid.Column="1" Classes="ghost small" Padding="6,2" Margin="7,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        AutomationProperties.Name="Dark canvas color"
+                                        AutomationProperties.AutomationId="PickDarkCanvas"
+                                        Command="{Binding Preview.PickDarkCanvasCommand}"
+                                        ToolTip.Tip="Pick the dark canvas color">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Dark canvas" FontSize="10.5" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Preview.DarkCanvasHex}" Classes="mono"
+                                                   FontSize="9.5" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Classes="iconOnly" Width="22" Padding="2"
+                                        AutomationProperties.Name="Reset dark canvas"
+                                        Command="{Binding Preview.ResetDarkCanvasCommand}"
+                                        IsEnabled="{Binding Preview.HasDarkCanvasColor}"
+                                        ToolTip.Tip="Back to the dark canvas derived from the palette">
+                                    <materialIcons:MaterialIcon Kind="Restore" Width="12" Height="12"/>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Classes="caption" FontSize="10" TextWrapping="Wrap"
+                                       Text="Canvas only — Surface, Text and Border are re-derived from the color you pick."/>
                         </StackPanel>
 
-                        <!-- Separator before variants -->
-                        <Separator Margin="0,4"/>
+                        <Separator Margin="0,1"/>
 
-                        <!-- Variants (§8) — no wrapping border, constrained layout -->
-                        <Grid ColumnDefinitions="*,Auto">
+                        <!-- ROLE MAPPING: assign swatches to semantic roles once;
+                             every scene follows the map. Auto = derived default. -->
+                        <StackPanel Spacing="7">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="ROLE MAPPING" Classes="eyebrow"
+                                           VerticalAlignment="Center"/>
+                                <Button Grid.Column="1"
+                                        Classes="ghost small" Padding="8,3" FontSize="10.5"
+                                        Content="Reset all"
+                                        AutomationProperties.AutomationId="ResetAllRoles"
+                                        Command="{Binding Preview.ResetAllRolesCommand}"
+                                        IsEnabled="{Binding Preview.HasRoleOverrides}"
+                                        ToolTip.Tip="Put every role back on its derived default"/>
+                            </Grid>
 
-                            <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center">
-                                <TextBlock Text="VARIANTS" Classes="eyebrow"/>
-                                <TextBlock Classes="caption"
-                                           FontSize="11"
-                                           TextWrapping="Wrap"
-                                           Text="Generates derived palettes (OKLCH mix) and opens them as a new tab"/>
-                            </StackPanel>
+                            <TextBlock Classes="caption" FontSize="10.5" TextWrapping="Wrap"
+                                       Text="Bind palette colors to UI roles. Every scene follows the map; Auto keeps the derived default."/>
 
-                            <StackPanel Grid.Column="1"
-                                        Orientation="Horizontal"
-                                        Spacing="8"
-                                        VerticalAlignment="Center">
-                                <Button Classes="iconOnly" Command="{Binding Preview.GenerateLightVariantCommand}"
-                                        ToolTip.Tip="Create a lighter sibling palette from these colors">
-                                <materialIcons:MaterialIcon Kind="Flashlight" Width="18" Height="18"/>
-                            </Button>
-                            <Button Classes="iconOnly" Command="{Binding Preview.GenerateDarkVariantCommand}"
-                                        ToolTip.Tip="Create a darker sibling palette from these colors">
-                                <materialIcons:MaterialIcon Kind="NightLight" Width="18" Height="18"/>
-                            </Button>
-                            </StackPanel>
+                            <Border Classes="well" Padding="8,5" CornerRadius="10">
+                                <ItemsControl ItemsSource="{Binding Preview.Roles}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Spacing="3"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:MockupRole">
+                                            <!-- Role · ComboBox (stretches, so every row
+                                                 lines up) · reset to Auto -->
+                                            <Grid ColumnDefinitions="62,*,Auto">
+                                                <TextBlock Text="{Binding Name}" Classes="caption"
+                                                           FontSize="10.5"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip.Tip="{Binding Hint}"/>
 
-                        </Grid>
+                                                <ComboBox Grid.Column="1" MinWidth="0" Height="30"
+                                                          FontSize="11.5" Padding="8,3"
+                                                          Margin="5,0,0,0"
+                                                          HorizontalAlignment="Stretch"
+                                                          ItemsSource="{Binding Options}"
+                                                          SelectedIndex="{Binding SelectedOption, Mode=TwoWay}"
+                                                          ToolTip.Tip="Choose which palette color plays this role — the chip is the actual color">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:MockupOption">
+                                                            <!-- The same template renders the closed box,
+                                                                 so the current pick always shows its swatch
+                                                                 too. The hex lives in the row tooltip to keep
+                                                                 the control narrow enough for the dock. -->
+                                                            <Grid ColumnDefinitions="Auto,*">
+                                                                <Border Width="13" Height="13" CornerRadius="4"
+                                                                        Background="{Binding Swatch}"
+                                                                        BorderBrush="{DynamicResource OutlineBrush}"
+                                                                        BorderThickness="1"
+                                                                        VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Label}"
+                                                                           FontSize="11.5" Margin="7,0,0,0"
+                                                                           VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <Button Grid.Column="2" Classes="iconOnly" Width="22"
+                                                        Padding="2" Margin="3,0,0,0"
+                                                        Command="{Binding ResetToAutoCommand}"
+                                                        IsEnabled="{Binding !IsOverridden}"
+                                                        ToolTip.Tip="Reset this role to the derived default (Auto)">
+                                                    <materialIcons:MaterialIcon Kind="Restore"
+                                                                                Width="13" Height="13"/>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </StackPanel>
+
+                        <Separator Margin="0,1"/>
+
+                        <!-- VARIANTS: derive a new palette from this one. Labelled,
+                             because two night/flashlight icons looked like a theme
+                             switch and nothing said they create a palette. -->
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="VARIANTS" Classes="eyebrow"/>
+
+                            <TextBlock Classes="caption" FontSize="10.5" TextWrapping="Wrap"
+                                       Text="Derive a lighter or darker sibling palette (OKLCH mix) and open it on the board."/>
+
+                            <Grid ColumnDefinitions="*,6,*">
+                                <Button Classes="themeTab" Height="30"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Generate lighter palette"
+                                        Command="{Binding Preview.GenerateLightVariantCommand}"
+                                        ToolTip.Tip="Create a palette 30% lighter and open it on the board">
+                                    <StackPanel Orientation="Horizontal" Spacing="5"
+                                                VerticalAlignment="Center">
+                                        <materialIcons:MaterialIcon Kind="Flashlight" Width="13" Height="13"/>
+                                        <TextBlock Text="Lighter" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Grid.Column="2" Classes="themeTab" Height="30"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Generate darker palette"
+                                        Command="{Binding Preview.GenerateDarkVariantCommand}"
+                                        ToolTip.Tip="Create a palette 35% darker and open it on the board">
+                                    <StackPanel Orientation="Horizontal" Spacing="5"
+                                                VerticalAlignment="Center">
+                                        <materialIcons:MaterialIcon Kind="NightLight" Width="13" Height="13"/>
+                                        <TextBlock Text="Darker" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
 
                     </StackPanel>
                 </ScrollViewer>
@@ -286,6 +442,42 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Theme switch: always reachable, even with the dock
+                             collapsed, because it changes what you are judging. -->
+                        <Border Padding="3" Margin="0,0,4,0" VerticalAlignment="Center"
+                                Background="{DynamicResource SurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
+                                CornerRadius="999"
+                                ToolTip.Tip="Preview theme — the canvas the scenes are painted on">
+                            <StackPanel Orientation="Horizontal" Spacing="1">
+                                <Button Classes="themeTab"
+                                        Classes.active="{Binding Preview.IsLightTheme}"
+                                        AutomationProperties.Name="Light preview theme"
+                                        AutomationProperties.AutomationId="ToolbarThemeLight"
+                                        Command="{Binding Preview.SelectThemeCommand}"
+                                        CommandParameter="{x:Static vm:PreviewTheme.Light}"
+                                        ToolTip.Tip="Light canvas — near-white, tinted with the accent">
+                                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                        <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="13" Height="13"/>
+                                        <TextBlock Text="Light" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Classes="themeTab"
+                                        Classes.active="{Binding Preview.IsDarkTheme}"
+                                        AutomationProperties.Name="Dark preview theme"
+                                        AutomationProperties.AutomationId="ToolbarThemeDark"
+                                        Command="{Binding Preview.SelectThemeCommand}"
+                                        CommandParameter="{x:Static vm:PreviewTheme.Dark}"
+                                        ToolTip.Tip="Dark canvas — near-black, tinted with the accent">
+                                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                        <materialIcons:MaterialIcon Kind="WeatherNight" Width="13" Height="13"/>
+                                        <TextBlock Text="Dark" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Side-by-side comparison (§8) -->
                         <Button Height="34" Margin="0,0,4,0"
                                 Command="{Binding Preview.ComparePalettesCommand}"
@@ -323,15 +515,24 @@
                     <TextBlock Text="{Binding Preview.SceneHint}" Classes="caption" FontSize="11"
                                TextWrapping="Wrap" MaxWidth="680" HorizontalAlignment="Left"/>
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="{Binding PaletteCountLabel}" Classes="caption mono"
-                           VerticalAlignment="Bottom"/>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Bottom"
+                            HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding Preview.ThemeName}" Classes="caption" FontSize="10.5"
+                               HorizontalAlignment="Right"/>
+                    <TextBlock Text="{Binding PaletteCountLabel}" Classes="caption mono"
+                               HorizontalAlignment="Right"/>
+                </StackPanel>
             </Grid>
 
             <!-- ═══ Scene gallery: the selected context, rendered from the role map ═══ -->
-            <ScrollViewer Grid.Row="2"
+            <!-- The gallery grid takes the scroll viewport's width explicitly.
+                 The ScrollViewer measures its content unconstrained, so without a
+                 definite width every star column and Stretch scene would shrink to
+                 its minimum instead of filling the stage. -->
+            <ScrollViewer Grid.Row="2" x:Name="SceneScroll"
                           HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto">
-                <Grid>
+                <Grid Width="{Binding #SceneScroll.Viewport.Width}">
 
                     <!-- Stage: palette-painted, top-aligned, wide enough to read.
                          Padding/height belong to the stage, so a taller window adds
@@ -348,150 +549,363 @@
                         <Panel>
 
                             <!-- ── Scene: Dashboard ── -->
-                            <StackPanel Spacing="16" MaxWidth="820" HorizontalAlignment="Left"
+                            <StackPanel Spacing="16"
                                         IsVisible="{Binding Preview.IsSceneDashboard}">
+
+                                <!-- Window chrome: the page reads as an app, not a
+                                     card, and the chrome itself exercises Primary,
+                                     Accent and Border in one line. -->
+                                <Border Background="{Binding Preview.SurfaceBrush}"
+                                        CornerRadius="10" Padding="11,7"
+                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                    <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="5"
+                                                    VerticalAlignment="Center">
+                                            <Border Width="7" Height="7" CornerRadius="4"
+                                                    Background="{Binding Preview.PrimaryBrush}"/>
+                                            <Border Width="7" Height="7" CornerRadius="4"
+                                                    Background="{Binding Preview.AccentBrush}"/>
+                                            <Border Width="7" Height="7" CornerRadius="4"
+                                                    Background="{Binding Preview.BorderBrush}"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Background="{Binding Preview.BackgroundBrush}"
+                                                CornerRadius="6" Padding="8,3"
+                                                BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                            <TextBlock Text="acme.app/overview" Classes="mono" FontSize="9.5"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4"
+                                                    VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <Border Width="5" Height="5" CornerRadius="3"
+                                                    Background="{Binding Preview.PrimaryBrush}"
+                                                    VerticalAlignment="Center"/>
+                                            <TextBlock Text="Live" FontSize="9.5" FontWeight="SemiBold"
+                                                       Foreground="{Binding Preview.PrimaryBrush}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- App bar: brand, nav (active item underlined in
+                                     Primary) and search. -->
+                                <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Border Width="24" Height="24" CornerRadius="8"
+                                                Background="{Binding Preview.PrimaryBrush}"/>
+                                        <TextBlock Text="Acme" FontWeight="Bold" FontSize="14"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{Binding Preview.TextBrush}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="Overview" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{Binding Preview.TextBrush}"/>
+                                            <Border Height="2" CornerRadius="1"
+                                                    Background="{Binding Preview.PrimaryBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Reports" FontSize="12" VerticalAlignment="Center"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Team" FontSize="12" VerticalAlignment="Center"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Billing" FontSize="12" VerticalAlignment="Center"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                                VerticalAlignment="Center">
+                                        <Border Background="{Binding Preview.SurfaceBrush}"
+                                                BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                CornerRadius="8" Padding="9,5">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <materialIcons:MaterialIcon Kind="Magnify" Width="11" Height="11"
+                                                                            Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                <TextBlock Text="Search" FontSize="10.5"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Width="26" Height="26" CornerRadius="13"
+                                                Background="{Binding Preview.AccentBrush}">
+                                            <TextBlock Text="A" FontSize="10" FontWeight="Bold"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
 
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Spacing="2">
-                                        <TextBlock Text="Project dashboard" FontWeight="Bold" FontSize="20"
+                                        <TextBlock Text="Overview" FontWeight="Bold" FontSize="22"
                                                    Foreground="{Binding Preview.TextBrush}"/>
                                         <TextBlock Text="Last 30 days · Acme workspace"
                                                    FontSize="12" Foreground="{Binding Preview.MutedTextBrush}"/>
                                     </StackPanel>
                                     <Border Grid.Column="1"
                                             Background="{Binding Preview.AccentBrush}"
-                                            CornerRadius="10" Padding="11,5" VerticalAlignment="Top">
-                                        <TextBlock Text="Beta"
-                                                   FontSize="11" FontWeight="Bold"
+                                            CornerRadius="10" Padding="10,4" VerticalAlignment="Top">
+                                        <TextBlock Text="Beta" FontSize="10.5" FontWeight="Bold"
                                                    Foreground="{Binding Preview.AccentForegroundBrush}"/>
                                     </Border>
                                 </Grid>
 
-                                <TextBlock FontSize="13" TextWrapping="Wrap" MaxWidth="640" HorizontalAlignment="Left"
-                                           Foreground="{Binding Preview.MutedTextBrush}"
-                                           Text="Your onboarding revamp reached 12,480 people this month. Conversion is holding just under the 4.5% goal."/>
-
-                                <!-- Stat cards -->
-                                <Grid ColumnDefinitions="*,12,*">
+                                <!-- KPI row: three cards, each chip in a different role. -->
+                                <Grid ColumnDefinitions="*,12,*,12,*">
                                     <Border Background="{Binding Preview.SurfaceBrush}"
-                                            CornerRadius="12" Padding="16"
+                                            CornerRadius="12" Padding="14"
                                             BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                        <StackPanel Spacing="4">
+                                        <StackPanel Spacing="5">
                                             <TextBlock Text="Active users" FontSize="11"
                                                        Foreground="{Binding Preview.MutedTextBrush}"/>
-                                            <TextBlock Text="12,480" FontWeight="Bold" FontSize="22"
+                                            <TextBlock Text="12,480" FontWeight="Bold" FontSize="23"
                                                        Foreground="{Binding Preview.TextBrush}"/>
-                                            <Border Background="{Binding Preview.PrimaryBrush}" CornerRadius="6"
-                                                    HorizontalAlignment="Left" Padding="7,2">
-                                                <TextBlock Text="+8.2%" FontSize="10" FontWeight="Bold"
-                                                           Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
-                                            </Border>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{Binding Preview.PrimaryBrush}"
+                                                        CornerRadius="6" Padding="7,2">
+                                                    <TextBlock Text="+8.2%" FontSize="9.5" FontWeight="Bold"
+                                                               Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                                </Border>
+                                                <TextBlock Text="vs last month" FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
+
                                     <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}"
-                                            CornerRadius="12" Padding="16"
+                                            CornerRadius="12" Padding="14"
                                             BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                        <StackPanel Spacing="4">
+                                        <StackPanel Spacing="5">
                                             <TextBlock Text="Conversion" FontSize="11"
                                                        Foreground="{Binding Preview.MutedTextBrush}"/>
-                                            <TextBlock Text="3.9%" FontWeight="Bold" FontSize="22"
+                                            <TextBlock Text="3.9%" FontWeight="Bold" FontSize="23"
                                                        Foreground="{Binding Preview.TextBrush}"/>
-                                            <Border Background="{Binding Preview.AccentBrush}" CornerRadius="6"
-                                                    HorizontalAlignment="Left" Padding="7,2">
-                                                <TextBlock Text="Goal 4.5%" FontSize="10" FontWeight="Bold"
-                                                           Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{Binding Preview.AccentBrush}"
+                                                        CornerRadius="6" Padding="7,2">
+                                                    <TextBlock Text="Goal 4.5%" FontSize="9.5" FontWeight="Bold"
+                                                               Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                                </Border>
+                                                <TextBlock Text="behind" FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="4" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="12" Padding="14"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="Retention" FontSize="11"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            <TextBlock Text="92.4%" FontWeight="Bold" FontSize="23"
+                                                       Foreground="{Binding Preview.TextBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{Binding Preview.SurfaceBrush}"
+                                                        BorderBrush="{Binding Preview.BorderBrush}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6" Padding="6,1">
+                                                    <TextBlock Text="+1.4%" FontSize="9.5" FontWeight="Bold"
+                                                               Foreground="{Binding Preview.AccentBrush}"/>
+                                                </Border>
+                                                <TextBlock Text="on track" FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Activity + team: the two-column body of a real dashboard. -->
+                                <Grid ColumnDefinitions="*,12,252">
+                                    <Border Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="12" Padding="14"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="9">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="Recent activity" FontWeight="SemiBold" FontSize="13"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="View all" FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding Preview.PrimaryBrush}"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
+
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Border Width="26" Height="26" CornerRadius="13"
+                                                        Background="{Binding Preview.PrimaryBrush}"/>
+                                                <StackPanel Grid.Column="1" Spacing="1" Margin="10,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="Nikita published the pricing page"
+                                                               FontSize="12" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                    <TextBlock Text="2 minutes ago" FontSize="10.5"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="New" FontSize="10"
+                                                           FontWeight="SemiBold" VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.AccentBrush}"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
+
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Border Width="26" Height="26" CornerRadius="13"
+                                                        Background="{Binding Preview.AccentBrush}"/>
+                                                <StackPanel Grid.Column="1" Spacing="1" Margin="10,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="Sam invited 4 teammates"
+                                                               FontSize="12" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                    <TextBlock Text="1 hour ago" FontSize="10.5"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="Read" FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
+
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Border Width="26" Height="26" CornerRadius="13"
+                                                        Background="{Binding Preview.SurfaceBrush}"
+                                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                                    <TextBlock Text="N" FontSize="10" FontWeight="Bold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" Spacing="1" Margin="10,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="Design review moved to Thursday"
+                                                               FontSize="12" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                    <TextBlock Text="Yesterday" FontSize="10.5"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="12" Padding="14"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="9">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="Team" FontWeight="SemiBold" FontSize="13"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="4" Classes="mono" FontSize="11"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
+
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Border Width="24" Height="24" CornerRadius="12"
+                                                        Background="{Binding Preview.PrimaryBrush}"/>
+                                                <StackPanel Grid.Column="1" Spacing="1" Margin="8,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="Nikita Rao" FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                    <TextBlock Text="Owner" FontSize="9.5"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Border Width="24" Height="24" CornerRadius="12"
+                                                        Background="{Binding Preview.AccentBrush}"/>
+                                                <StackPanel Grid.Column="1" Spacing="1" Margin="8,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="Sam Okafor" FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                    <TextBlock Text="Editor" FontSize="9.5"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Border Width="24" Height="24" CornerRadius="12"
+                                                        Background="{Binding Preview.SurfaceBrush}"
+                                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                                    <TextBlock Text="P" FontSize="9" FontWeight="Bold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" Spacing="1" Margin="8,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="Priya Raman" FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                    <TextBlock Text="Viewer" FontSize="9.5"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Border Background="{Binding Preview.SurfaceBrush}"
+                                                    BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                    CornerRadius="8" Padding="0,5">
+                                                <TextBlock Text="Invite" FontSize="10.5" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
                                             </Border>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
 
-                                <!-- Activity: hairline borders and muted metadata at work -->
-                                <Border Background="{Binding Preview.SurfaceBrush}"
-                                        CornerRadius="12" Padding="16"
-                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                    <StackPanel Spacing="10">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <TextBlock Text="Recent activity" FontWeight="SemiBold" FontSize="13"
-                                                       Foreground="{Binding Preview.TextBrush}"/>
-                                            <TextBlock Grid.Column="1" Text="View all" FontSize="11"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{Binding Preview.PrimaryBrush}"/>
-                                        </Grid>
-
-                                        <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
-
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
-                                            <Border Width="26" Height="26" CornerRadius="13"
-                                                    Background="{Binding Preview.PrimaryBrush}"/>
-                                            <StackPanel Grid.Column="1" Spacing="1" Margin="10,0,0,0"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="Nikita published the pricing page"
-                                                           FontSize="12" TextTrimming="CharacterEllipsis"
-                                                           Foreground="{Binding Preview.TextBrush}"/>
-                                                <TextBlock Text="2 minutes ago" FontSize="10.5"
-                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="New" FontSize="10"
-                                                       FontWeight="SemiBold" VerticalAlignment="Center"
-                                                       Foreground="{Binding Preview.AccentBrush}"/>
-                                        </Grid>
-
-                                        <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
-
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
-                                            <Border Width="26" Height="26" CornerRadius="13"
-                                                    Background="{Binding Preview.AccentBrush}"/>
-                                            <StackPanel Grid.Column="1" Spacing="1" Margin="10,0,0,0"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="Sam invited 4 teammates"
-                                                           FontSize="12" TextTrimming="CharacterEllipsis"
-                                                           Foreground="{Binding Preview.TextBrush}"/>
-                                                <TextBlock Text="1 hour ago" FontSize="10.5"
-                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="Read" FontSize="10"
-                                                       VerticalAlignment="Center"
-                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
-                                        </Grid>
-
-                                        <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
-
-                                        <Grid ColumnDefinitions="Auto,*">
-                                            <Border Width="26" Height="26" CornerRadius="13"
-                                                    Background="{Binding Preview.SurfaceBrush}"
-                                                    BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                                <TextBlock Text="N" FontSize="10" FontWeight="Bold"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                           Foreground="{Binding Preview.TextBrush}"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1" Spacing="1" Margin="10,0,0,0"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="Design review moved to Thursday"
-                                                           FontSize="12" TextTrimming="CharacterEllipsis"
-                                                           Foreground="{Binding Preview.TextBrush}"/>
-                                                <TextBlock Text="Yesterday" FontSize="10.5"
-                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
-                                            </StackPanel>
-                                        </Grid>
+                                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Button Content="Publish changes"
+                                                FontWeight="SemiBold" FontSize="12"
+                                                BorderThickness="0"
+                                                Background="{Binding Preview.PrimaryBrush}"
+                                                Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                        <Button Content="Secondary"
+                                                FontSize="12"
+                                                Foreground="{Binding Preview.TextBrush}"
+                                                Background="Transparent"
+                                                BorderBrush="{Binding Preview.BorderBrush}"
+                                                BorderThickness="1"/>
                                     </StackPanel>
-                                </Border>
-
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Button Content="Primary action"
-                                            FontWeight="SemiBold"
-                                            BorderThickness="0"
-                                            Background="{Binding Preview.PrimaryBrush}"
-                                            Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
-                                    <Button Content="Secondary"
-                                            Foreground="{Binding Preview.TextBrush}"
-                                            Background="Transparent"
-                                            BorderBrush="{Binding Preview.BorderBrush}"
-                                            BorderThickness="1"/>
-                                </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="Updated 2 min ago" FontSize="10.5"
+                                               VerticalAlignment="Center"
+                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                </Grid>
                             </StackPanel>
 
                             <!-- ── Scene: Landing ── -->
                             <StackPanel Spacing="26" IsVisible="{Binding Preview.IsSceneLanding}">
+
+                                <!-- Window chrome -->
+                                <Border Background="{Binding Preview.SurfaceBrush}"
+                                        CornerRadius="10" Padding="11,7"
+                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                    <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="5"
+                                                    VerticalAlignment="Center">
+                                            <Border Width="7" Height="7" CornerRadius="4"
+                                                    Background="{Binding Preview.PrimaryBrush}"/>
+                                            <Border Width="7" Height="7" CornerRadius="4"
+                                                    Background="{Binding Preview.AccentBrush}"/>
+                                            <Border Width="7" Height="7" CornerRadius="4"
+                                                    Background="{Binding Preview.BorderBrush}"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Background="{Binding Preview.BackgroundBrush}"
+                                                CornerRadius="6" Padding="8,3"
+                                                BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                            <TextBlock Text="yourbrand.com" Classes="mono" FontSize="9.5"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="3" Text="Live" FontSize="9.5" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"
+                                                   Foreground="{Binding Preview.PrimaryBrush}"/>
+                                    </Grid>
+                                </Border>
+
                                 <!-- Nav -->
                                 <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -506,36 +920,145 @@
                                         <TextBlock Text="Features" FontSize="12" Foreground="{Binding Preview.MutedTextBrush}"/>
                                         <TextBlock Text="Pricing" FontSize="12" Foreground="{Binding Preview.MutedTextBrush}"/>
                                         <TextBlock Text="Docs" FontSize="12" Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Changelog" FontSize="12" Foreground="{Binding Preview.MutedTextBrush}"/>
                                     </StackPanel>
-                                    <Button Grid.Column="2" Content="Sign up" FontSize="12" Padding="14,7"
-                                            BorderThickness="0" FontWeight="SemiBold"
-                                            Background="{Binding Preview.PrimaryBrush}"
-                                            Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
-                                </Grid>
-
-                                <!-- Hero -->
-                                <StackPanel Spacing="12" MaxWidth="600" HorizontalAlignment="Center">
-                                    <TextBlock Text="Colors that carry your product" FontWeight="Bold" FontSize="30"
-                                               TextAlignment="Center" TextWrapping="Wrap"
-                                               Foreground="{Binding Preview.TextBrush}"/>
-                                    <TextBlock Text="A palette editor for teams that ship: generate colors, preview them in context and hand them to engineering."
-                                               FontSize="13" TextAlignment="Center" TextWrapping="Wrap"
-                                               Foreground="{Binding Preview.MutedTextBrush}"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                                        <Button Content="Start free" Padding="18,10" BorderThickness="0"
-                                                FontWeight="SemiBold"
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Sign in" FontSize="12" VerticalAlignment="Center"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <Button Content="Sign up" FontSize="12" Padding="14,7"
+                                                BorderThickness="0" FontWeight="SemiBold"
                                                 Background="{Binding Preview.PrimaryBrush}"
                                                 Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
-                                        <Button Content="Live demo" Padding="18,10"
-                                                Foreground="{Binding Preview.TextBrush}"
-                                                Background="{Binding Preview.SurfaceBrush}"
-                                                BorderBrush="{Binding Preview.BorderBrush}"
-                                                BorderThickness="1"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Hero: copy on the left, a palette panel on the right —
+                                     the two columns exercise every role at once. -->
+                                <Grid ColumnDefinitions="*,26,352">
+                                    <StackPanel Spacing="14" VerticalAlignment="Center">
+                                        <Border Background="{Binding Preview.SurfaceBrush}"
+                                                BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                CornerRadius="999" Padding="9,3"
+                                                HorizontalAlignment="Left">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <Border Width="5" Height="5" CornerRadius="3"
+                                                        Background="{Binding Preview.AccentBrush}"
+                                                        VerticalAlignment="Center"/>
+                                                <TextBlock Text="NEW · SPECTRUM 3.0" FontSize="9" FontWeight="Bold"
+                                                           LetterSpacing="0.8"
+                                                           Foreground="{Binding Preview.AccentBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <TextBlock Text="Colors that carry your product"
+                                                   FontWeight="Bold" FontSize="32" TextWrapping="Wrap"
+                                                   LineHeight="38" MaxWidth="430"
+                                                   HorizontalAlignment="Left"
+                                                   Foreground="{Binding Preview.TextBrush}"/>
+
+                                        <TextBlock Text="A palette editor for teams that ship: generate colors, preview them in context and hand them to engineering."
+                                                   FontSize="13" TextWrapping="Wrap" MaxWidth="410"
+                                                   HorizontalAlignment="Left"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Button Content="Start free" Padding="18,10" BorderThickness="0"
+                                                    FontWeight="SemiBold"
+                                                    Background="{Binding Preview.PrimaryBrush}"
+                                                    Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                            <Button Content="Live demo" Padding="18,10"
+                                                    Foreground="{Binding Preview.TextBrush}"
+                                                    Background="{Binding Preview.SurfaceBrush}"
+                                                    BorderBrush="{Binding Preview.BorderBrush}"
+                                                    BorderThickness="1"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Border Width="5" Height="5" CornerRadius="3"
+                                                    Background="{Binding Preview.PrimaryBrush}"
+                                                    VerticalAlignment="Center"/>
+                                            <TextBlock Text="Free for 3 palettes · no card required"
+                                                       FontSize="10.5"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Product panel: the six roles as a swatch strip
+                                         plus a miniature interface. -->
+                                    <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                            CornerRadius="14" Padding="16">
+                                        <StackPanel Spacing="11">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="Brand palette" FontWeight="SemiBold" FontSize="12"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <Border Grid.Column="1" Background="{Binding Preview.AccentBrush}"
+                                                        CornerRadius="6" Padding="6,1">
+                                                    <TextBlock Text="v3" FontSize="9" FontWeight="Bold"
+                                                               Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <Grid ColumnDefinitions="*,5,*,5,*,5,*,5,*" Height="30">
+                                                <Border Background="{Binding Preview.PrimaryBrush}" CornerRadius="7"/>
+                                                <Border Grid.Column="2" Background="{Binding Preview.AccentBrush}" CornerRadius="7"/>
+                                                <Border Grid.Column="4" Background="{Binding Preview.BackgroundBrush}"
+                                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                        CornerRadius="7"/>
+                                                <Border Grid.Column="6" Background="{Binding Preview.SurfaceBrush}"
+                                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                        CornerRadius="7"/>
+                                                <Border Grid.Column="8" Background="{Binding Preview.BorderBrush}" CornerRadius="7"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
+
+                                            <StackPanel Spacing="3">
+                                                <TextBlock Text="Interface tokens" FontSize="11.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <TextBlock Text="12 colors · synced 2 minutes ago" FontSize="10"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{Binding Preview.PrimaryBrush}"
+                                                        CornerRadius="7" Padding="9,4">
+                                                    <TextBlock Text="Copy all" FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                                </Border>
+                                                <Border Background="{Binding Preview.SurfaceBrush}"
+                                                        BorderBrush="{Binding Preview.BorderBrush}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="7" Padding="9,4">
+                                                    <TextBlock Text="Export" FontSize="10"
+                                                               Foreground="{Binding Preview.TextBrush}"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Social proof -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="TRUSTED BY TEAMS AT" Classes="eyebrow" FontSize="9"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="24">
+                                        <TextBlock Text="Northwind" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Loam" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Vertex" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Kinfolk" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Text="Harbor" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
 
                                 <!-- Feature cards -->
-                                <Grid ColumnDefinitions="*,12,*,12,*" HorizontalAlignment="Stretch">
+                                <Grid ColumnDefinitions="*,12,*,12,*">
                                     <Border Background="{Binding Preview.SurfaceBrush}" CornerRadius="12" Padding="16"
                                             BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
                                         <StackPanel Spacing="6">
@@ -553,7 +1076,9 @@
                                                        Foreground="{Binding Preview.MutedTextBrush}"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}" CornerRadius="12" Padding="16"
+
+                                    <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="12" Padding="16"
                                             BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
                                         <StackPanel Spacing="6">
                                             <Border Width="30" Height="30" CornerRadius="9"
@@ -570,7 +1095,9 @@
                                                        Foreground="{Binding Preview.MutedTextBrush}"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Grid.Column="4" Background="{Binding Preview.SurfaceBrush}" CornerRadius="12" Padding="16"
+
+                                    <Border Grid.Column="4" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="12" Padding="16"
                                             BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
                                         <StackPanel Spacing="6">
                                             <Border Width="30" Height="30" CornerRadius="9"
@@ -589,14 +1116,28 @@
                                     </Border>
                                 </Grid>
 
-                                <!-- Footer -->
-                                <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="© 2026 Yourbrand" FontSize="11"
-                                               Foreground="{Binding Preview.MutedTextBrush}"/>
-                                    <TextBlock Grid.Column="1" Text="Built with Spectrum" FontSize="11"
-                                               Foreground="{Binding Preview.AccentBrush}"/>
+                                <!-- Testimonial: a Primary rule on a page background. -->
+                                <Grid ColumnDefinitions="3,14,*">
+                                    <Border Background="{Binding Preview.PrimaryBrush}" CornerRadius="2"/>
+                                    <StackPanel Grid.Column="2" Spacing="6">
+                                        <TextBlock Text="“We ship a palette a week now. The role map means nobody argues about what primary means.”"
+                                                   FontSize="14" TextWrapping="Wrap"
+                                                   Foreground="{Binding Preview.TextBrush}"/>
+                                        <TextBlock Text="Ana Duarte · Design lead, Loam" FontSize="11"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                    </StackPanel>
                                 </Grid>
+
+                                <!-- Footer -->
+                                <StackPanel Spacing="10">
+                                    <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="© 2026 Yourbrand" FontSize="11"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="Built with Spectrum" FontSize="11"
+                                                   Foreground="{Binding Preview.AccentBrush}"/>
+                                    </Grid>
+                                </StackPanel>
                             </StackPanel>
 
                             <!-- ── Scene: Mobile ── -->
@@ -605,7 +1146,7 @@
                                         Background="{Binding Preview.BackgroundBrush}"
                                         BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="2"
                                         ClipToBounds="True">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="14,12,14,0">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="14,12,14,0">
 
                                         <!-- Status row -->
                                         <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,8">
@@ -635,28 +1176,57 @@
                                                            Foreground="{Binding Preview.MutedTextBrush}"/>
                                             </StackPanel>
                                             <Border Grid.Column="1" Width="28" Height="28" CornerRadius="14"
-                                                    Background="{Binding Preview.PrimaryBrush}"
-                                                    VerticalAlignment="Center"/>
+                                                    Background="{Binding Preview.AccentBrush}"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="A" FontSize="11" FontWeight="Bold"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                            </Border>
                                         </Grid>
 
                                         <!-- Search: a surface with a border, muted placeholder -->
                                         <Border Grid.Row="2" Background="{Binding Preview.SurfaceBrush}"
-                                                CornerRadius="10" Padding="9,6" Margin="0,0,0,10"
+                                                CornerRadius="10" Padding="9,6" Margin="0,0,0,8"
                                                 BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <materialIcons:MaterialIcon Kind="Magnify" Width="13" Height="13"
                                                                             Foreground="{Binding Preview.MutedTextBrush}"/>
-                                                <TextBlock Text="Search messages" FontSize="11"
-                                                           VerticalAlignment="Center"
+                                                <TextBlock Grid.Column="1" Text="Search messages" FontSize="11"
+                                                           Margin="6,0,0,0" VerticalAlignment="Center"
                                                            Foreground="{Binding Preview.MutedTextBrush}"/>
-                                            </StackPanel>
+                                                <materialIcons:MaterialIcon Grid.Column="2" Kind="TuneVariant"
+                                                                            Width="12" Height="12"
+                                                                            Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Grid>
                                         </Border>
 
+                                        <!-- Filters: the active chip is the Primary test. -->
+                                        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6"
+                                                    Margin="0,0,0,10">
+                                            <Border Background="{Binding Preview.PrimaryBrush}"
+                                                    CornerRadius="7" Padding="9,4">
+                                                <TextBlock Text="All 12" FontSize="9.5" FontWeight="Bold"
+                                                           Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                            </Border>
+                                            <Border Background="{Binding Preview.SurfaceBrush}"
+                                                    BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                    CornerRadius="7" Padding="9,4">
+                                                <TextBlock Text="Unread" FontSize="9.5"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Border>
+                                            <Border Background="{Binding Preview.SurfaceBrush}"
+                                                    BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                                    CornerRadius="7" Padding="9,4">
+                                                <TextBlock Text="Files" FontSize="9.5"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+
                                         <!-- Unread list: one surface card, hairline separators -->
-                                        <Border Grid.Row="3" Background="{Binding Preview.SurfaceBrush}"
+                                        <Border Grid.Row="4" Background="{Binding Preview.SurfaceBrush}"
                                                 CornerRadius="12" Padding="12" VerticalAlignment="Top"
                                                 BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                            <StackPanel Spacing="9">
+                                            <StackPanel Spacing="8">
                                                 <TextBlock Text="UNREAD" Classes="eyebrow" FontSize="9"
                                                            Foreground="{Binding Preview.MutedTextBrush}"/>
 
@@ -726,6 +1296,9 @@
 
                                                 <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
 
+                                                <TextBlock Text="EARLIER" Classes="eyebrow" FontSize="9"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+
                                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                                     <Border Width="26" Height="26" CornerRadius="13"
                                                             Background="{Binding Preview.SurfaceBrush}"
@@ -744,33 +1317,6 @@
                                                                    Foreground="{Binding Preview.MutedTextBrush}"/>
                                                     </StackPanel>
                                                     <TextBlock Grid.Column="2" Text="Mon" FontSize="9"
-                                                               VerticalAlignment="Center"
-                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
-                                                </Grid>
-
-                                                <Border Height="1" Background="{Binding Preview.BorderBrush}"/>
-
-                                                <TextBlock Text="EARLIER" Classes="eyebrow" FontSize="9"
-                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
-
-                                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                                    <Border Width="26" Height="26" CornerRadius="13"
-                                                            Background="{Binding Preview.SurfaceBrush}"
-                                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
-                                                        <TextBlock Text="A" FontSize="10" FontWeight="Bold"
-                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                   Foreground="{Binding Preview.TextBrush}"/>
-                                                    </Border>
-                                                    <StackPanel Grid.Column="1" Spacing="1" Margin="9,0,0,0"
-                                                                VerticalAlignment="Center">
-                                                        <TextBlock Text="Aria liked your post" FontSize="11.5" FontWeight="SemiBold"
-                                                                   TextTrimming="CharacterEllipsis"
-                                                                   Foreground="{Binding Preview.TextBrush}"/>
-                                                        <TextBlock Text="12 new likes on the launch note"
-                                                                   FontSize="10" TextTrimming="CharacterEllipsis"
-                                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="Fri" FontSize="9"
                                                                VerticalAlignment="Center"
                                                                Foreground="{Binding Preview.MutedTextBrush}"/>
                                                 </Grid>
@@ -801,14 +1347,20 @@
                                             </StackPanel>
                                         </Border>
 
-                                        <!-- Bottom tabs -->
-                                        <Border Grid.Row="4" Margin="0,10,0,0" Padding="0,8,0,10"
+                                        <!-- Bottom tabs; the unread dot tests Accent on Background. -->
+                                        <Border Grid.Row="5" Margin="0,10,0,0" Padding="0,8,0,10"
                                                 BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="0,1,0,0">
                                             <Grid ColumnDefinitions="*,*,*">
                                                 <StackPanel Spacing="3" HorizontalAlignment="Center">
-                                                    <materialIcons:MaterialIcon Kind="Inbox" Width="16" Height="16"
-                                                                                HorizontalAlignment="Center"
-                                                                                Foreground="{Binding Preview.PrimaryBrush}"/>
+                                                    <Grid>
+                                                        <materialIcons:MaterialIcon Kind="Inbox" Width="16" Height="16"
+                                                                                    HorizontalAlignment="Center"
+                                                                                    Foreground="{Binding Preview.PrimaryBrush}"/>
+                                                        <Border Width="5" Height="5" CornerRadius="3"
+                                                                Background="{Binding Preview.AccentBrush}"
+                                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                                Margin="0,0,8,0"/>
+                                                    </Grid>
                                                     <TextBlock Text="Inbox" FontSize="9" HorizontalAlignment="Center"
                                                                Foreground="{Binding Preview.PrimaryBrush}"/>
                                                 </StackPanel>
@@ -834,34 +1386,112 @@
 
                             <!-- ── Scene: Chart ── -->
                             <StackPanel Spacing="16" IsVisible="{Binding Preview.IsSceneChart}">
-                                <StackPanel Spacing="2" MaxWidth="640" HorizontalAlignment="Left">
-                                    <TextBlock Text="Quarterly revenue" FontWeight="Bold" FontSize="18"
-                                               Foreground="{Binding Preview.TextBrush}"/>
-                                    <TextBlock Text="Bars cycle the palette; the axis follows the Text role."
-                                               FontSize="12" Foreground="{Binding Preview.MutedTextBrush}"/>
-                                </StackPanel>
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Revenue" FontWeight="Bold" FontSize="20"
+                                                   Foreground="{Binding Preview.TextBrush}"/>
+                                        <TextBlock Text="Acme workspace · updated 2 minutes ago" FontSize="12"
+                                                   Foreground="{Binding Preview.MutedTextBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Range switch: the active segment is a Primary fill. -->
+                                    <Border Grid.Column="1" VerticalAlignment="Center" Padding="2"
+                                            Background="{Binding Preview.SurfaceBrush}"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
+                                            CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="2">
+                                            <Border Background="{Binding Preview.PrimaryBrush}"
+                                                    CornerRadius="6" Padding="8,3">
+                                                <TextBlock Text="6M" FontSize="10" FontWeight="Bold"
+                                                           Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                            </Border>
+                                            <Border CornerRadius="6" Padding="8,3">
+                                                <TextBlock Text="1Y" FontSize="10"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Border>
+                                            <Border CornerRadius="6" Padding="8,3">
+                                                <TextBlock Text="All" FontSize="10"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- KPI tiles: the same numbers the plot narrates. -->
+                                <Grid ColumnDefinitions="*,10,*,10,*">
+                                    <Border Background="{Binding Preview.SurfaceBrush}" CornerRadius="10"
+                                            Padding="12,10"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="MRR" FontSize="10"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            <TextBlock Text="$128.4k" FontWeight="Bold" FontSize="17"
+                                                       Foreground="{Binding Preview.TextBrush}"/>
+                                            <Border Background="{Binding Preview.AccentBrush}"
+                                                    CornerRadius="5" Padding="6,1"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="+18.4%" FontSize="9" FontWeight="Bold"
+                                                           Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="10" Padding="12,10"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="Orders" FontSize="10"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            <TextBlock Text="1,204" FontWeight="Bold" FontSize="17"
+                                                       Foreground="{Binding Preview.TextBrush}"/>
+                                            <Border Background="{Binding Preview.PrimaryBrush}"
+                                                    CornerRadius="5" Padding="6,1"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="+6.1%" FontSize="9" FontWeight="Bold"
+                                                           Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="4" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="10" Padding="12,10"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="Refunds" FontSize="10"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            <TextBlock Text="0.8%" FontWeight="Bold" FontSize="17"
+                                                       Foreground="{Binding Preview.TextBrush}"/>
+                                            <Border Background="{Binding Preview.SurfaceBrush}"
+                                                    BorderBrush="{Binding Preview.BorderBrush}"
+                                                    BorderThickness="1" CornerRadius="5" Padding="5,0"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="goal &lt;1.2%" FontSize="9" FontWeight="Bold"
+                                                           Foreground="{Binding Preview.AccentBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
 
                                 <Border Background="{Binding Preview.SurfaceBrush}" CornerRadius="14" Padding="20,18"
-                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1"
-                                        MaxWidth="640" HorizontalAlignment="Left">
-                                    <StackPanel Spacing="16">
+                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="14">
 
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="Revenue by month" FontWeight="SemiBold" FontSize="13"
                                                            Foreground="{Binding Preview.TextBrush}"/>
-                                                <TextBlock Text="Rolling 6 months · USD" FontSize="11"
+                                                <TextBlock Text="Rolling 6 months · USD thousands" FontSize="11"
                                                            Foreground="{Binding Preview.MutedTextBrush}"/>
                                             </StackPanel>
-                                            <Border Grid.Column="1" Background="{Binding Preview.AccentBrush}"
-                                                    CornerRadius="8" Padding="9,4" VerticalAlignment="Top">
-                                                <TextBlock Text="+18.4%" FontSize="10.5" FontWeight="Bold"
-                                                           Foreground="{Binding Preview.AccentForegroundBrush}"/>
-                                            </Border>
+                                            <TextBlock Grid.Column="1" Text="Target 75%" FontSize="10"
+                                                       FontWeight="SemiBold" VerticalAlignment="Center"
+                                                       Foreground="{Binding Preview.AccentBrush}"/>
                                         </Grid>
 
                                         <!-- Plot: gridlines in the Border role, bars from the
-                                             palette, axis labels in the Text role. -->
+                                             palette, axis labels in the Text role, and a
+                                             target rule in Accent. -->
                                         <Grid RowDefinitions="16,140,18" ColumnDefinitions="34,*">
 
                                             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*,*,*,*">
@@ -923,6 +1553,214 @@
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
 
+                                            <!-- Target rule over the bars, at the 75% line. -->
+                                            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                                                  VerticalAlignment="Top" Margin="0,42,0,0"
+                                                  ColumnDefinitions="*,Auto" IsHitTestVisible="False">
+                                                <Border Height="1" VerticalAlignment="Center"
+                                                        Margin="0,0,8,0"
+                                                        Background="{Binding Preview.AccentBrush}"/>
+                                                <Border Grid.Column="1" Background="{Binding Preview.AccentBrush}"
+                                                        CornerRadius="5" Padding="6,2"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="75%" FontSize="8.5" FontWeight="Bold"
+                                                               Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                                </Border>
+                                            </Grid>
+
+                                        </Grid>
+
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Bars follow palette order, cycling after the last color."
+                                                       FontSize="10"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            <TextBlock Grid.Column="1" Text="Avg 69%" FontSize="10" Classes="mono"
+                                                       Foreground="{Binding Preview.MutedTextBrush}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Second row: distribution (stacked bar) and ranking
+                                     (horizontal bars on a Border-role track). -->
+                                <Grid ColumnDefinitions="*,12,*">
+                                    <Border Background="{Binding Preview.SurfaceBrush}" CornerRadius="12" Padding="16"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="10">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="Channel mix" FontWeight="SemiBold" FontSize="12.5"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="Q3" FontSize="10"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Grid>
+
+                                            <!-- Stacked bar: one palette color per slice. -->
+                                            <ItemsControl ItemsSource="{Binding Preview.ChannelSegments}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="2"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:ChartSegment">
+                                                        <Border Width="{Binding Width}" Height="14" CornerRadius="4"
+                                                                Background="{Binding Brush}"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <ItemsControl ItemsSource="{Binding Preview.ChannelSegments}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Spacing="5"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:ChartSegment">
+                                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                                            <Border Width="8" Height="8" CornerRadius="3"
+                                                                    Background="{Binding Brush}"
+                                                                    VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Label}"
+                                                                       FontSize="10.5" Margin="6,0,0,0"
+                                                                       Foreground="{Binding LabelBrush}"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding Value}"
+                                                                       Classes="mono" FontSize="9.5"
+                                                                       Foreground="{Binding MutedBrush}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="2" Background="{Binding Preview.SurfaceBrush}"
+                                            CornerRadius="12" Padding="16"
+                                            BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="10">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="Top pages" FontWeight="SemiBold" FontSize="12.5"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="Views" FontSize="10"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </Grid>
+
+                                            <ItemsControl ItemsSource="{Binding Preview.TopPages}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Spacing="8"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:RankBar">
+                                                        <Grid RowDefinitions="Auto,5" ColumnDefinitions="*,Auto">
+                                                            <TextBlock Text="{Binding Label}" FontSize="10.5"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Foreground="{Binding LabelBrush}"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Value}"
+                                                                       Classes="mono" FontSize="9.5"
+                                                                       Foreground="{Binding MutedBrush}"/>
+                                                            <Border Grid.Row="1" Grid.ColumnSpan="2" Height="5"
+                                                                    CornerRadius="3" Margin="0,3,0,0"
+                                                                    Background="{Binding TrackBrush}">
+                                                                <Border Width="{Binding Width}" Height="5"
+                                                                        CornerRadius="3"
+                                                                        HorizontalAlignment="Left"
+                                                                        Background="{Binding Brush}"/>
+                                                            </Border>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Weekly trend: area + line on a fixed 300 × 108 canvas,
+                                     gridlines above the fill so they stay visible. -->
+                                <Border Background="{Binding Preview.SurfaceBrush}" CornerRadius="12"
+                                        Padding="16"
+                                        BorderBrush="{Binding Preview.BorderBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="10">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="Weekly sessions" FontWeight="SemiBold" FontSize="12.5"
+                                                           Foreground="{Binding Preview.TextBrush}"/>
+                                                <TextBlock Text="Last 7 days · sessions" FontSize="10"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Background="{Binding Preview.AccentBrush}"
+                                                    CornerRadius="6" Padding="7,2" VerticalAlignment="Top">
+                                                <TextBlock Text="+12.6%" FontSize="9" FontWeight="Bold"
+                                                           Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid ColumnDefinitions="300,16,*">
+                                            <StackPanel Spacing="6">
+                                                <Grid Height="108">
+                                                    <Canvas Width="300" Height="108"
+                                                            HorizontalAlignment="Left">
+                                                        <Path Data="{Binding Preview.TrendAreaGeometry}"
+                                                              Fill="{Binding Preview.TrendAreaBrush}"
+                                                              Stretch="None"/>
+                                                        <Path Data="{Binding Preview.TrendLineGeometry}"
+                                                              Stroke="{Binding Preview.TrendStrokeBrush}"
+                                                              StrokeThickness="2"
+                                                              Stretch="None"/>
+                                                    </Canvas>
+
+                                                    <Grid RowDefinitions="*,*,*,*" IsHitTestVisible="False">
+                                                        <Border Height="1" VerticalAlignment="Top"
+                                                                Background="{Binding Preview.BorderBrush}"/>
+                                                        <Border Grid.Row="1" Height="1" VerticalAlignment="Top"
+                                                                Background="{Binding Preview.BorderBrush}"/>
+                                                        <Border Grid.Row="2" Height="1" VerticalAlignment="Top"
+                                                                Background="{Binding Preview.BorderBrush}"/>
+                                                        <Border Grid.Row="3" Height="1" VerticalAlignment="Bottom"
+                                                                Background="{Binding Preview.BorderBrush}"/>
+                                                    </Grid>
+                                                </Grid>
+
+                                                <Grid ColumnDefinitions="*,*,*,*,*,*,*">
+                                                    <TextBlock Text="Mon" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="1" Text="Tue" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="2" Text="Wed" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="3" Text="Thu" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="4" Text="Fri" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="5" Text="Sat" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="6" Text="Sun" FontSize="8.5" HorizontalAlignment="Center"
+                                                               Foreground="{Binding Preview.MutedTextBrush}"/>
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="18">
+                                                    <StackPanel Spacing="1">
+                                                        <TextBlock Text="PEAK" Classes="eyebrow" FontSize="8"/>
+                                                        <TextBlock Text="918" FontWeight="Bold" FontSize="14"
+                                                                   Foreground="{Binding Preview.TextBrush}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="1">
+                                                        <TextBlock Text="AVG" Classes="eyebrow" FontSize="8"/>
+                                                        <TextBlock Text="651" FontWeight="Bold" FontSize="14"
+                                                                   Foreground="{Binding Preview.TextBrush}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="1">
+                                                        <TextBlock Text="LOW" Classes="eyebrow" FontSize="8"/>
+                                                        <TextBlock Text="420" FontWeight="Bold" FontSize="14"
+                                                                   Foreground="{Binding Preview.TextBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <TextBlock Text="Sunday carries the week; the line follows the Primary role and its fill is Primary mixed into the canvas."
+                                                           FontSize="10" TextWrapping="Wrap"
+                                                           Foreground="{Binding Preview.MutedTextBrush}"/>
+                                            </StackPanel>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -931,7 +1769,7 @@
                             <!-- ── Scene: Poster ── -->
                             <Grid IsVisible="{Binding Preview.IsScenePoster}">
                                 <Border Background="{Binding Preview.PrimaryBrush}" CornerRadius="18"
-                                        Padding="30" MinHeight="430" ClipToBounds="True">
+                                        Padding="32" MinHeight="430" ClipToBounds="True">
                                     <Panel>
                                         <!-- Decorative geometry in secondary roles -->
                                         <Border Width="220" Height="220" CornerRadius="110"
@@ -946,11 +1784,11 @@
                                         </Border>
 
                                         <Grid RowDefinitions="*,Auto,Auto" Margin="6">
-                                            <StackPanel VerticalAlignment="Top" Spacing="10" MaxWidth="420">
+                                            <StackPanel VerticalAlignment="Top" Spacing="10" MaxWidth="430">
                                                 <TextBlock Text="SPECTRUM" FontSize="13" FontWeight="Bold" LetterSpacing="4"
                                                            Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
-                                                <TextBlock Text="Color, in context" FontWeight="Bold" FontSize="40"
-                                                           TextWrapping="Wrap"
+                                                <TextBlock Text="Color, in context" FontWeight="Bold" FontSize="42"
+                                                           TextWrapping="Wrap" LineHeight="48"
                                                            Foreground="{Binding Preview.PrimaryForegroundBrush}"/>
                                                 <!-- Derived on-primary color, not Opacity: the preview
                                                      must show a color the palette actually owns. -->
@@ -959,13 +1797,17 @@
                                                            Foreground="{Binding Preview.PrimaryMutedForegroundBrush}"/>
                                             </StackPanel>
 
-                                            <StackPanel Grid.Row="1" Spacing="4" Margin="0,28,0,0" MaxWidth="380">
+                                            <StackPanel Grid.Row="1" Spacing="4" Margin="0,28,0,0" MaxWidth="400">
                                                 <TextBlock Text="Doors 18:30 · Studio Hall, Berlin" FontSize="11"
                                                            FontWeight="SemiBold"
                                                            Foreground="{Binding Preview.PrimaryMutedForegroundBrush}"/>
                                                 <TextBlock Text="Six talks on palette systems, then drinks with the type crowd."
                                                            FontSize="11" TextWrapping="Wrap"
                                                            Foreground="{Binding Preview.PrimaryMutedForegroundBrush}"/>
+                                                <TextBlock Text="Ana Duarte · Sam Okafor · Priya Raman"
+                                                           FontSize="10" FontWeight="SemiBold"
+                                                           Foreground="{Binding Preview.PrimaryForegroundBrush}"
+                                                           Margin="0,6,0,0"/>
                                             </StackPanel>
 
                                             <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,26,0,0">
@@ -976,7 +1818,13 @@
                                                 </Border>
                                                 <TextBlock Grid.Column="1" Text="spectrum.app" FontSize="11"
                                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                           Margin="0,0,12,0"
                                                            Foreground="{Binding Preview.PrimaryMutedForegroundBrush}"/>
+                                                <Border Grid.Column="2" Background="{Binding Preview.AccentBrush}"
+                                                        CornerRadius="8" Padding="10,5" VerticalAlignment="Center">
+                                                    <TextBlock Text="TICKETS €35" FontSize="10" FontWeight="Bold"
+                                                               Foreground="{Binding Preview.AccentForegroundBrush}"/>
+                                                </Border>
                                             </Grid>
                                         </Grid>
                                     </Panel>
