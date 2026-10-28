@@ -3,12 +3,46 @@
              xmlns:vm="using:Spectrum.ViewModels"
              xmlns:converters="using:Spectrum.Converters"
              xmlns:local="using:Spectrum.Views"
+             xmlns:services="using:Spectrum.Services"
              xmlns:materialIcons="using:Material.Icons.Avalonia"
              x:Class="Spectrum.Views.Workspaces.ExportWorkspace"
              x:DataType="vm:MainWindowViewModel">
 
     <!-- Ctrl+4 — Move files in and out: export presets, PNG sheet, imports.
          The board steps aside here, so this workspace fills the whole column. -->
+
+    <UserControl.Styles>
+        <!-- PNG / JPG pill: the same segmented idea as the Preview workspace's
+             theme switch, scaled down to fit this panel. -->
+        <Style Selector="Button.sheetTab">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.sheetTab:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+        </Style>
+
+        <Style Selector="Button.sheetTab.active">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="Button.sheetTab.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*">
 
@@ -31,11 +65,11 @@
 
             <!-- ═══ EXPORT ═══ -->
             <Border Grid.Column="0" Classes="panel" Padding="18">
-                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
                     <StackPanel Spacing="2">
                         <TextBlock Text="EXPORT PALETTE" Classes="eyebrow"/>
                         <TextBlock Classes="caption" TextWrapping="Wrap"
-                                   Text="Text formats build a preview you can copy; ASE / ACO and the PNG sheet write straight to a file."/>
+                                   Text="Text formats build a preview you can copy; ASE / ACO and the PNG / JPG sheet write straight to a file."/>
                     </StackPanel>
 
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto" Margin="0,14,0,0">
@@ -86,13 +120,71 @@
                                 <TextBlock Text="Save file" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Height="34" Command="{Binding Export.ExportPngCommand}"
-                                ToolTip.Tip="Render the palette as a shareable image (Ctrl+J)">
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                <materialIcons:MaterialIcon Kind="Image" Width="14" Height="14"/>
-                                <TextBlock Text="PNG sheet" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Swatch sheet: the image is rendered up front, so what is on
+                         screen is exactly what Save sheet writes. -->
+                    <StackPanel Grid.Row="4" Spacing="10" Margin="0,14,0,0">
+                        <Separator/>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="SWATCH SHEET" Classes="eyebrow"/>
+                                <TextBlock Classes="caption" TextWrapping="Wrap"
+                                           Text="Every swatch as one shareable image — previewed exactly as it saves."/>
                             </StackPanel>
-                        </Button>
+
+                            <Border Grid.Column="1" Padding="3" Margin="12,0,0,0" VerticalAlignment="Top"
+                                    Background="{DynamicResource SurfaceRaisedBrush}"
+                                    BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
+                                    CornerRadius="999"
+                                    ToolTip.Tip="Image format for Save sheet">
+                                <StackPanel Orientation="Horizontal" Spacing="1">
+                                    <Button Classes="sheetTab" Classes.active="{Binding Export.IsPngSheet}"
+                                            AutomationProperties.Name="Save the sheet as PNG"
+                                            AutomationProperties.AutomationId="SheetFormatPng"
+                                            Command="{Binding Export.SelectSheetFormatCommand}"
+                                            CommandParameter="{x:Static services:SheetImageFormat.Png}"
+                                            Content="PNG"
+                                            ToolTip.Tip="Lossless — crisp edges, larger file"/>
+                                    <Button Classes="sheetTab" Classes.active="{Binding Export.IsJpgSheet}"
+                                            AutomationProperties.Name="Save the sheet as JPG"
+                                            AutomationProperties.AutomationId="SheetFormatJpg"
+                                            Command="{Binding Export.SelectSheetFormatCommand}"
+                                            CommandParameter="{x:Static services:SheetImageFormat.Jpg}"
+                                            Content="JPG"
+                                            ToolTip.Tip="Smaller file for sharing — slight artifacts on flat color"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Classes="well" Height="168" Padding="8">
+                            <Grid>
+                                <Image Source="{Binding Export.SheetPreview}"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add colors to the palette and the sheet appears here."
+                                           Classes="caption" TextAlignment="Center" TextWrapping="Wrap"
+                                           MaxWidth="260"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsVisible="{Binding Export.IsSheetPreviewEmpty}"/>
+                            </Grid>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding Export.SheetSizeLabel}"
+                                       Classes="caption mono" FontSize="10.5"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <Button Grid.Column="1" Height="32" FontWeight="SemiBold"
+                                    Command="{Binding Export.SaveSheetCommand}"
+                                    ToolTip.Tip="Write the swatch sheet in the selected format (Ctrl+J)">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <materialIcons:MaterialIcon Kind="Image" Width="14" Height="14"/>
+                                    <TextBlock Text="{Binding Export.SaveSheetLabel}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                     </StackPanel>
                 </Grid>
             </Border>

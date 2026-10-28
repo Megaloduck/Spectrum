@@ -48,6 +48,9 @@ namespace Spectrum.ViewModels
         /// <summary>Ctrl+4 · Export: formats, preview, file output.</summary>
         public ExportWorkspaceViewModel Export { get; }
 
+        /// <summary>Ctrl+, · Settings: a workspace of its own instead of a dialog.</summary>
+        public SettingsViewModel Settings { get; }
+
         public Array ColorBlindModes { get; } = Enum.GetValues(typeof(ColorBlindMode));
 
         /// <summary>Notations offered by the footer copy-format picker (§2/§10).</summary>
@@ -78,9 +81,9 @@ namespace Spectrum.ViewModels
             Analyze?.RefreshEvaluation();
         }
 
-        /// <summary>The Analyze workspace has no dock, so its app-bar toggle would
-        /// be a no-op there. Hidden only for Analyze; other workspaces keep it.</summary>
-        public bool ShowDockToggle => !IsAnalyzeMode;
+        /// <summary>The Analyze and Settings workspaces have no dock, so the app-bar
+        /// toggle would be a no-op there. Hidden for those; the rest keep it.</summary>
+        public bool ShowDockToggle => !IsAnalyzeMode && !IsSettingsMode;
 
         // ---------------- §8 Preview & visualization ----------------
 
@@ -123,22 +126,39 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(IsPreviewMode));
             OnPropertyChanged(nameof(IsAnalyzeMode));
             OnPropertyChanged(nameof(IsExportMode));
+            OnPropertyChanged(nameof(IsSettingsMode));
             OnPropertyChanged(nameof(ShowDockToggle));
 
             // The Analyze breadcrumb names the workspace you are in.
             Analyze?.RefreshReferencePath();
+
+            // The sheet preview is only rendered on demand, so entering Export
+            // is what brings it up to date with the current palette.
+            if (value == WorkspaceMode.Export) Export?.RefreshSheetPreview();
         }
 
         public bool IsStudioMode => WorkspaceMode == WorkspaceMode.Studio;
         public bool IsPreviewMode => WorkspaceMode == WorkspaceMode.Preview;
         public bool IsAnalyzeMode => WorkspaceMode == WorkspaceMode.Analyze;
         public bool IsExportMode => WorkspaceMode == WorkspaceMode.Export;
+        public bool IsSettingsMode => WorkspaceMode == WorkspaceMode.Settings;
+
+        /// <summary>Where Settings returns to — the workspace it was opened from.</summary>
+        private WorkspaceMode _returnWorkspace = WorkspaceMode.Studio;
 
         /// <summary>App-bar segment switch + Ctrl+1..4 + command palette.</summary>
         [RelayCommand]
         private void SetWorkspace(WorkspaceMode mode)
         {
             if (WorkspaceMode == mode) return;
+
+            // Settings is a detour: remember what to come back to, and drop any
+            // armed destructive action when leaving it.
+            if (mode == WorkspaceMode.Settings && WorkspaceMode != WorkspaceMode.Settings)
+                _returnWorkspace = WorkspaceMode;
+            else if (mode != WorkspaceMode.Settings)
+                Settings?.DisarmReset();
+
             WorkspaceMode = mode;
 
             // Switching tabs is navigation, not an action worth a toast.
@@ -149,7 +169,8 @@ namespace Spectrum.ViewModels
                 WorkspaceMode.Studio => "Studio — generate and edit the palette.",
                 WorkspaceMode.Preview => "Preview — mockup, variants and side-by-side compare.",
                 WorkspaceMode.Analyze => "Analyze — evaluate the selected color.",
-                _ => "Export — send the palette out, or bring files in.",
+                WorkspaceMode.Export => "Export — send the palette out, or bring files in.",
+                _ => "Settings — appearance, defaults, storage and updates.",
             };
             _suppressToast = previous;
         }
@@ -255,11 +276,15 @@ namespace Spectrum.ViewModels
                 PaletteCount = Palette.Count;
                 Preview?.RaiseMockupPropertiesChanged();
                 Analyze?.RefreshForPalette();
+                Export?.ScheduleSheetPreviewRefresh();
                 if (!_isLoadingBoard && !_isRestoringHistory) SyncActivePalette();
             };
 
             Library = new PaletteLibraryViewModel();
             Library.ActivePaletteChanged += OnActivePaletteChanged;
+
+            // Settings shares the shell's library so storage changes can reload it.
+            Settings = new SettingsViewModel { MainLibrary = Library };
 
             // The workspace ViewModels own their own state and commands; they
             // reach the shared board through the shell they're built with.
@@ -306,17 +331,18 @@ namespace Spectrum.ViewModels
                 Export.SelectedExportFormat = export;
         }
 
-        /// <summary>§10 Settings dialog (Ctrl+,).</summary>
+        /// <summary>§10 Settings (Ctrl+,) — opens the settings workspace, and closes it
+        /// again when you are already there, so the gear behaves like a toggle.</summary>
         [RelayCommand]
-        private async Task OpenSettingsAsync()
+        private void OpenSettings()
         {
-            if (GetOwnerWindow() is not { } owner) return;
-
-            var window = new Views.SettingsWindow();
-            if (Library is not null) window.AttachLibrary(Library);
-            await window.ShowDialog(owner);
-            StatusMessage = "Settings saved.";
+            if (WorkspaceMode == WorkspaceMode.Settings) CloseSettings();
+            else SetWorkspace(WorkspaceMode.Settings);
         }
+
+        /// <summary>Done / Esc leaves Settings for the workspace it was opened from.</summary>
+        [RelayCommand]
+        private void CloseSettings() => SetWorkspace(_returnWorkspace);
 
         // Panel collapse toggle (§7 "Resizable / collapsible panels").
         // The inspector can be collapsed; the palette rail is always shown.
@@ -362,6 +388,7 @@ namespace Spectrum.ViewModels
         public void Detach()
         {
             _toastTimer?.Stop();
+            Export?.Detach();
             Library.Detach();
             GlobalHotkeyService.HotkeyRaised -= OnGlobalHotkeyRaised;
         }
@@ -425,6 +452,7 @@ namespace Spectrum.ViewModels
                 SyncActivePalette();
                 Preview.RaiseMockupPropertiesChanged();
                 Analyze.RefreshForPalette();
+                Export?.ScheduleSheetPreviewRefresh();
 
                 // If the edited swatch is the one selected on the board, keep the
                 // color panel (and the Analyze reference record it drives) following it.

@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Material.Icons;
 using Spectrum.Models;
 using Spectrum.ViewModels;
 using System;
@@ -25,6 +26,25 @@ namespace Spectrum.Views
         public MainWindow()
         {
             InitializeComponent();
+            // Custom chrome: no system title bar, so the caption icon and the
+            // maximized padding have to follow the window state ourselves.
+            PropertyChanged += (_, e) =>
+            {
+                if (e.Property == WindowStateProperty)
+                {
+                    UpdateChromeForState();
+
+                    // The platform reports the maximized overhang a beat later,
+                    // once the new frame has been laid out.
+                    Dispatcher.UIThread.Post(UpdateChromeForState, DispatcherPriority.Background);
+                }
+                else if (e.Property == OffScreenMarginProperty)
+                {
+                    UpdateChromeForState();
+                }
+            };
+            UpdateChromeForState();
+
             Closed += (_, _) =>
             {
                 if (_subscribedVm is not null)
@@ -61,6 +81,51 @@ namespace Spectrum.Views
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             // No-op: the palette rail is always visible.
+        }
+
+        // ---------------- Custom title bar (§7) ----------------
+
+        private void OnMinimizeWindow(object? sender, RoutedEventArgs e) =>
+            WindowState = WindowState.Minimized;
+
+        private void OnToggleMaximizeWindow(object? sender, RoutedEventArgs e) => ToggleMaximize();
+
+        private void OnCloseWindow(object? sender, RoutedEventArgs e) => Close();
+
+        private void ToggleMaximize() =>
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+        /// <summary>The app bar is the title bar: drag empty space to move the window,
+        /// double-click it to maximize. Buttons in the bar handle their own input,
+        /// so this only fires on the bar itself.</summary>
+        private void OnAppBarPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+
+            if (e.ClickCount == 2)
+            {
+                ToggleMaximize();
+                e.Handled = true;
+                return;
+            }
+
+            BeginMoveDrag(e);
+        }
+
+        private void UpdateChromeForState()
+        {
+            var maximized = WindowState == WindowState.Maximized;
+
+            if (MaximizeIcon is not null)
+                MaximizeIcon.Kind = maximized ? MaterialIconKind.WindowRestore : MaterialIconKind.WindowMaximize;
+
+            // A maximized borderless window hangs one frame outside the working
+            // area on Windows; OffScreenMargin is exactly that overhang, so the
+            // shell keeps its panels on screen instead of under the screen edge.
+            var off = OffScreenMargin;
+            RootGrid.Margin = maximized
+                ? new Thickness(off.Left, off.Top, off.Right, off.Bottom)
+                : new Thickness(0, 10, 10, 10);
         }
 
         private void OnWindowKeyDown(object? sender, KeyEventArgs e)
@@ -113,7 +178,7 @@ namespace Spectrum.Views
                         RunIfPossible(vm.Export.ExportToFileCommand);
                         break;
                     case Key.J:
-                        RunIfPossible(vm.Export.ExportPngCommand);
+                        RunIfPossible(vm.Export.SaveSheetCommand);
                         break;
                     case Key.I:
                         RunIfPossible(vm.ToggleInspectorCommand);
@@ -152,7 +217,8 @@ namespace Spectrum.Views
                     e.Handled = true;
                     break;
                 case Key.Escape:
-                    vm.SelectedSwatch = null;
+                    if (vm.IsSettingsMode) RunIfPossible(vm.CloseSettingsCommand);
+                    else vm.SelectedSwatch = null;
                     break;
                 case Key.F2:
                     RunIfPossible(vm.Library.RenamePaletteCommand, vm.Library.SelectedPalette);

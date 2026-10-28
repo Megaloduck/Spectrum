@@ -181,7 +181,7 @@ namespace Spectrum.Views
             Add("Save palette to file", "Ctrl+S", vm.SavePaletteCommand);
             Add("Load palette from file", "Ctrl+O", vm.LoadPaletteCommand);
             Add("Export selected format to file", "Ctrl+E", vm.Export.ExportToFileCommand);
-            Add("Export PNG swatch sheet", "Ctrl+J", vm.Export.ExportPngCommand);
+            Add("Export swatch sheet (PNG / JPG)", "Ctrl+J", vm.Export.SaveSheetCommand);
             Add("Build export preview", "footer", vm.Export.BuildExportPreviewCommand);
             Add("Copy export to clipboard", "footer", vm.Export.CopyExportCommand);
             Add("Copy whole palette as text", "footer", vm.CopyAllHexCommand);
@@ -194,6 +194,7 @@ namespace Spectrum.Views
             Add("Workspace: Preview — mockup & compare", "Ctrl+2", vm.SetWorkspaceCommand, WorkspaceMode.Preview);
             Add("Workspace: Analyze — evaluate the selected color", "Ctrl+3", vm.SetWorkspaceCommand, WorkspaceMode.Analyze);
             Add("Workspace: Export — files in and out", "Ctrl+4", vm.SetWorkspaceCommand, WorkspaceMode.Export);
+            Add("Settings — appearance, defaults, storage, updates", "Ctrl+,", vm.OpenSettingsCommand);
 
             // Analyze & studio tools
             Add("Open contrast matrix", "Analyze — every pair scored", vm.Analyze.OpenContrastMatrixCommand);

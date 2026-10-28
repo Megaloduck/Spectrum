@@ -57,10 +57,10 @@
 
 **Import / export (§5–6, local files only)**
 - Import: JSON, **CSS variables**, **GPL (GIMP)**, **ASE (Adobe)**, **ACO (Photoshop)**, image extraction
-- Export: JSON, CSS, SCSS, **LESS**, Tailwind, **SVG**, **PNG swatch sheet**, **ASE / GPL / ACO**, plain text — copy to clipboard or save to file (the **Export workspace** holds the presets and preview)
+- Export: JSON, CSS, SCSS, **LESS**, Tailwind, **SVG**, **PNG / JPG swatch sheet**, **ASE / GPL / ACO**, plain text — copy to clipboard or save to file (the **Export workspace** holds the format picker, the text preview and a live preview of the sheet image)
 
 **Desktop UX (§7)**
-- **Four workspaces — Studio · Preview · Analyze · Export** (`Ctrl+1…4`): the top app bar switches the shell so each task only shows the panels it needs, instead of everything at once
+- **Workspaces — Studio · Preview · Analyze · Export** (`Ctrl+1…4`) plus **Settings** (`Ctrl+,`): the top app bar switches the shell so each task only shows the panels it needs, instead of everything at once — Settings is a full workspace too, not a modal dialog, and returns you to the workspace you came from
 - Sidebar + resizable/collapsible panels (splitters everywhere), **Ctrl+K command palette**, full keyboard-shortcut map, **tabs**, **system tray** with quick access, multi-window detach, rich **tooltips with color info**
 
 **Preview & visualization (§8)**
@@ -120,7 +120,7 @@ Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) an
 | Build a gradient | **Gradient** in the Studio toolbar (`Ctrl+1`) → copy CSS, save SVG/PNG, or add its stops to the palette |
 | Score every color pair | **Matrix** in the Analyze toolbar (`Ctrl+3`) → WCAG cells + APCA tooltips + CSV copy |
 | Screen eyedropper | **Screen** button or `Ctrl+Alt+P` (click anywhere to pick) |
-| Export a palette | **Export** workspace (`Ctrl+4`) → build a preview, copy, **Save to file…** or **PNG sheet…** |
+| Export a palette | **Export** workspace (`Ctrl+4`) → build a preview, copy, **Save file…**, or preview the swatch sheet and **Save PNG… / Save JPG…** |
 | Command palette | `Ctrl+K` |
 | Switch workspace | `Ctrl+1` Studio · `Ctrl+2` Preview · `Ctrl+3` Analyze · `Ctrl+4` Export |
 | Undo / redo | `Ctrl+Z` / `Ctrl+Y` |
@@ -129,8 +129,9 @@ Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) an
 | Duplicate / delete selected swatch | `Ctrl+D` / `Delete` |
 | Open color picker | Click the big base-color preview, or the palette icon on a swatch |
 | Collapse inspector | `Ctrl+I` |
-| Settings | `Ctrl+,` |
-| Export to file / PNG sheet | `Ctrl+E` / `Ctrl+J` |
+| Settings | `Ctrl+,` or the gear — opens the Settings workspace, `Esc` returns |
+| Move / maximize the window | Drag the app bar, or double-click it — the window draws its own title bar, with Minimize / Maximize / Close in the app bar's top-right corner |
+| Export to file / swatch sheet | `Ctrl+E` / `Ctrl+J` |
 
 ## 🤝 Contributing
 

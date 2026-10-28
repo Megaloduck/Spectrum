@@ -18,5 +18,8 @@ namespace Spectrum.Models
 
         /// <summary>Move files in and out: export presets, PNG sheet, imports.</summary>
         Export,
+
+        /// <summary>Preferences: appearance, defaults, hotkey, storage, data, updates.</summary>
+        Settings,
     }
 }

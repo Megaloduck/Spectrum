@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using SkiaSharp;
 using Spectrum.Models;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -9,26 +11,53 @@ using System.Linq;
 
 namespace Spectrum.Services
 {
+    /// <summary>Raster formats the swatch sheet can be written as.</summary>
+    public enum SheetImageFormat
+    {
+        Png,
+        Jpg,
+    }
+
     /// <summary>
     /// §6 "Export as PNG (swatch sheet)": renders the palette with Avalonia's
-    /// own retained-mode drawing into a RenderTargetBitmap and saves a PNG.
-    /// Uses the Skia renderer already shipped with Avalonia — no new packages.
+    /// own retained-mode drawing into a RenderTargetBitmap — the same Skia
+    /// renderer already shipped with Avalonia, no new packages.
+    ///
+    /// The render is split from the write so the Export workspace can show the
+    /// exact image it is about to save (and re-use it for the file).
     /// </summary>
-    public static class PngExportService
+    public static class SwatchSheetService
     {
         private const int CellWidth = 220;
         private const int SheetHeight = 320;
 
-        public static void Export(IEnumerable<ColorSwatch> palette, string path)
+        // Avalonia's Bitmap.Save only encodes PNG (11.x), so JPEG goes through
+        // Skia directly — the same engine Avalonia.Skia renders this sheet with.
+        private const int JpegQuality = 90;
+
+        /// <summary>Pixel size of the sheet for a palette of this length.</summary>
+        public static PixelSize SizeFor(int swatchCount) =>
+            new(System.Math.Max(CellWidth, CellWidth * swatchCount), SheetHeight);
+
+        /// <summary>File extension for a sheet image format.</summary>
+        public static string ExtensionFor(SheetImageFormat format) =>
+            format == SheetImageFormat.Jpg ? "jpg" : "png";
+
+        /// <summary>Label used in buttons and file pickers.</summary>
+        public static string DisplayName(SheetImageFormat format) =>
+            format == SheetImageFormat.Jpg ? "JPG" : "PNG";
+
+        /// <summary>Draws the sheet (one labelled cell per swatch) without touching the disk.</summary>
+        public static RenderTargetBitmap Render(IEnumerable<ColorSwatch> palette)
         {
             var swatches = palette.ToList();
-            var width = System.Math.Max(CellWidth, CellWidth * swatches.Count);
+            var size = SizeFor(swatches.Count);
 
-            using var surface = new RenderTargetBitmap(new PixelSize(width, SheetHeight));
+            var surface = new RenderTargetBitmap(size);
             using (var dc = surface.CreateDrawingContext())
             {
                 // Opaque canvas so translucent swatches read predictably.
-                dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, width, SheetHeight));
+                dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, size.Width, size.Height));
 
                 for (var i = 0; i < swatches.Count; i++)
                 {
@@ -53,8 +82,36 @@ namespace Spectrum.Services
                 }
             }
 
+            return surface;
+        }
+
+        /// <summary>Writes a sheet produced by <see cref="Render"/> to disk.</summary>
+        public static void Save(RenderTargetBitmap sheet, string path, SheetImageFormat format)
+        {
+            if (format == SheetImageFormat.Jpg)
+            {
+                SaveJpeg(sheet, path);
+                return;
+            }
+
             using var stream = File.Create(path);
-            surface.Save(stream);
+            sheet.Save(stream);
+        }
+
+        private static void SaveJpeg(RenderTargetBitmap sheet, string path)
+        {
+            using var png = new MemoryStream();
+            sheet.Save(png);
+            png.Position = 0;
+
+            using var bitmap = SKBitmap.Decode(png)
+                ?? throw new InvalidOperationException("The swatch sheet could not be read back for JPEG encoding.");
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Jpeg, JpegQuality)
+                ?? throw new InvalidOperationException("The swatch sheet could not be encoded as JPEG.");
+
+            using var file = File.Create(path);
+            data.SaveTo(file);
         }
 
         private static void DrawChecker(Avalonia.Media.DrawingContext dc, Rect rect)

@@ -14,7 +14,9 @@
         Title="Spectrum"
         Width="1500" Height="800"
         MinWidth="1240" MinHeight="680"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -22,12 +24,27 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <Window.Styles>
+        <!-- The window draws no system chrome: Close gets the one coloured hover
+             state in the caption cluster so the destructive action reads clearly. -->
+        <Style Selector="Button.captionClose:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <Style Selector="Button.captionClose:pointerover materialIcons|MaterialIcon">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+    </Window.Styles>
+
     <!-- The shell is three things: the app bar, the palette rail, and the
          active workspace. Everything task-specific lives in Views/Workspaces. -->
     <Grid x:Name="RootGrid" RowDefinitions="Auto,*" Margin="0,10,10,10">
 
-        <!-- ═══════════════════ APP BAR · brand · workspaces · actions ═══════════════════ -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16">
+        <!-- ═══════════════════ APP BAR · brand · workspaces · actions ═══════════════════
+             With no system title bar this row is also the window's title bar:
+             drag it to move, double-click it to maximize. -->
+        <Grid Grid.Row="0" x:Name="AppBar" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16"
+              PointerPressed="OnAppBarPointerPressed">
 
             <!-- Brand: gradient palette mark, wordmark, open palette + size.
                  The mark shares the rail tile's 44px box and left edge (the rail
@@ -69,7 +86,7 @@
                     BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
                     CornerRadius="999"
                     HorizontalAlignment="Center" VerticalAlignment="Center"
-                    ToolTip.Tip="Switch workspace — Ctrl+1 Studio · Ctrl+2 Preview · Ctrl+3 Analyze · Ctrl+4 Export">
+                    ToolTip.Tip="Switch workspace — Ctrl+1 Studio · Ctrl+2 Preview · Ctrl+3 Analyze · Ctrl+4 Export · Ctrl+, Settings">
                 <StackPanel Orientation="Horizontal" Spacing="1">
                     <Button Classes="wsTab" Classes.active="{Binding IsStudioMode}" Content="Studio"
                             Command="{Binding SetWorkspaceCommand}"
@@ -116,6 +133,25 @@
                 <Button Classes="iconChip ghost" Command="{Binding OpenSettingsCommand}"
                         ToolTip.Tip="Settings (Ctrl+,)">
                     <materialIcons:MaterialIcon Kind="CogOutline" Width="17" Height="17"/>
+                </Button>
+
+                <Border Width="1" Height="20" Margin="5,0"
+                        Background="{DynamicResource OutlineBrush}"/>
+
+                <!-- Caption buttons, in the app's top-right corner instead of a
+                     system title bar. -->
+                <Button Classes="iconChip ghost" Click="OnMinimizeWindow"
+                        ToolTip.Tip="Minimize">
+                    <materialIcons:MaterialIcon Kind="WindowMinimize" Width="15" Height="15"/>
+                </Button>
+                <Button Classes="iconChip ghost" Click="OnToggleMaximizeWindow"
+                        ToolTip.Tip="Maximize / restore">
+                    <materialIcons:MaterialIcon x:Name="MaximizeIcon" Kind="WindowMaximize"
+                                                Width="14" Height="14"/>
+                </Button>
+                <Button Classes="iconChip ghost captionClose" Click="OnCloseWindow"
+                        ToolTip.Tip="Close">
+                    <materialIcons:MaterialIcon Kind="WindowClose" Width="15" Height="15"/>
                 </Button>
             </StackPanel>
         </Grid>
@@ -362,6 +398,7 @@
                 <workspaces:PreviewWorkspace IsVisible="{Binding IsPreviewMode}"/>
                 <workspaces:AnalyzeWorkspace IsVisible="{Binding IsAnalyzeMode}"/>
                 <workspaces:ExportWorkspace IsVisible="{Binding IsExportMode}"/>
+                <workspaces:SettingsWorkspace IsVisible="{Binding IsSettingsMode}"/>
             </Grid>
 
         </Grid>

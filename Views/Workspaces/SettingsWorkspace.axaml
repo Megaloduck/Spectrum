@@ -1,0 +1,226 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Spectrum.ViewModels"
+             xmlns:conv="using:Spectrum.Converters"
+             xmlns:materialIcons="using:Material.Icons.Avalonia"
+             x:Class="Spectrum.Views.Workspaces.SettingsWorkspace"
+             x:DataType="vm:MainWindowViewModel">
+
+    <!-- Ctrl+, — Settings as a full workspace instead of a dialog. Every option
+         applies immediately and persists, so there is nothing to submit; Done
+         just goes back to the workspace you came from. -->
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Toolbar: what this pane is, and the way out. -->
+        <Border Grid.Row="0" Classes="panel" Padding="12,8" Margin="0,0,0,10">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="4,0,0,0">
+                    <TextBlock Text="SETTINGS" Classes="eyebrow" VerticalAlignment="Center"/>
+                    <TextBlock Text="·" Classes="caption"/>
+                    <TextBlock Text="Everything here is stored locally and applies immediately."
+                               Classes="caption" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Height="30" FontWeight="SemiBold"
+                        Command="{Binding CloseSettingsCommand}"
+                        ToolTip.Tip="Back to the workspace you came from (Esc)">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <materialIcons:MaterialIcon Kind="Check" Width="15" Height="15"/>
+                        <TextBlock Text="Done" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="0,0,4,0">
+            <Grid ColumnDefinitions="*,12,*" VerticalAlignment="Top">
+
+                <!-- ═══ COLUMN ONE · look, defaults, hotkey ═══ -->
+                <StackPanel Grid.Column="0" Spacing="12">
+
+                    <!-- Appearance -->
+                    <Border Classes="panel" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="APPEARANCE" Classes="eyebrow"/>
+
+                            <TextBlock Text="Theme" Classes="caption"/>
+                            <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.Themes}"
+                                      SelectedItem="{Binding Settings.Theme}"
+                                      HorizontalAlignment="Stretch"/>
+
+                            <TextBlock Text="Accent color" Classes="caption" Margin="0,4,0,0"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Padding="10,7" Click="OnPickAccent"
+                                        ToolTip.Tip="Pick the accent color">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <materialIcons:MaterialIcon Kind="Palette" Width="16" Height="16"/>
+                                        <TextBlock Text="Pick…" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Padding="10,7" Click="OnResetAccent"
+                                        ToolTip.Tip="Reset the accent to the default">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <materialIcons:MaterialIcon Kind="Undo" Width="16" Height="16"/>
+                                        <TextBlock Text="Reset" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Border Width="34" Height="30" CornerRadius="8" BorderThickness="1.3"
+                                        BorderBrush="{DynamicResource OutlineBrush}"
+                                        Background="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="{Binding Settings.AccentLabel}" Classes="caption"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <TextBlock Text="Density" Classes="caption" Margin="0,4,0,0"/>
+                            <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.Densities}"
+                                      SelectedItem="{Binding Settings.Density}"
+                                      HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Defaults -->
+                    <Border Classes="panel" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="COPY &amp; EXPORT DEFAULTS" Classes="eyebrow"/>
+
+                            <TextBlock Text="Default color format on copy" Classes="caption"/>
+                            <ComboBox ItemsSource="{Binding Settings.CopyFormats}"
+                                      SelectedItem="{Binding Settings.DefaultCopyFormat}"
+                                      HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={x:Static conv:EnumSpacedConverter.Instance}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <TextBlock Text="Default export format" Classes="caption" Margin="0,4,0,0"/>
+                            <ComboBox ItemsSource="{Binding Settings.ExportFormats}"
+                                      SelectedItem="{Binding Settings.DefaultExportFormat}"
+                                      HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={x:Static conv:EnumSpacedConverter.Instance}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Hotkey -->
+                    <Border Classes="panel" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="GLOBAL HOTKEY (SCREEN EYEDROPPER)" Classes="eyebrow"/>
+
+                            <StackPanel Orientation="Horizontal" Spacing="14">
+                                <CheckBox Content="Ctrl"  IsChecked="{Binding Settings.HotkeyCtrl}"/>
+                                <CheckBox Content="Alt"   IsChecked="{Binding Settings.HotkeyAlt}"/>
+                                <CheckBox Content="Shift" IsChecked="{Binding Settings.HotkeyShift}"/>
+                                <CheckBox Content="Win"   IsChecked="{Binding Settings.HotkeyMeta}"/>
+                                <ComboBox MinWidth="90"
+                                          ItemsSource="{x:Static vm:SettingsViewModel.HotkeyKeys}"
+                                          SelectedItem="{Binding Settings.HotkeyKey}"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding Settings.HotkeyPreview}"
+                                       Classes="caption mono" FontSize="11"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <!-- ═══ COLUMN TWO · storage, data, about ═══ -->
+                <StackPanel Grid.Column="2" Spacing="12">
+
+                    <!-- Storage -->
+                    <Border Classes="panel" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="STORAGE" Classes="eyebrow"/>
+
+                            <TextBlock Text="Storage location" Classes="caption"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         IsReadOnly="True"
+                                         Text="{Binding Settings.StorageLocationLabel}"
+                                         Classes="mono" FontSize="12"/>
+                                <Button Grid.Column="1" Margin="8,0,0,0" Padding="10,7"
+                                        Click="OnBrowseStorage"
+                                        ToolTip.Tip="Browse the storage folder">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="16" Height="16"/>
+                                        <TextBlock Text="Browse…" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Text="Autosave, backups and version history all live in this folder."
+                                       Classes="caption" FontSize="11" TextWrapping="Wrap"/>
+
+                            <TextBlock Text="Provider" Classes="caption" Margin="0,4,0,0"/>
+                            <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.StorageProviders}"
+                                      SelectedItem="{Binding Settings.StorageProvider}"
+                                      HorizontalAlignment="Stretch"
+                                      ToolTip.Tip="json = flat file library · sqlite = local database (§9)"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Danger zone -->
+                    <Border BorderThickness="1.3" BorderBrush="{DynamicResource DangerBrush}"
+                            CornerRadius="18" Padding="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="RESET / CLEAR DATA"
+                                       Classes="eyebrow" Foreground="{DynamicResource DangerBrush}"/>
+                            <TextBlock Classes="caption" TextWrapping="Wrap"
+                                       Text="Deletes every palette, version and backup from this app's storage folder. Settings are kept."/>
+                            <Button Padding="12,8"
+                                    Command="{Binding Settings.ResetDataCommand}"
+                                    ToolTip.Tip="Destructive — deletes every palette, version and backup"
+                                    HorizontalAlignment="Left"
+                                    Foreground="{DynamicResource DangerBrush}"
+                                    BorderBrush="{DynamicResource DangerBrush}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <materialIcons:MaterialIcon Kind="TrashCanOutline" Width="16" Height="16"
+                                                                Foreground="{DynamicResource DangerBrush}"/>
+                                    <TextBlock Text="{Binding Settings.ResetButtonLabel}" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource DangerBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{Binding Settings.ResetStatus}"
+                                       Classes="caption" FontSize="11" TextWrapping="Wrap"
+                                       IsVisible="{Binding Settings.HasResetStatus}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- About / updates -->
+                    <Border Classes="panel" Padding="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="ABOUT &amp; UPDATES" Classes="eyebrow"/>
+                            <TextBlock Text="{Binding Settings.VersionLabel}"
+                                       Classes="caption mono" FontSize="11"/>
+                            <TextBlock Text="{Binding Settings.UpdateStatus}"
+                                       Classes="caption" TextWrapping="Wrap"/>
+                            <Button Padding="12,8"
+                                    Command="{Binding Settings.CheckForUpdatesCommand}"
+                                    ToolTip.Tip="Check for updates"
+                                    HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <materialIcons:MaterialIcon Kind="Refresh" Width="16" Height="16"/>
+                                    <TextBlock Text="Check for updates" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+            </Grid>
+        </ScrollViewer>
+
+    </Grid>
+</UserControl>

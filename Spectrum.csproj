@@ -33,6 +33,9 @@
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.1" />
 		<PackageReference Include="Material.Icons.Avalonia" Version="2.1.9" />
 		<PackageReference Include="Material.Icons" Version="3.0.2" />
+		<!-- §6 JPEG swatch sheets: Avalonia's Bitmap.Save only encodes PNG, so the
+		     sheet is encoded through the Skia build Avalonia.Skia already ships. -->
+		<PackageReference Include="SkiaSharp" Version="2.88.8" />
 	</ItemGroup>
 
 	<ItemGroup>
