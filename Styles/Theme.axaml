@@ -785,8 +785,11 @@
   </Style>
 
   <!-- ===================== Sliders ===================== -->
-  <!-- The gradient track is drawn by the view behind a transparent Slider; the
-       control itself only contributes the circular handle. -->
+  <!-- Every slider in the app is Classes="overlay": the view paints the track
+       strip (hue ramp, alpha checker, plain bar) behind the control and the
+       control only contributes the handle. The track rules below clear Fluent's
+       own line so that strip is the only one drawn — a slider without a strip
+       behind it would therefore have no visible track. -->
   <Style Selector="Slider:horizontal">
     <Setter Property="Height" Value="26"/>
     <Setter Property="MinHeight" Value="0"/>
@@ -841,6 +844,27 @@
                 BoxShadow="0 1 4 0 #33000000"/>
       </ControlTemplate>
     </Setter>
+  </Style>
+
+  <!-- Pointer feedback: the handle lifts as you grab it, and settles while you
+       drag, so the control answers before the value visibly moves. -->
+  <Style Selector="Slider /template/ Thumb">
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12"/>
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Hovering anywhere on the slider — not just the handle — lifts it, so the
+       whole 26px row reads as the hit area. -->
+  <Style Selector="Slider:pointerover /template/ Thumb">
+    <Setter Property="RenderTransform" Value="scale(1.15)"/>
+  </Style>
+
+  <Style Selector="Slider /template/ Thumb:pressed">
+    <Setter Property="RenderTransform" Value="scale(1.06)"/>
   </Style>
 
 </Styles>

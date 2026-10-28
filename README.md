@@ -36,7 +36,7 @@
 **Palette management (§1)**
 - Palette **library sidebar**: create, inline-rename, duplicate, delete, **pin/favorite**, **search**, and filter (All / Pinned / Recent)
 - **Autosave with dirty state** (750 ms debounce), atomic writes, **crash-recovery journal**, rotating **backups**, and **per-palette version history** with one-click restore
-- **Tabs for open palettes**, whole-library import/export, and **detach a palette into its own window**
+- **Tabs for open palettes**, whole-library import/export, and **detach the palette board into its own window** (the board only — a live second view, not a second copy of the app)
 
 **Swatch & color editing (§2)**
 - Full **spectrum picker dialog** (saturation/value plane + hue & opacity sliders) with **HEX / RGB / HSL / HSV input**, plus live **LAB/LCH/OKLCH readouts**
@@ -61,7 +61,7 @@
 
 **Desktop UX (§7)**
 - **Workspaces — Studio · Preview · Analyze · Export** (`Ctrl+1…4`) plus **Settings** (`Ctrl+,`): the top app bar switches the shell so each task only shows the panels it needs, instead of everything at once — Settings is a full workspace too, not a modal dialog, and returns you to the workspace you came from
-- Sidebar + resizable/collapsible panels (splitters everywhere), **Ctrl+K command palette**, full keyboard-shortcut map, **tabs**, **system tray** with quick access, multi-window detach, rich **tooltips with color info**
+- Sidebar + resizable/collapsible panels (splitters everywhere), **Ctrl+K command palette**, full keyboard-shortcut map, **tabs**, **system tray** with quick access, **detachable palette board**, rich **tooltips with color info**
 
 **Preview & visualization (§8)**
 - **Preview workspace scenes as tabs** — **Dashboard · Landing · Mobile · Chart · Poster** — each rendered from a **role map** (Primary, Accent, Surface, Background, Text, Border), with its guidance kept outside the mockup so the scene stays judgeable

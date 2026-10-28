@@ -42,9 +42,13 @@
                 </ComboBox>
 
                 <TextBlock Text="Angle" Classes="caption" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                <Slider x:Name="AngleSlider" Minimum="0" Maximum="360" Value="90"
-                        Width="150" VerticalAlignment="Center" ValueChanged="OnAngleChanged"
-                        ToolTip.Tip="CSS angle: 0° = to top, 90° = to right"/>
+                <Grid Width="150" Height="26" VerticalAlignment="Center">
+                    <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                            Background="{DynamicResource OutlineBrush}"/>
+                    <Slider x:Name="AngleSlider" Classes="overlay" Minimum="0" Maximum="360" Value="90"
+                            VerticalAlignment="Center" ValueChanged="OnAngleChanged"
+                            ToolTip.Tip="CSS angle: 0° = to top, 90° = to right"/>
+                </Grid>
                 <TextBlock x:Name="AngleLabel" Text="90°" Classes="mono caption"
                            VerticalAlignment="Center" MinWidth="38"/>
             </StackPanel>
@@ -77,10 +81,14 @@
                                     Cursor="Hand" PointerPressed="OnStopSwatchClick"
                                     ToolTip.Tip="Click to change this stop's color"/>
 
-                            <Slider Grid.Column="1" Minimum="0" Maximum="100"
-                                    Value="{Binding Position, Mode=TwoWay}"
-                                    VerticalAlignment="Center" Margin="10,0"
-                                    ToolTip.Tip="Stop position (0–100%)"/>
+                            <Grid Grid.Column="1" Height="26" Margin="10,0" VerticalAlignment="Center">
+                                <Border Height="8" VerticalAlignment="Center" CornerRadius="4"
+                                        Background="{DynamicResource OutlineBrush}"/>
+                                <Slider Classes="overlay" Minimum="0" Maximum="100"
+                                        Value="{Binding Position, Mode=TwoWay}"
+                                        VerticalAlignment="Center"
+                                        ToolTip.Tip="Stop position (0–100%)"/>
+                            </Grid>
 
                             <TextBlock Grid.Column="2" Text="{Binding Info}" Classes="mono caption"
                                        VerticalAlignment="Center" Margin="0,0,10,0"/>

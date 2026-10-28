@@ -492,7 +492,7 @@
                         <!-- Detach (§7 multi-window): lives on the Preview toolbar only. -->
                         <Button Height="34"
                                 Command="{Binding DetachWindowCommand}"
-                                ToolTip.Tip="Open this palette in a separate window (§7 multi-window)">
+                                ToolTip.Tip="Pop this palette's board into its own window (§7 multi-window)">
                             <StackPanel Orientation="Horizontal" Spacing="6"
                                         VerticalAlignment="Center">
                                 <materialIcons:MaterialIcon Kind="WindowRestore" Width="16" Height="16"/>

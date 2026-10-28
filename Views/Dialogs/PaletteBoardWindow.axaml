@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Spectrum.ViewModels"
+        xmlns:local="using:Spectrum.Views"
+        x:Class="Spectrum.Views.PaletteBoardWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Library.SelectedPalette.Name}"
+        Width="820" Height="440" MinWidth="480" MinHeight="300"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="True"
+        Icon="/Assets/Spectrum.ico"
+        Background="{DynamicResource CanvasBrush}">
+
+    <!-- §7 "Multi-window support" — detaching a palette pops out the board only,
+         not a second copy of the shell. It shares the main window's ViewModel, so
+         the floating board and the one on screen are the same palette: selecting,
+         editing, locking or dragging a swatch in either window shows in both. -->
+
+    <Grid Margin="10">
+        <local:PaletteBoardView/>
+    </Grid>
+</Window>

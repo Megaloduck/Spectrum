@@ -25,19 +25,41 @@ namespace Spectrum.Views
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
+            Unsubscribe();
+            Subscribe();
+        }
 
-            if (_subscribedVm is not null)
-            {
-                _subscribedVm.ViewModeRequested -= OnViewModeRequested;
-                _subscribedVm = null;
-            }
+        // A detached board (see PaletteBoardWindow) shares the shell's ViewModel
+        // and can be opened and closed many times, so the subscription is tied to
+        // being in the visual tree rather than to the DataContext it was given.
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            Subscribe();
+        }
 
-            if (DataContext is MainWindowViewModel vm)
-            {
-                _subscribedVm = vm;
-                vm.ViewModeRequested += OnViewModeRequested;
-                ApplyViewMode(vm.ViewMode);
-            }
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromVisualTree(e);
+            Unsubscribe();
+        }
+
+        private void Subscribe()
+        {
+            if (_subscribedVm is not null) return;
+            if (DataContext is not MainWindowViewModel vm) return;
+
+            _subscribedVm = vm;
+            vm.ViewModeRequested += OnViewModeRequested;
+            ApplyViewMode(vm.ViewMode);
+        }
+
+        private void Unsubscribe()
+        {
+            if (_subscribedVm is null) return;
+
+            _subscribedVm.ViewModeRequested -= OnViewModeRequested;
+            _subscribedVm = null;
         }
 
         // ---------------- View modes (§8 grid / list / compact) ----------------

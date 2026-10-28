@@ -353,18 +353,17 @@ namespace Spectrum.ViewModels
         [RelayCommand]
         private void ToggleInspector() => InspectorVisible = !InspectorVisible;
 
-        /// <summary>§7 "Multi-window support": detach the current palette into its own window.</summary>
+        /// <summary>§7 "Multi-window support": pop the palette board out into its own
+        /// window — just the board, not a second copy of the shell. Both windows
+        /// share this ViewModel, so they always show the same palette.</summary>
         [RelayCommand]
         private void DetachWindow()
         {
             if (GetOwnerWindow() is not { } owner) return;
 
-            var window = new Views.MainWindow
-            {
-                DataContext = new MainWindowViewModel(),
-            };
+            var window = new Views.PaletteBoardWindow { DataContext = this };
             window.Show(owner);
-            StatusMessage = "Palette detached into a new window.";
+            StatusMessage = "Palette board detached into its own window.";
         }
 
         /// <summary>§3 "Global hotkey to trigger picker" — Ctrl+Alt+P by default (rebindable in Settings).</summary>
