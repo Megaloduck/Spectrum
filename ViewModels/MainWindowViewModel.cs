@@ -81,9 +81,10 @@ namespace Spectrum.ViewModels
             Analyze?.RefreshEvaluation();
         }
 
-        /// <summary>The Analyze and Settings workspaces have no dock, so the app-bar
-        /// toggle would be a no-op there. Hidden for those; the rest keep it.</summary>
-        public bool ShowDockToggle => !IsAnalyzeMode && !IsSettingsMode;
+        /// <summary>Analyze, Export and Settings have no dock, so the app-bar toggle
+        /// would be a dead control there. Hidden for those; Studio and Preview,
+        /// which do own a dock, keep it.</summary>
+        public bool ShowDockToggle => !IsAnalyzeMode && !IsExportMode && !IsSettingsMode;
 
         // ---------------- §8 Preview & visualization ----------------
 

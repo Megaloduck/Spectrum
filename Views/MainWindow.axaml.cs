@@ -112,6 +112,10 @@ namespace Spectrum.Views
             BeginMoveDrag(e);
         }
 
+        /// <summary>The shell's own breathing room: the rail bleeds to the left edge,
+        /// the app bar and the panels sit 10px in from everything else.</summary>
+        private static readonly Thickness ShellInset = new(0, 10, 10, 10);
+
         private void UpdateChromeForState()
         {
             var maximized = WindowState == WindowState.Maximized;
@@ -120,12 +124,18 @@ namespace Spectrum.Views
                 MaximizeIcon.Kind = maximized ? MaterialIconKind.WindowRestore : MaterialIconKind.WindowMaximize;
 
             // A maximized borderless window hangs one frame outside the working
-            // area on Windows; OffScreenMargin is exactly that overhang, so the
-            // shell keeps its panels on screen instead of under the screen edge.
+            // area on Windows. Compensating that with OffScreenMargin alone would
+            // land the shell exactly on the screen edge — panels flush against it,
+            // rounded corners clipped. So the frame is cancelled out *and* the
+            // shell keeps the same inset it has in a normal window.
             var off = OffScreenMargin;
             RootGrid.Margin = maximized
-                ? new Thickness(off.Left, off.Top, off.Right, off.Bottom)
-                : new Thickness(0, 10, 10, 10);
+                ? new Thickness(
+                    off.Left + ShellInset.Left,
+                    off.Top + ShellInset.Top,
+                    off.Right + ShellInset.Right,
+                    off.Bottom + ShellInset.Bottom)
+                : ShellInset;
         }
 
         private void OnWindowKeyDown(object? sender, KeyEventArgs e)
