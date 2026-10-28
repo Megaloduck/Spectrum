@@ -201,7 +201,6 @@ namespace Spectrum.Views
 
             // Window & view
             Add("Toggle light / dark theme", "appearance", vm.ToggleThemeCommand);
-            Add("Toggle library panel", "Ctrl+B", vm.ToggleLibraryPanelCommand);
             Add("Toggle inspector panel", "Ctrl+I", vm.ToggleInspectorCommand);
             Add("Detach palette into new window", "multi-window", vm.DetachWindowCommand);
 

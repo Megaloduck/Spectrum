@@ -128,7 +128,7 @@ Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) an
 | New palette | `Ctrl+N` |
 | Duplicate / delete selected swatch | `Ctrl+D` / `Delete` |
 | Open color picker | Click the big base-color preview, or the palette icon on a swatch |
-| Collapse library / inspector | `Ctrl+B` / `Ctrl+I` |
+| Collapse inspector | `Ctrl+I` |
 | Settings | `Ctrl+,` |
 | Export to file / PNG sheet | `Ctrl+E` / `Ctrl+J` |
 

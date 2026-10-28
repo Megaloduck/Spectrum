@@ -88,10 +88,6 @@
 
             <!-- Quick actions: panels · history · appearance -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                <Button Classes="iconChip ghost" Command="{Binding ToggleLibraryPanelCommand}"
-                        ToolTip.Tip="Show / hide the palette rail (Ctrl+B)">
-                    <materialIcons:MaterialIcon Kind="PageLayoutSidebarLeft" Width="17" Height="17"/>
-                </Button>
                 <Button Classes="iconChip ghost" Command="{Binding ToggleInspectorCommand}"
                         IsVisible="{Binding ShowDockToggle}"
                         ToolTip.Tip="Show / hide the workspace dock (Ctrl+I)">
@@ -125,14 +121,13 @@
         </Grid>
 
         <!-- ═══════════════════ BODY · palette rail · workspace ═══════════════════ -->
-        <Grid Grid.Row="1" x:Name="BodyGrid" ColumnDefinitions="68,10,*">
+        <Grid Grid.Row="1" x:Name="BodyGrid" ColumnDefinitions="68,*">
 
             <!-- ============ PALETTE RAIL ============
                  Discord-style navigation: one thumbnail per palette, a selection
                  pill on the left, management on right-click, and utility actions
                  pinned to the bottom. -->
-            <Grid Grid.Column="0" x:Name="LibraryPanel" IsVisible="{Binding LibraryVisible}"
-                  RowDefinitions="*,Auto">
+            <Grid Grid.Column="0" x:Name="LibraryPanel" RowDefinitions="*,Auto">
 
                 <ScrollViewer Grid.Row="0"
                               HorizontalScrollBarVisibility="Disabled"
@@ -249,8 +244,7 @@
                            IsVisible="{Binding Library.IsLibraryEmpty}"
                            HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
-                <!-- Utility actions: new · manage/search · settings (hide lives in
-                     the app bar and on Ctrl+B, so the rail stays three chips wide) -->
+                <!-- Utility actions: new · manage/search · settings -->
                 <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,4"
                             HorizontalAlignment="Center">
                     <Border Width="34" Height="1" Margin="0,4,0,6"

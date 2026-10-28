@@ -38,48 +38,29 @@ namespace Spectrum.Views
 
             // Coolors-style shortcut handling (full map in OnWindowKeyDown).
             AddHandler(KeyDownEvent, OnWindowKeyDown);
-
             DataContextChanged += (_, _) =>
-            {
-                if (_subscribedVm is not null)
                 {
-                    _subscribedVm.PropertyChanged -= OnViewModelPropertyChanged;
-                    _subscribedVm.Library.RenameStarted -= OnPaletteRenameStarted;
-                    _subscribedVm = null;
-                }
+                    if (_subscribedVm is not null)
+                    {
+                        _subscribedVm.PropertyChanged -= OnViewModelPropertyChanged;
+                        _subscribedVm.Library.RenameStarted -= OnPaletteRenameStarted;
+                        _subscribedVm = null;
+                    }
 
-                if (DataContext is MainWindowViewModel vm)
-                {
-                    _subscribedVm = vm;
-                    vm.PropertyChanged += OnViewModelPropertyChanged;
-                    vm.Library.RenameStarted += OnPaletteRenameStarted;
-                }
-
-                ApplyShellLayout();
-            };
+                    if (DataContext is MainWindowViewModel vm)
+                    {
+                        _subscribedVm = vm;
+                        vm.PropertyChanged += OnViewModelPropertyChanged;
+                        vm.Library.RenameStarted += OnPaletteRenameStarted;
+                    }
+                };
         }
 
-        // ---------------- Collapsible library (§7) ----------------
+        // ---------------- Layout ----------------
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(MainWindowViewModel.LibraryVisible))
-                ApplyShellLayout();
-        }
-
-        /// <summary>
-        /// Sizes the library column. IsVisible alone would leave a 264px gutter,
-        /// so the widths are driven here; the workspace handles its own dock.
-        /// </summary>
-        private void ApplyShellLayout()
-        {
-            var open = _subscribedVm is { LibraryVisible: true };
-
-            // The palette rail is a fixed-width navigation strip; the second
-            // column is just the gutter between the rail and the workspace.
-            var columns = BodyGrid.ColumnDefinitions;
-            columns[0].Width = new GridLength(open ? 68 : 0);
-            columns[1].Width = new GridLength(open ? 10 : 0);
+            // No-op: the palette rail is always visible.
         }
 
         private void OnWindowKeyDown(object? sender, KeyEventArgs e)
@@ -133,9 +114,6 @@ namespace Spectrum.Views
                         break;
                     case Key.J:
                         RunIfPossible(vm.Export.ExportPngCommand);
-                        break;
-                    case Key.B:
-                        RunIfPossible(vm.ToggleLibraryPanelCommand);
                         break;
                     case Key.I:
                         RunIfPossible(vm.ToggleInspectorCommand);

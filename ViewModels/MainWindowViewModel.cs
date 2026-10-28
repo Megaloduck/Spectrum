@@ -318,18 +318,10 @@ namespace Spectrum.ViewModels
             StatusMessage = "Settings saved.";
         }
 
-        // Panel collapse toggles (§7 "Resizable / collapsible panels"). Plain
-        // bindable flags: the shell binds the library column to LibraryVisible and
-        // every workspace binds its own dock to InspectorVisible, so no view has to
-        // subscribe to an event to know when a panel closed.
-        [ObservableProperty]
-        private bool _libraryVisible = true;
-
+        // Panel collapse toggle (§7 "Resizable / collapsible panels").
+        // The inspector can be collapsed; the palette rail is always shown.
         [ObservableProperty]
         private bool _inspectorVisible = true;
-
-        [RelayCommand]
-        private void ToggleLibraryPanel() => LibraryVisible = !LibraryVisible;
 
         [RelayCommand]
         private void ToggleInspector() => InspectorVisible = !InspectorVisible;
