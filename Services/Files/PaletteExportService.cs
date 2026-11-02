@@ -19,7 +19,8 @@ namespace Spectrum.Services
         Gpl,
         Ase,
         Aco,
-        PlainText
+        PlainText,
+        Prompt
     }
 
     /// <summary>
@@ -27,7 +28,13 @@ namespace Spectrum.Services
     /// </summary>
     public static class PaletteExportService
     {
-        public static string Export(IEnumerable<ColorSwatch> palette, ExportFormat format)
+        /// <param name="promptContext">Where the palette was previewed (roles, scene,
+        /// theme). Only <see cref="ExportFormat.Prompt"/> reads it; every other
+        /// format ignores it, so callers can pass it unconditionally.</param>
+        public static string Export(
+            IEnumerable<ColorSwatch> palette,
+            ExportFormat format,
+            PalettePromptContext? promptContext = null)
         {
             return format switch
             {
@@ -38,6 +45,7 @@ namespace Spectrum.Services
                 ExportFormat.Tailwind => ExportTailwind(palette),
                 ExportFormat.Svg => ExportSvg(palette),
                 ExportFormat.Gpl => ExportGpl(palette),
+                ExportFormat.Prompt => PalettePromptService.Build(palette, promptContext),
                 ExportFormat.Ase or ExportFormat.Aco =>
                     $"{format} is a binary swatch format — use “Save to file…” to write it.",
                 _ => ExportPlainText(palette),
@@ -56,6 +64,7 @@ namespace Spectrum.Services
             ExportFormat.Gpl => "gpl",
             ExportFormat.Ase => "ase",
             ExportFormat.Aco => "aco",
+            ExportFormat.Prompt => "md",
             _ => "txt",
         };
 

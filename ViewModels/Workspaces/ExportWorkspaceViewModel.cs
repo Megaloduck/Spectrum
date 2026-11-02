@@ -153,7 +153,10 @@ namespace Spectrum.ViewModels
         [RelayCommand]
         private void BuildExportPreview()
         {
-            ExportPreview = PaletteExportService.Export(_shell.Palette, SelectedExportFormat);
+            // The prompt format reads the Preview workspace's role map; the other
+            // formats ignore the context.
+            ExportPreview = PaletteExportService.Export(
+                _shell.Palette, SelectedExportFormat, _shell.Preview.BuildPromptContext());
             _shell.StatusMessage = $"Export preview built ({SelectedExportFormat}).";
         }
 
@@ -191,7 +194,8 @@ namespace Spectrum.ViewModels
                         await System.IO.File.WriteAllBytesAsync(path, PaletteBinaryExportService.WriteAco(_shell.Palette));
                         break;
                     default:
-                        await System.IO.File.WriteAllTextAsync(path, PaletteExportService.Export(_shell.Palette, format));
+                        await System.IO.File.WriteAllTextAsync(path, PaletteExportService.Export(
+                            _shell.Palette, format, _shell.Preview.BuildPromptContext()));
                         break;
                 }
 

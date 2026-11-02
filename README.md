@@ -57,7 +57,7 @@
 
 **Import / export (§5–6, local files only)**
 - Import: JSON, **CSS variables**, **GPL (GIMP)**, **ASE (Adobe)**, **ACO (Photoshop)**, image extraction
-- Export: JSON, CSS, SCSS, **LESS**, Tailwind, **SVG**, **PNG / JPG swatch sheet**, **ASE / GPL / ACO**, plain text — copy to clipboard or save to file (the **Export workspace** holds the format picker, the text preview and a live preview of the sheet image)
+- Export: JSON, CSS, SCSS, **LESS**, Tailwind, **SVG**, **PNG / JPG swatch sheet**, **ASE / GPL / ACO**, plain text, **Prompt** (a Markdown brief for AI assistants) — copy to clipboard or save to file (the **Export workspace** holds the format picker, the text preview and a live preview of the sheet image)
 
 **Desktop UX (§7)**
 - **Workspaces — Studio · Preview · Analyze · Export** (`Ctrl+1…4`) plus **Settings** (`Ctrl+,`): the top app bar switches the shell so each task only shows the panels it needs, instead of everything at once — Settings is a full workspace too, not a modal dialog, and returns you to the workspace you came from
@@ -65,6 +65,7 @@
 
 **Preview & visualization (§8)**
 - **Preview workspace scenes as tabs** — **Dashboard · Landing · Mobile · Chart · Poster** — each rendered from a **role map** (Primary, Accent, Surface, Background, Text, Border), with its guidance kept outside the mockup so the scene stays judgeable
+- **Export as a prompt** — the Preview toolbar's **Prompt** button copies (or saves as `.md`) a Markdown brief any AI assistant can build from: the palette, a CSS-token block, the **resolved role map** (so it matches the scene on screen, color-blind simulation included), the scene guidance and a short set of ground rules
 - **Light / dark preview switch** (toolbar and dock) — the same role map painted on a near-white or a near-black canvas; the dark canvas is set at a fixed OKLCH lightness so a bright and a dark palette stay visibly different, instead of both collapsing to black
 - **Custom canvas colors per theme** in the dock: pick the light and dark canvas independently (the app's color picker), with Auto derived from the palette accent and a per-theme reset; Surface, Text and Border re-derive from whatever canvas is in play
 - Scene fidelity: pages carry window chrome; the dashboard has an app bar, three KPI cards, activity and team panes; the landing page pairs a hero with a palette panel, logo strip and testimonial; the phone is a real list with filters and a tab bar; the chart scene carries four charts — vertical bars with a target rule, a stacked channel split, ranked pages and a trend line with an area fill — all painted from the roles; poster small print is a derived on-primary color rather than dimmed text; scenes honour the **color-blind simulation**
@@ -121,6 +122,7 @@ Or open `Spectrum.slnx` in your IDE of choice (Visual Studio, Rider, VS Code) an
 | Score every color pair | **Matrix** in the Analyze toolbar (`Ctrl+3`) → WCAG cells + APCA tooltips + CSV copy |
 | Screen eyedropper | **Screen** button or `Ctrl+Alt+P` (click anywhere to pick) |
 | Export a palette | **Export** workspace (`Ctrl+4`) → build a preview, copy, **Save file…**, or preview the swatch sheet and **Save PNG… / Save JPG…** |
+| Export as a prompt | **Preview** toolbar (`Ctrl+2`) → **Prompt** → **Copy prompt** or **Save prompt as .md…** (or pick **Prompt** as the format in Export) |
 | Command palette | `Ctrl+K` |
 | Switch workspace | `Ctrl+1` Studio · `Ctrl+2` Preview · `Ctrl+3` Analyze · `Ctrl+4` Export |
 | Undo / redo | `Ctrl+Z` / `Ctrl+Y` |

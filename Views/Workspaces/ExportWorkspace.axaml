@@ -69,7 +69,7 @@
                     <StackPanel Spacing="2">
                         <TextBlock Text="EXPORT PALETTE" Classes="eyebrow"/>
                         <TextBlock Classes="caption" TextWrapping="Wrap"
-                                   Text="Text formats build a preview you can copy; ASE / ACO and the PNG / JPG sheet write straight to a file."/>
+                                   Text="Text formats — including Prompt (.md) for AI assistants — build a preview you can copy; ASE / ACO and the PNG / JPG sheet write straight to a file."/>
                     </StackPanel>
 
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto" Margin="0,14,0,0">

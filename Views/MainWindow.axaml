@@ -51,22 +51,16 @@
                  column is 4px of selection pill + the 44px tile), so the app icon
                  sits exactly on top of the palette tiles below it. -->
             <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center" Margin="14,0,0,0">
-                <Border Width="44" Height="44" CornerRadius="11"                        
-                        Background="{DynamicResource SurfaceRaisedBrush}"
-                        BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1">
-                    <materialIcons:MaterialIcon Kind="Palette" Width="21" Height="21"
-                                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <materialIcons:MaterialIcon.Foreground>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#5B8DEF" Offset="0"/>
-                                <GradientStop Color="#58C27D" Offset="0.28"/>
-                                <GradientStop Color="#F4C95D" Offset="0.52"/>
-                                <GradientStop Color="#F2994A" Offset="0.76"/>
-                                <GradientStop Color="#EB5757" Offset="1"/>
-                            </LinearGradientBrush>
-                        </materialIcons:MaterialIcon.Foreground>
-                    </materialIcons:MaterialIcon>
-                </Border>
+    <Border Width="44" Height="44" CornerRadius="11" 
+            BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1"
+            ToolTip.Tip="Spectrum">
+        <Image Source="/Assets/Spectrum-logo.png" 
+               Width="35" Height="35" 
+               Stretch="Uniform" 
+               HorizontalAlignment="Center" 
+               VerticalAlignment="Center" />
+    </Border>
+
 
                 <StackPanel VerticalAlignment="Center" Spacing="1">
                     <TextBlock Text="Spectrum" Classes="display" FontSize="24"/>
@@ -129,10 +123,6 @@
                 <Button Classes="iconChip ghost" Command="{Binding ToggleThemeCommand}"
                         ToolTip.Tip="Toggle light / dark">
                     <materialIcons:MaterialIcon Kind="WhiteBalanceSunny" Width="17" Height="17"/>
-                </Button>
-                <Button Classes="iconChip ghost" Command="{Binding OpenSettingsCommand}"
-                        ToolTip.Tip="Settings (Ctrl+,)">
-                    <materialIcons:MaterialIcon Kind="CogOutline" Width="17" Height="17"/>
                 </Button>
 
                 <Border Width="1" Height="20" Margin="5,0"

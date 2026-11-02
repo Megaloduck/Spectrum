@@ -769,6 +769,82 @@ namespace Spectrum.ViewModels
             _shell.StatusMessage = $"Generated {suffix.ToLowerInvariant()} mode variant with {swatches.Count} colors.";
         }
 
+        // ---------------- Prompt export ----------------
+
+        /// <summary>The color a role currently resolves to — a pinned palette color,
+        /// the Auto default, and the color-blind simulation, exactly as the scenes
+        /// draw it. The prompt reports these values, so it can never disagree with
+        /// the picture the palette was judged in.</summary>
+        private Color ResolvedRoleColor(int roleIndex) => ResolveRole(roleIndex, AutoColorFor(roleIndex));
+
+        /// <summary>Snapshot of what the gallery is showing, for the prompt export.
+        /// Public because the Export workspace reuses it for its Prompt format.</summary>
+        public PalettePromptContext BuildPromptContext() => new(
+            _shell.Library.SelectedPalette?.Name ?? "Palette",
+            IsDarkTheme ? "dark" : "light",
+            SceneTitle,
+            SceneHint,
+            Roles
+                .Select((role, index) => new PromptRole(
+                    role.Name, role.Hint, ColorMathService.ToHex(ResolvedRoleColor(index))))
+                .ToList());
+
+        /// <summary>Copies a Markdown brief any AI assistant can build a UI from.</summary>
+        [RelayCommand]
+        private async Task CopyPromptAsync()
+        {
+            if (_shell.Palette.Count == 0)
+            {
+                _shell.StatusMessage = "Add some colors before exporting a prompt.";
+                return;
+            }
+
+            await ClipboardHelper.SetTextAsync(
+                PalettePromptService.Build(_shell.Palette, BuildPromptContext()));
+            _shell.StatusMessage = "Copied a ready-to-paste UI prompt to the clipboard.";
+        }
+
+        /// <summary>Writes the same prompt to a Markdown file.</summary>
+        [RelayCommand]
+        private async Task SavePromptAsync()
+        {
+            if (_shell.Palette.Count == 0)
+            {
+                _shell.StatusMessage = "Add some colors before exporting a prompt.";
+                return;
+            }
+
+            var path = await PaletteFileService.PickSaveFileAsync(
+                $"{PaletteFileStem()}-prompt", "md", "Prompt (*.md)");
+            if (string.IsNullOrEmpty(path))
+            {
+                _shell.StatusMessage = "Prompt export cancelled.";
+                return;
+            }
+
+            try
+            {
+                await System.IO.File.WriteAllTextAsync(
+                    path, PalettePromptService.Build(_shell.Palette, BuildPromptContext()));
+                _shell.StatusMessage = $"Saved the UI prompt to {System.IO.Path.GetFileName(path)}.";
+            }
+            catch (Exception ex)
+            {
+                _shell.StatusMessage = $"Couldn't save the prompt: {ex.Message}";
+            }
+        }
+
+        /// <summary>File-name stem from the active palette (falls back to "palette").</summary>
+        private string PaletteFileStem()
+        {
+            var name = _shell.Library.SelectedPalette?.Name;
+            if (string.IsNullOrWhiteSpace(name)) return "palette";
+
+            var invalid = System.IO.Path.GetInvalidFileNameChars();
+            var clean = new string(name.Select(c => invalid.Contains(c) ? '-' : c).ToArray()).Trim();
+            return string.IsNullOrWhiteSpace(clean) ? "palette" : clean;
+        }
+
         /// <summary>§8 "Side-by-side palette comparison".</summary>
         [RelayCommand]
         private async Task ComparePalettesAsync()

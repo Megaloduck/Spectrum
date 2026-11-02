@@ -489,6 +489,47 @@
                             </StackPanel>
                         </Button>
 
+                        <!-- Export as a prompt: a Markdown brief any AI assistant can
+                             build from. The flyout offers both outputs — copy for a
+                             chat window, .md for keeping next to the project. -->
+                        <Button Height="34" Margin="0,0,4,0"
+                                AutomationProperties.Name="Export as a prompt"
+                                AutomationProperties.AutomationId="ExportPrompt"
+                                ToolTip.Tip="Export as a prompt — a Markdown brief describing the palette, its roles and CSS tokens">
+                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                        VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="RobotOutline" Width="16" Height="16"/>
+                                <TextBlock Text="Prompt" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button.Flyout>
+                                <Flyout Placement="BottomEdgeAlignedLeft">
+                                    <StackPanel x:DataType="vm:MainWindowViewModel" Width="222"
+                                                Spacing="6" Margin="2">
+                                        <TextBlock Text="EXPORT AS PROMPT" Classes="eyebrow"/>
+                                        <TextBlock Classes="caption" FontSize="10.5" TextWrapping="Wrap"
+                                                   Text="Paste it into ChatGPT, Claude, v0 or Cursor to build a UI from this palette."/>
+
+                                        <Button Classes="menuItem"
+                                                AutomationProperties.AutomationId="CopyPrompt"
+                                                Command="{Binding Preview.CopyPromptCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <materialIcons:MaterialIcon Kind="ContentCopy" Width="14" Height="14"/>
+                                                <TextBlock Text="Copy prompt" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="menuItem"
+                                                AutomationProperties.AutomationId="SavePrompt"
+                                                Command="{Binding Preview.SavePromptCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="14" Height="14"/>
+                                                <TextBlock Text="Save prompt as .md…" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+
                         <!-- Detach (§7 multi-window): lives on the Preview toolbar only. -->
                         <Button Height="34"
                                 Command="{Binding DetachWindowCommand}"
@@ -995,7 +1036,7 @@
                                                            Foreground="{Binding Preview.TextBrush}"/>
                                                 <Border Grid.Column="1" Background="{Binding Preview.AccentBrush}"
                                                         CornerRadius="6" Padding="6,1">
-                                                    <TextBlock Text="v3" FontSize="9" FontWeight="Bold"
+                                                    <TextBlock Text="New" FontSize="9" FontWeight="Bold"
                                                                Foreground="{Binding Preview.AccentForegroundBrush}"/>
                                                 </Border>
                                             </Grid>

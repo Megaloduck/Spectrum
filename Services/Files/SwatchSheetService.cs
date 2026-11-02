@@ -31,6 +31,12 @@ namespace Spectrum.Services
         private const int CellWidth = 220;
         private const int SheetHeight = 320;
 
+        /// <summary>Ink for the labels under each block. They sit on the sheet's white
+        /// canvas, not on the swatch, so the ink must be readable on white — the
+        /// contrast ink used inside the block turns white on dark colors and the
+        /// labels disappeared for every dark swatch.</summary>
+        private static readonly Color SheetInk = Color.FromRgb(0x1E, 0x20, 0x25);
+
         // Avalonia's Bitmap.Save only encodes PNG (11.x), so JPEG goes through
         // Skia directly — the same engine Avalonia.Skia renders this sheet with.
         private const int JpegQuality = 90;
@@ -74,11 +80,11 @@ namespace Spectrum.Services
                     dc.DrawRectangle(null, borderPen, blockRect);
 
                     var name = string.IsNullOrWhiteSpace(swatch.Name) ? "Color" : swatch.Name;
-                    DrawText(dc, name, x + 14, SheetHeight - 66, 16, FontWeight.SemiBold, textColor);
+                    DrawText(dc, name, x + 14, SheetHeight - 66, 16, FontWeight.SemiBold, SheetInk);
                     DrawText(dc, ColorMathService.ToHex(swatch.Color), x + 14, SheetHeight - 42, 14,
-                        FontWeight.Normal, textColor);
+                        FontWeight.Normal, SheetInk);
                     DrawText(dc, $"rgb({swatch.Color.R}, {swatch.Color.G}, {swatch.Color.B})", x + 14,
-                        SheetHeight - 22, 12, FontWeight.Normal, textColor);
+                        SheetHeight - 22, 12, FontWeight.Normal, SheetInk);
                 }
             }
 
