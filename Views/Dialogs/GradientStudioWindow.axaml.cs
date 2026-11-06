@@ -16,7 +16,7 @@ using System.Linq;
 namespace Spectrum.Views
 {
     /// <summary>
-    /// §8 "Gradient studio": modal editor for a multi-stop linear/radial
+    /// "Gradient studio": modal editor for a multi-stop linear/radial
     /// gradient seeded from the current palette. Exports CSS (clipboard),
     /// SVG and PNG (local files only), or returns its stop colors so the
     /// ViewModel can append them to the palette under one undo step.

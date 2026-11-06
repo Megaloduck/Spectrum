@@ -33,21 +33,21 @@
 
 ## ✨ Features
 
-**Palette management (§1)**
+**Palette management**
 - Palette **library sidebar**: create, inline-rename, duplicate, delete, **pin/favorite**, **search**, and filter (All / Pinned / Recent)
 - **Autosave with dirty state** (750 ms debounce), atomic writes, **crash-recovery journal**, rotating **backups**, and **per-palette version history** with one-click restore
 - **Tabs for open palettes**, whole-library import/export, and **detach the palette board into its own window** (the board only — a live second view, not a second copy of the app)
 
-**Swatch & color editing (§2)**
+**Swatch & color editing**
 - Full **spectrum picker dialog** (saturation/value plane + hue & opacity sliders) with **HEX / RGB / HSL / HSV input**, plus live **LAB/LCH/OKLCH readouts**
 - Manual hex entry, alpha control, **copy in 9 formats**, **paste from clipboard** (any notation), swatch labels, duplicate, inline large preview
 
-**Color picking (§3)**
+**Color picking**
 - **System-wide eyedropper** with pixel-grid magnifier and **global hotkey** (default `Ctrl+Alt+P`, rebindable) — Windows native interop, fully local
 - **In-app eyedropper** for exact pixels of any image, plus histogram-based extraction from images
 - **Recent-picked-colors history** (persisted, click to reuse)
 
-**Color science (§4)**
+**Color science**
 - Conversions: HEX, RGB, HSL, HSV, **LAB, LCH, OKLCH** — live in the inspector
 - Harmonies: complementary, analogous, triadic, tetradic, split-complementary, monochromatic + random-with-lock
 - **Tints / shades / tones** generators, palette-from-base, palette-from-image
@@ -55,15 +55,15 @@
 - **Contrast matrix** — every text-on-background pair scored at once: color-coded WCAG cells, APCA in the tooltip, one-click CSV copy
 - **Color blindness simulation** (Protanopia, Deuteranopia, Tritanopia, Achromatopsia)
 
-**Import / export (§5–6, local files only)**
+**Import / export (local files only)**
 - Import: JSON, **CSS variables**, **GPL (GIMP)**, **ASE (Adobe)**, **ACO (Photoshop)**, image extraction
 - Export: JSON, CSS, SCSS, **LESS**, Tailwind, **SVG**, **PNG / JPG swatch sheet**, **ASE / GPL / ACO**, plain text, **Prompt** (a Markdown brief for AI assistants) — copy to clipboard or save to file (the **Export workspace** holds the format picker, the text preview and a live preview of the sheet image)
 
-**Desktop UX (§7)**
+**Desktop UX**
 - **Workspaces — Studio · Preview · Analyze · Export** (`Ctrl+1…4`) plus **Settings** (`Ctrl+,`): the top app bar switches the shell so each task only shows the panels it needs, instead of everything at once — Settings is a full workspace too, not a modal dialog, and returns you to the workspace you came from
 - Sidebar + resizable/collapsible panels (splitters everywhere), **Ctrl+K command palette**, full keyboard-shortcut map, **tabs**, **system tray** with quick access, **detachable palette board**, rich **tooltips with color info**
 
-**Preview & visualization (§8)**
+**Preview & visualization**
 - **Preview workspace scenes as tabs** — **Dashboard · Landing · Mobile · Chart · Poster** — each rendered from a **role map** (Primary, Accent, Surface, Background, Text, Border), with its guidance kept outside the mockup so the scene stays judgeable
 - **Export as a prompt** — the Preview toolbar's **Prompt** button copies (or saves as `.md`) a Markdown brief any AI assistant can build from: the palette, a CSS-token block, the **resolved role map** (so it matches the scene on screen, color-blind simulation included), the scene guidance and a short set of ground rules
 - **Light / dark preview switch** (toolbar and dock) — the same role map painted on a near-white or a near-black canvas; the dark canvas is set at a fixed OKLCH lightness so a bright and a dark palette stay visibly different, instead of both collapsing to black
@@ -77,11 +77,11 @@
 - Swatch cards read as **color + name + hex at rest**; the per-swatch action rail fades in on hover (lock stays visible)
 - **Gradient studio** — multi-stop linear/radial gradients with a live CSS readout, **Copy CSS / Save SVG / Save PNG**, and one click to send the stop colors into the palette (undoable)
 
-**Storage & settings (§9–10)**
+**Storage & settings**
 - **JSON file storage** (default) and **SQLite** storage behind one interface, with migration between them; autosave, backups, version history, whole-library import/export
 - Settings: theme, **accent color**, **density**, default copy/export formats, **hotkey configuration**, **storage location**, **reset / clear data**
 
-**Technical (§11)**
+**Technical**
 - Cross-platform Avalonia UI (.NET 9), **MVVM** (CommunityToolkit), offline-first (**no background network calls**; update check runs only when you click it), accessibility labels on swatches, light/dark themes
 - **xUnit test suite** over the color math, WCAG/APCA contrast, copy-format round-trips and every import/export codec (ASE/ACO/GPL/CSS/JSON), with **GitHub Actions CI** building and testing on Linux and Windows
 - Studio-style monochrome UI driven entirely by a design-token stylesheet (`Styles/Theme.axaml`), with a runtime accent override

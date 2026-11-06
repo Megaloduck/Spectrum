@@ -539,7 +539,7 @@ namespace Spectrum.ViewModels
             OnPropertyChanged(nameof(BoardHeaderLabel));
         }
 
-        // ---------------- Contrast matrix (§4/§8) ----------------
+        // ---------------- Contrast matrix ----------------
 
         [RelayCommand]
         private async Task OpenContrastMatrixAsync()

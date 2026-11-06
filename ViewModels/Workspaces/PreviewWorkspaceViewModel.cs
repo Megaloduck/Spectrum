@@ -736,7 +736,7 @@ namespace Spectrum.ViewModels
             }
         }
 
-        /// <summary>§8 "Dark / light mode variant generator": derives a lighter or darker
+        /// <summary> "Dark / light mode variant generator": derives a lighter or darker
         /// sibling palette from the current one and opens it.</summary>
         [RelayCommand]
         private void GenerateLightVariant() => GenerateVariant(light: true);
@@ -845,7 +845,7 @@ namespace Spectrum.ViewModels
             return string.IsNullOrWhiteSpace(clean) ? "palette" : clean;
         }
 
-        /// <summary>§8 "Side-by-side palette comparison".</summary>
+        /// <summary> "Side-by-side palette comparison".</summary>
         [RelayCommand]
         private async Task ComparePalettesAsync()
         {

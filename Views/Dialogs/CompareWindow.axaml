@@ -12,7 +12,7 @@
 
         <StackPanel Spacing="2">
             <TextBlock Text="COMPARE PALETTES" Classes="eyebrow"/>
-            <TextBlock Text="Current palette on the left, pick another one on the right (§8)."
+            <TextBlock Text="Current palette on the left, pick another one on the right."
                        Classes="subtitle"/>
         </StackPanel>
 

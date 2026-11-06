@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// §9 "SQLite storage": the second ILibraryStore backend. Palettes, swatches
+    /// "SQLite storage": the second ILibraryStore backend. Palettes, swatches
     /// and version history live in a single local `library.db`; saves are one
     /// atomic transaction (DELETE + reinsert — the whole library is small, so
     /// this is both simpler and safer than row-level syncing).

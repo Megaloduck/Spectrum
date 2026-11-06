@@ -10,7 +10,7 @@ namespace Spectrum.Services
     public readonly record struct OklchColor(double L, double C, double H);
 
     /// <summary>
-    /// Pure color math for §4 "Color Science (All Local Math)".
+    /// Pure color math for "Color Science (All Local Math)".
     /// Everything here is deterministic, allocation-light, dependency-free
     /// static code operating on Avalonia's Color — deliberately UI-free so it
     /// can be unit tested without a window (see README note on tests).
@@ -358,7 +358,7 @@ namespace Spectrum.Services
             return result;
         }
 
-        // ---------------- Palette generation helpers (§4 tints/shades) ----------------
+        // ---------------- Palette generation helpers (tints/shades) ----------------
 
         /// <summary>count lighter steps (mix toward white), including the base as the last item.</summary>
         public static System.Collections.Generic.List<Color> Tints(Color baseColor, int count = 5)

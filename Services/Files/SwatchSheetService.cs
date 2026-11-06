@@ -19,7 +19,7 @@ namespace Spectrum.Services
     }
 
     /// <summary>
-    /// §6 "Export as PNG (swatch sheet)": renders the palette with Avalonia's
+    /// "Export as PNG (swatch sheet)": renders the palette with Avalonia's
     /// own retained-mode drawing into a RenderTargetBitmap — the same Skia
     /// renderer already shipped with Avalonia, no new packages.
     ///

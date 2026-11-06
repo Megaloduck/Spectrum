@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// §5 "Import (Local Files Only)": parses palette/swatch files into the
+    /// "Import (Local Files Only)": parses palette/swatch files into the
     /// library's swatch DTOs. All parsers are pure C# over local bytes — no
     /// network, no external tooling. Supported: own JSON (via the library),
     /// CSS custom properties, GIMP .gpl, Adobe .ase, Photoshop .aco, image

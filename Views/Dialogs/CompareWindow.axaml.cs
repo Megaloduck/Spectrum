@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Spectrum.Views
 {
-    /// <summary>§8 "Side-by-side palette comparison": current palette vs any palette in the library.</summary>
+    /// <summary> "Side-by-side palette comparison": current palette vs any palette in the library.</summary>
     public partial class CompareWindow : Window
     {
         public sealed class Row

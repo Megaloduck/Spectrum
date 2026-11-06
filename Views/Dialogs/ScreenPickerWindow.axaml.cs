@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 namespace Spectrum.Views
 {
     /// <summary>
-    /// System-wide eyedropper overlay (§3): a small topmost window that follows
+    /// System-wide eyedropper overlay: a small topmost window that follows
     /// the cursor showing a live 12×12 magnifier sampled straight from the
     /// screen, plus a WH_MOUSE_LL hook so a click *anywhere* (even over other
     /// applications) captures the color under the cursor. Esc cancels.

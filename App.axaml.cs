@@ -28,7 +28,7 @@ namespace Spectrum
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
 
-                // §10: settings must load (and apply storage location) before the
+                // settings must load (and apply storage location) before the
                 // library initializes inside the MainWindowViewModel constructor.
                 SettingsService.Load();
                 SettingsService.ApplyStartup();
@@ -42,17 +42,17 @@ namespace Spectrum
                 SettingsService.ApplyDensity();
 
                 // Make sure a pending debounced autosave is written before the
-                // process exits (§9 autosave + crash recovery).
+                // process exits (autosave + crash recovery).
                 desktop.Exit += (_, _) => PaletteLibraryService.Flush();
 
-                // System tray icon + quick access (§7).
+                // System tray icon + quick access.
                 SetupTrayIcon(desktop);
             }
 
             base.OnFrameworkInitializationCompleted();
         }
 
-        // ---------------- System tray (§7 "System tray icon + quick access") ----------------
+        // ---------------- System tray ("System tray icon + quick access") ----------------
 
         private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
         {

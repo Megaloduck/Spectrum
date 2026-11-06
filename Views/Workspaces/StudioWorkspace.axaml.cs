@@ -10,7 +10,7 @@ namespace Spectrum.Views.Workspaces
 
         protected override Grid RootGrid => WorkspaceRoot;
 
-        /// <summary>Clicking the big base-color preview opens the spectrum picker (§2).</summary>
+        /// <summary>Clicking the big base-color preview opens the spectrum picker.</summary>
         private void OnBasePreviewPressed(object? sender, PointerPressedEventArgs e)
         {
             if (DataContext is MainWindowViewModel vm && vm.Studio.OpenColorPickerCommand.CanExecute(null))

@@ -8,7 +8,7 @@ using System.Text;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// §6 "Export as ASE / ACO": writers for the two binary Adobe swatch
+    ///  "Export as ASE / ACO": writers for the two binary Adobe swatch
     /// formats (GPL is plain text — see PaletteExportService.ExportGpl).
     /// Pure byte-level writers, fully offline.
     /// </summary>

@@ -80,7 +80,7 @@ namespace Spectrum.Services
             return sb.ToString();
         }
 
-        /// <summary>Vector swatch sheet — every swatch as a labelled color band (§6).</summary>
+        /// <summary>Vector swatch sheet — every swatch as a labelled color band.</summary>
         private static string ExportSvg(IEnumerable<ColorSwatch> palette)
         {
             var swatches = palette.ToList();
@@ -111,7 +111,7 @@ namespace Spectrum.Services
             return sb.ToString();
         }
 
-        /// <summary>GIMP palette (.gpl) — the de-facto plain-text interchange format (§5/§6).</summary>
+        /// <summary>GIMP palette (.gpl) — the de-facto plain-text interchange format.</summary>
         public static string ExportGpl(IEnumerable<ColorSwatch> palette)
         {
             var sb = new StringBuilder();

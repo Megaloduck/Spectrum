@@ -166,7 +166,7 @@
                             <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.StorageProviders}"
                                       SelectedItem="{Binding Settings.StorageProvider}"
                                       HorizontalAlignment="Stretch"
-                                      ToolTip.Tip="json = flat file library · sqlite = local database (§9)"/>
+                                      ToolTip.Tip="json = flat file library · sqlite = local database"/>
                         </StackPanel>
                     </Border>
 

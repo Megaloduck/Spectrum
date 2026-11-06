@@ -1,7 +1,7 @@
 namespace Spectrum.Models
 {
     /// <summary>
-    /// The app's top-level workspaces (§7 desktop UX). The app bar switches
+    /// The app's top-level workspaces (desktop UX). The app bar switches
     /// between them and each one shows only the panels its task needs, instead
     /// of putting every tool on screen at once.
     /// </summary>

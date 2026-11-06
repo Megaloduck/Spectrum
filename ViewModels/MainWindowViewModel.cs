@@ -21,7 +21,7 @@ namespace Spectrum.ViewModels
     {
         public ObservableCollection<ColorSwatch> Palette { get; } = new();
 
-        /// <summary>The sidebar palette library (§1): list, search, pin, versions.</summary>
+        /// <summary>The sidebar palette library: list, search, pin, versions.</summary>
         public PaletteLibraryViewModel Library { get; }
 
         private string? _activePaletteId;
@@ -31,7 +31,7 @@ namespace Spectrum.ViewModels
         /// read by the workspace ViewModels that operate on it.</summary>
         internal string? ActivePaletteId => _activePaletteId;
 
-        // ---------------- Workspaces (§7 desktop UX) ----------------
+        // ---------------- Workspaces (desktop UX) ----------------
         // Each workspace owns its own state and commands; this shell composes
         // them (views bind e.g. {Binding Studio.Hue}) while the shared board
         // state — palette, history, library, status — stays here.
@@ -53,13 +53,13 @@ namespace Spectrum.ViewModels
 
         public Array ColorBlindModes { get; } = Enum.GetValues(typeof(ColorBlindMode));
 
-        /// <summary>Notations offered by the footer copy-format picker (§2/§10).</summary>
+        /// <summary>Notations offered by the footer copy-format picker.</summary>
         public Array CopyFormats { get; } = Enum.GetValues(typeof(CopyFormat));
 
         [ObservableProperty]
         private CopyFormat _selectedCopyFormat = CopyFormat.Hex;
 
-        /// <summary>The swatch most recently clicked on the board (§8 zoom, Delete/Ctrl+D shortcuts).</summary>
+        /// <summary>The swatch most recently clicked on the board (zoom, Delete/Ctrl+D shortcuts).</summary>
         [ObservableProperty]
         private ColorSwatch? _selectedSwatch;
 
@@ -86,7 +86,7 @@ namespace Spectrum.ViewModels
         /// which do own a dock, keep it.</summary>
         public bool ShowDockToggle => !IsAnalyzeMode && !IsExportMode && !IsSettingsMode;
 
-        // ---------------- §8 Preview & visualization ----------------
+        // ---------------- Preview & visualization ----------------
 
         public Array ViewModes { get; } = Enum.GetValues(typeof(ViewMode));
 
@@ -114,7 +114,7 @@ namespace Spectrum.ViewModels
                 swatch.ShowContrastOverlay = value;
         }
 
-        // ---------------- Active workspace (§7 desktop UX) ----------------
+        // ---------------- Active workspace (desktop UX) ----------------
 
         [ObservableProperty]
         private WorkspaceMode _workspaceMode = WorkspaceMode.Studio;
@@ -271,7 +271,7 @@ namespace Spectrum.ViewModels
             // Keep the header's "N colors" pill in sync no matter what
             // caused the palette to change (add, remove, clear, generate...),
             // and mirror every edit into the library DTO so autosave can
-            // persist it (§1 auto-save / dirty state).
+            // persist it (auto-save / dirty state).
             Palette.CollectionChanged += (_, _) =>
             {
                 PaletteCount = Palette.Count;
@@ -298,12 +298,12 @@ namespace Spectrum.ViewModels
             // base color, so they refresh whenever it changes.
             Studio.BaseColorChanged += Analyze.RefreshForBaseColor;
 
-            // System-wide hotkey for the screen eyedropper (§3). The binding
+            // System-wide hotkey for the screen eyedropper. The binding
             // itself is registered by SettingsService at startup so the user's
             // configured combination is honoured from the first launch.
             GlobalHotkeyService.HotkeyRaised += OnGlobalHotkeyRaised;
 
-            // §10 defaults + §3 picked-color history.
+            // defaults + picked-color history.
             ApplyFormatDefaults();
             Studio.RestoreRecentPicks();
 
@@ -323,7 +323,7 @@ namespace Spectrum.ViewModels
             _suppressToast = false;
         }
 
-        /// <summary>§10 defaults, read at startup and again whenever Settings changes.</summary>
+        /// <summary> defaults, read at startup and again whenever Settings changes.</summary>
         public void ApplyFormatDefaults()
         {
             if (Enum.TryParse<CopyFormat>(SettingsService.Settings.DefaultCopyFormat, out var copy))
@@ -332,7 +332,7 @@ namespace Spectrum.ViewModels
                 Export.SelectedExportFormat = export;
         }
 
-        /// <summary>§10 Settings (Ctrl+,) — opens the settings workspace, and closes it
+        /// <summary> Settings (Ctrl+,) — opens the settings workspace, and closes it
         /// again when you are already there, so the gear behaves like a toggle.</summary>
         [RelayCommand]
         private void OpenSettings()
@@ -345,7 +345,7 @@ namespace Spectrum.ViewModels
         [RelayCommand]
         private void CloseSettings() => SetWorkspace(_returnWorkspace);
 
-        // Panel collapse toggle (§7 "Resizable / collapsible panels").
+        // Panel collapse toggle ( "Resizable / collapsible panels").
         // The inspector can be collapsed; the palette rail is always shown.
         [ObservableProperty]
         private bool _inspectorVisible = true;
@@ -353,7 +353,7 @@ namespace Spectrum.ViewModels
         [RelayCommand]
         private void ToggleInspector() => InspectorVisible = !InspectorVisible;
 
-        /// <summary>§7 "Multi-window support": pop the palette board out into its own
+        /// <summary> "Multi-window support": pop the palette board out into its own
         /// window — just the board, not a second copy of the shell. Both windows
         /// share this ViewModel, so they always show the same palette.</summary>
         [RelayCommand]
@@ -366,7 +366,7 @@ namespace Spectrum.ViewModels
             StatusMessage = "Palette board detached into its own window.";
         }
 
-        /// <summary>§3 "Global hotkey to trigger picker" — Ctrl+Alt+P by default (rebindable in Settings).</summary>
+        /// <summary> "Global hotkey to trigger picker" — Ctrl+Alt+P by default (rebindable in Settings).</summary>
         private void OnGlobalHotkeyRaised()
         {
             if (Studio.PickFromScreenCommand.CanExecute(null))
@@ -621,7 +621,7 @@ namespace Spectrum.ViewModels
             StatusMessage = $"Copied {text} ({SelectedCopyFormat}) to clipboard.";
         }
 
-        /// <summary>§2 "Duplicate individual swatch".</summary>
+        /// <summary> "Duplicate individual swatch".</summary>
         [RelayCommand]
         private void DuplicateSwatch(ColorSwatch? swatch)
         {

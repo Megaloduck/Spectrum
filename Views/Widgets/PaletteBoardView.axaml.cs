@@ -62,7 +62,7 @@ namespace Spectrum.Views
             _subscribedVm = null;
         }
 
-        // ---------------- View modes (§8 grid / list / compact) ----------------
+        // ---------------- View modes (grid / list / compact) ----------------
 
         private void OnViewModeRequested()
         {
@@ -110,7 +110,7 @@ namespace Spectrum.Views
             if (sender is not Border border || border.DataContext is not ColorSwatch swatch) return;
             if (!e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
 
-            // Track the clicked swatch for shortcuts (Ctrl+D / Delete) and §8 zoom.
+            // Track the clicked swatch for shortcuts (Ctrl+D / Delete) and zoom.
             if (DataContext is MainWindowViewModel selectVm) selectVm.SelectedSwatch = swatch;
 
             var panel = border.FindAncestorOfType<Panel>();

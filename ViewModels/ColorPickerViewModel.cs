@@ -13,7 +13,7 @@ namespace Spectrum.ViewModels
     /// <summary>
     /// Backs Views/ColorPickerDialog: a saturation/value spectrum plane plus
     /// hue + opacity sliders, with manual input in HEX, RGB, HSL and HSV
-    /// (§2 "Edit swatch color (picker)", "Manual hex input", "RGB / HSL / HSV input",
+    /// ("Edit swatch color (picker)", "Manual hex input", "RGB / HSL / HSV input",
     /// "Alpha / opacity control", "Inline large preview").
     /// </summary>
     public partial class ColorPickerViewModel : ViewModelBase

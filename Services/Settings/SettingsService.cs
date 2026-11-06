@@ -9,7 +9,7 @@ using System.Text.Json;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// §10 Settings: loads/saves settings.json and applies every setting to the
+    /// Settings: loads/saves settings.json and applies every setting to the
     /// running app (theme, accent, density, defaults, hotkey, storage location).
     /// Everything is local — settings never leave the machine.
     /// </summary>

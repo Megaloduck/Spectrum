@@ -171,164 +171,105 @@
                 <local:PaletteBoardView/>
 
                 <!-- ───────────────────────── PALETTE CONTEXT ───────────────────────── -->
-                <Border Classes="panel" Padding="14,12">
-                    <StackPanel Spacing="10">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Spacing="1">
-                                <TextBlock Text="PALETTE CONTEXT" Classes="eyebrow"/>
-                                <TextBlock Text="How the evaluated color behaves with the rest of the palette."
-                                           Classes="caption" FontSize="10.5"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{Binding Analyze.ReferencePalette}"
-                                       Classes="mono" FontSize="10" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TextMutedBrush}"/>
-                        </Grid>
+<Border Classes="panel" Padding="14,12">
+    <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="1">
+                <TextBlock Text="PALETTE CONTEXT" Classes="eyebrow"/>
+                <TextBlock Text="How the evaluated color behaves with the rest of the palette."
+                           Classes="caption" FontSize="10.5"/>
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding Analyze.ReferencePalette}"
+                       Classes="mono" FontSize="10" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextMutedBrush}"/>
+        </Grid>
 
-                        <WrapPanel Orientation="Horizontal">
+        <!--
+            Pure-XAML responsive grid: a 2-column UniformGrid.
+            - At wide widths the four cards sit 2×2 with equal widths.
+            - At narrow widths the UniformGrid still tries 2 columns, but
+              each card has MinWidth="180" so if the container can't fit
+              two 180px cards the row overflows gracefully and the
+              parent ScrollViewer handles it.
+            - No VM property, no converter, no code-behind.
+        -->
+        <UniformGrid Columns="4" HorizontalAlignment="Stretch">
 
-                            <!-- Collisions involving the selected color -->
-                            <Border Width="308" Padding="11,9" CornerRadius="10"
-                                    Background="{DynamicResource SurfaceRaisedBrush}"
-                                    Margin="0,0,10,10">
-                                <StackPanel Spacing="5">
-                                    <TextBlock Text="VISION COLLISIONS" Classes="eyebrow" FontSize="9.5"/>
-                                    <TextBlock Text="{Binding Analyze.CollisionsSummary}" Classes="caption"
-                                               FontSize="10" TextWrapping="Wrap"/>
-                                    <ItemsControl ItemsSource="{Binding Analyze.CollisionsForSelection}"
-                                                  IsVisible="{Binding Analyze.HasCollisionsForSelection}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="services:VisionCollision">
-                                                <StackPanel Spacing="3" Margin="0,0,0,5">
-                                                    <Grid ColumnDefinitions="*,Auto">
-                                                        <TextBlock Text="{Binding Mode, Converter={x:Static converters:EnumSpacedConverter.Instance}}"
-                                                                   FontSize="9.5" FontWeight="SemiBold"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                                        <TextBlock Grid.Column="1"
-                                                                   Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
-                                                                   Classes="mono caption" FontSize="9.5"/>
-                                                    </Grid>
-                                                    <StackPanel Orientation="Horizontal" Spacing="5">
-                                                        <Border Width="14" Height="14" CornerRadius="4"
-                                                                BorderBrush="{DynamicResource OutlineBrush}"
-                                                                BorderThickness="1"
-                                                                Background="{Binding FirstColor, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                        <TextBlock Text="{Binding FirstName}" FontSize="10"
-                                                                   MaxWidth="86" TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="↔" Classes="caption" FontSize="9"/>
-                                                        <Border Width="14" Height="14" CornerRadius="4"
-                                                                BorderBrush="{DynamicResource OutlineBrush}"
-                                                                BorderThickness="1"
-                                                                Background="{Binding SecondColor, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                        <TextBlock Text="{Binding SecondName}" FontSize="10"
-                                                                   MaxWidth="86" TextTrimming="CharacterEllipsis"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+            <!-- ───── 1. VISION COLLISIONS ───── -->
+            <Border Padding="11,9" CornerRadius="10"
+                    Margin="0,0,10,10" MinWidth="180"
+                    Background="{DynamicResource SurfaceRaisedBrush}">
+                <StackPanel Spacing="5">
+                    <TextBlock Text="VISION COLLISIONS" Classes="eyebrow" FontSize="9.5"/>
+                    <TextBlock Text="{Binding Analyze.CollisionsSummary}" Classes="caption"
+                               FontSize="10" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding Analyze.CollisionsForSelection}"
+                                  IsVisible="{Binding Analyze.HasCollisionsForSelection}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="services:VisionCollision">
+                                <StackPanel Spacing="3" Margin="0,0,0,5">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Mode, Converter={x:Static converters:EnumSpacedConverter.Instance}}"
+                                                   FontSize="9.5" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
+                                                   Classes="mono caption" FontSize="9.5"/>
+                                    </Grid>
+                                    <WrapPanel Orientation="Horizontal">
+                                        <Border Width="14" Height="14" CornerRadius="4"
+                                                BorderBrush="{DynamicResource OutlineBrush}"
+                                                BorderThickness="1"
+                                                Background="{Binding FirstColor, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                        <TextBlock Text="{Binding FirstName}" FontSize="10"
+                                                   MaxWidth="120" TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="↔" Classes="caption" FontSize="9"
+                                                   VerticalAlignment="Center"/>
+                                        <Border Width="14" Height="14" CornerRadius="4"
+                                                BorderBrush="{DynamicResource OutlineBrush}"
+                                                BorderThickness="1"
+                                                Background="{Binding SecondColor, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                        <TextBlock Text="{Binding SecondName}" FontSize="10"
+                                                   MaxWidth="120" TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"/>
+                                    </WrapPanel>
                                 </StackPanel>
-                            </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
 
-                            <!-- Related colors: click to add -->
-                            <Border Width="308" Padding="11,9" CornerRadius="10"
-                                    Background="{DynamicResource SurfaceRaisedBrush}"
-                                    Margin="0,0,10,10">
-                                <StackPanel Spacing="5">
-                                    <TextBlock Text="RELATED COLORS" Classes="eyebrow" FontSize="9.5"/>
-                                    <TextBlock Text="Harmony rules from this color — click a swatch to add it."
-                                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
-                                    <ItemsControl ItemsSource="{Binding Analyze.Harmonies}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:HarmonyRow">
-                                                <StackPanel Spacing="3" Margin="0,0,0,5">
-                                                    <TextBlock Text="{Binding Rule}" FontSize="9"
-                                                               FontWeight="Bold" LetterSpacing="0.8"
-                                                               Opacity="0.55"/>
-                                                    <ItemsControl ItemsSource="{Binding Colors}">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <StackPanel Orientation="Horizontal" Spacing="4"/>
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate x:DataType="av:Color">
-                                                                <Button Classes="iconOnly" Padding="0"
-                                                                        Width="24" Height="24"
-                                                                        Command="{Binding $parent[ItemsControl].((vm:HarmonyRow)DataContext).AddCommand}"
-                                                                        CommandParameter="{Binding}"
-                                                                        ToolTip.Tip="{Binding}">
-                                                                    <Border Width="24" Height="24" CornerRadius="6"
-                                                                            BorderBrush="{DynamicResource OutlineBrush}"
-                                                                            BorderThickness="1"
-                                                                            Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                                </Button>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Nearest palette neighbors -->
-                            <Border Width="308" Padding="11,9" CornerRadius="10"
-                                    Background="{DynamicResource SurfaceRaisedBrush}"
-                                    Margin="0,0,10,10">
-                                <StackPanel Spacing="5">
-                                    <TextBlock Text="NEAREST NEIGHBORS" Classes="eyebrow" FontSize="9.5"/>
-                                    <TextBlock Text="Closest colors already on the board, by CIE76 ΔE."
-                                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
-                                    <ItemsControl ItemsSource="{Binding Analyze.PaletteNeighbors}"
-                                                  IsVisible="{Binding Analyze.HasPaletteNeighbors}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="services:PaletteNeighbor">
-                                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
-                                                    <Border Width="18" Height="18" CornerRadius="5"
-                                                            BorderBrush="{DynamicResource OutlineBrush}"
-                                                            BorderThickness="1"
-                                                            Background="{Binding Color, Converter={x:Static converters:BrushCache.Instance}}"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Name}"
-                                                               FontSize="10.5" Margin="7,0,0,0"
-                                                               VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Grid.Column="2"
-                                                               Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
-                                                               Classes="mono caption" FontSize="9.5"
-                                                               VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    <TextBlock Text="No other colors on the board yet." Classes="caption"
-                                               FontSize="10" IsVisible="{Binding !Analyze.HasPaletteNeighbors}"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Ramp + generators -->
-                            <Border Width="308" Padding="11,9" CornerRadius="10"
-                                    Background="{DynamicResource SurfaceRaisedBrush}"
-                                    Margin="0,0,10,10">
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="RAMP &amp; GENERATORS" Classes="eyebrow" FontSize="9.5"/>
-                                    <TextBlock Text="Perceptually even OKLCH steps — click one to add it."
-                                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
-
-                                    <ItemsControl ItemsSource="{Binding Analyze.Ramp}" Margin="0,2,0,0">
+            <!-- ───── 2. RELATED COLORS ───── -->
+            <Border Padding="11,9" CornerRadius="10"
+                    Margin="0,0,10,10" MinWidth="180"
+                    Background="{DynamicResource SurfaceRaisedBrush}">
+                <StackPanel Spacing="5">
+                    <TextBlock Text="RELATED COLORS" Classes="eyebrow" FontSize="9.5"/>
+                    <TextBlock Text="Harmony rules from this color — click a swatch to add it."
+                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding Analyze.Harmonies}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:HarmonyRow">
+                                <StackPanel Spacing="3" Margin="0,0,0,5">
+                                    <TextBlock Text="{Binding Rule}" FontSize="9"
+                                               FontWeight="Bold" LetterSpacing="0.8"
+                                               Opacity="0.55"/>
+                                    <ItemsControl ItemsSource="{Binding Colors}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <WrapPanel/>
+                                                <WrapPanel Orientation="Horizontal"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="av:Color">
-                                                <Button Classes="iconOnly" Padding="0" Margin="0,0,5,5"
-                                                        Width="26" Height="26"
-                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Analyze.AddRampStepCommand}"
+                                                <Button Classes="iconOnly" Padding="0"
+                                                        Width="24" Height="24"
+                                                        Command="{Binding $parent[ItemsControl].((vm:HarmonyRow)DataContext).AddCommand}"
                                                         CommandParameter="{Binding}"
                                                         ToolTip.Tip="{Binding}">
-                                                    <Border Width="26" Height="26" CornerRadius="6"
+                                                    <Border Width="24" Height="24" CornerRadius="6"
                                                             BorderBrush="{DynamicResource OutlineBrush}"
                                                             BorderThickness="1"
                                                             Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
@@ -336,30 +277,101 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-
-                                    <Grid ColumnDefinitions="*,4,*,4,*">
-                                        <Button Grid.Column="0" Height="28" FontSize="10.5"
-                                                Command="{Binding Analyze.AddTintsCommand}"
-                                                ToolTip.Tip="Add lighter OKLCH steps (toward white)">
-                                            <TextBlock Text="Tints" FontSize="10.5" VerticalAlignment="Center"/>
-                                        </Button>
-                                        <Button Grid.Column="2" Height="28" FontSize="10.5"
-                                                Command="{Binding Analyze.AddShadesCommand}"
-                                                ToolTip.Tip="Add darker OKLCH steps (toward black)">
-                                            <TextBlock Text="Shades" FontSize="10.5" VerticalAlignment="Center"/>
-                                        </Button>
-                                        <Button Grid.Column="4" Height="28" FontSize="10.5"
-                                                Command="{Binding Analyze.AddTonesCommand}"
-                                                ToolTip.Tip="Add desaturated OKLCH steps (toward gray)">
-                                            <TextBlock Text="Tones" FontSize="10.5" VerticalAlignment="Center"/>
-                                        </Button>
-                                    </Grid>
                                 </StackPanel>
-                            </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
 
-                        </WrapPanel>
-                    </StackPanel>
-                </Border>
+            <!-- ───── 3. NEAREST NEIGHBORS ───── -->
+            <Border Padding="11,9" CornerRadius="10"
+                    Margin="0,0,10,10" MinWidth="180"
+                    Background="{DynamicResource SurfaceRaisedBrush}">
+                <StackPanel Spacing="5">
+                    <TextBlock Text="NEAREST NEIGHBORS" Classes="eyebrow" FontSize="9.5"/>
+                    <TextBlock Text="Closest colors already on the board, by CIE76 ΔE."
+                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding Analyze.PaletteNeighbors}"
+                                  IsVisible="{Binding Analyze.HasPaletteNeighbors}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="services:PaletteNeighbor">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
+                                    <Border Width="18" Height="18" CornerRadius="5"
+                                            BorderBrush="{DynamicResource OutlineBrush}"
+                                            BorderThickness="1"
+                                            Background="{Binding Color, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}"
+                                               FontSize="10.5" Margin="7,0,0,0"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding DeltaE, StringFormat='ΔE {0:N1}'}"
+                                               Classes="mono caption" FontSize="9.5"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No other colors on the board yet." Classes="caption"
+                               FontSize="10" IsVisible="{Binding !Analyze.HasPaletteNeighbors}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ───── 4. RAMP & GENERATORS ───── -->
+            <Border Padding="11,9" CornerRadius="10"
+                    Margin="0,0,10,10" MinWidth="180"
+                    Background="{DynamicResource SurfaceRaisedBrush}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="RAMP &amp; GENERATORS" Classes="eyebrow" FontSize="9.5"/>
+                    <TextBlock Text="Perceptually even OKLCH steps — click one to add it."
+                               Classes="caption" FontSize="10" TextWrapping="Wrap"/>
+
+                    <ItemsControl ItemsSource="{Binding Analyze.Ramp}" Margin="0,2,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="av:Color">
+                                <Button Classes="iconOnly" Padding="0"
+                                        Width="26" Height="26"
+                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).Analyze.AddRampStepCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="{Binding}">
+                                    <Border Width="26" Height="26" CornerRadius="6"
+                                            BorderBrush="{DynamicResource OutlineBrush}"
+                                            BorderThickness="1"
+                                            Background="{Binding, Converter={x:Static converters:BrushCache.Instance}}"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <WrapPanel Orientation="Horizontal">
+                        <Button Height="28" FontSize="10.5" MinWidth="64"
+                                Command="{Binding Analyze.AddTintsCommand}"
+                                ToolTip.Tip="Add lighter OKLCH steps (toward white)">
+                            <TextBlock Text="Tints" FontSize="10.5" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button Height="28" FontSize="10.5" MinWidth="64"
+                                Command="{Binding Analyze.AddShadesCommand}"
+                                ToolTip.Tip="Add darker OKLCH steps (toward black)">
+                            <TextBlock Text="Shades" FontSize="10.5" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button Height="28" FontSize="10.5" MinWidth="64"
+                                Command="{Binding Analyze.AddTonesCommand}"
+                                ToolTip.Tip="Add desaturated OKLCH steps (toward gray)">
+                            <TextBlock Text="Tones" FontSize="10.5" VerticalAlignment="Center"/>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+        </UniformGrid>
+    </StackPanel>
+</Border>
 
                 <!-- ───────────────────────── EVALUATION ───────────────────────── -->
                 <Border Classes="panel" Padding="18,16">

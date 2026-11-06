@@ -175,6 +175,13 @@
     <Setter Property="FontWeight" Value="Normal"/>
     <Setter Property="LetterSpacing" Value="0"/>
   </Style>
+  
+  <Style Selector="TextBlock.displaycolor">
+    <Setter Property="FontFamily" Value="{DynamicResource Cabazon}"/>
+    <Setter Property="FontSize" Value="22"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+    <Setter Property="LetterSpacing" Value="0"/>
+  </Style>
 
   <Style Selector="TextBlock.display.small">
     <Setter Property="FontSize" Value="22"/>

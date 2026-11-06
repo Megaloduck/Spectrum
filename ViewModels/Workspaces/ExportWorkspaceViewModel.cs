@@ -36,7 +36,7 @@ namespace Spectrum.ViewModels
         [ObservableProperty]
         private string _exportPreview = string.Empty;
 
-        // ---------------- Swatch sheet preview (§6) ----------------
+        // ---------------- Swatch sheet preview ----------------
         // The sheet is rendered up front instead of only at save time, so the
         // Export workspace shows exactly the image the Save button writes.
 
@@ -168,7 +168,7 @@ namespace Spectrum.ViewModels
             _shell.StatusMessage = "Copied export text to clipboard.";
         }
 
-        /// <summary>§6 "Export presets": writes the selected format straight to a local file
+        /// <summary> "Export presets": writes the selected format straight to a local file
         /// (text formats directly, ASE/ACO as their binary encodings).</summary>
         [RelayCommand]
         private async Task ExportToFileAsync()
@@ -209,7 +209,7 @@ namespace Spectrum.ViewModels
 
         // ---------------- Swatch sheet file ----------------
 
-        /// <summary>§6 "Export as PNG (swatch sheet)" — writes the sheet as PNG or JPG.</summary>
+        /// <summary> "Export as PNG (swatch sheet)" — writes the sheet as PNG or JPG.</summary>
         [RelayCommand]
         private async Task SaveSheetAsync()
         {

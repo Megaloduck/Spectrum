@@ -12,8 +12,8 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/Spectrum.ico"
         Title="Spectrum"
-        Width="1500" Height="800"
-        MinWidth="1240" MinHeight="680"
+        Width="1280" Height="720"
+        MinWidth="1080" MinHeight="608"
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome">

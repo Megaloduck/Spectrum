@@ -26,7 +26,7 @@ namespace Spectrum.Views
     }
 
     /// <summary>
-    /// §7 "Command palette (Ctrl+K)": fuzzy-searchable list of every command in
+    /// "Command palette (Ctrl+K)": fuzzy-searchable list of every command in
     /// the app, with keyboard navigation. Opens even while typing in a TextBox.
     /// </summary>
     public partial class CommandPaletteWindow : Window

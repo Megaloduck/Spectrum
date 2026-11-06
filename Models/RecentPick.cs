@@ -2,7 +2,7 @@ using Avalonia.Media;
 
 namespace Spectrum.Models
 {
-    /// <summary>One entry in the recently-picked-colors history (§3).</summary>
+    /// <summary>One entry in the recently-picked-colors history.</summary>
     public class RecentPick
     {
         public RecentPick(Color color)

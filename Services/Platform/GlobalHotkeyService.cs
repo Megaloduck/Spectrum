@@ -6,8 +6,8 @@ using System.Threading;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// Registers a system-wide hotkey (§3 "Global hotkey to trigger picker",
-    /// §10 "Hotkey configuration"). A dedicated background thread owns the
+    /// Registers a system-wide hotkey ("Global hotkey to trigger picker",
+    /// "Hotkey configuration"). A dedicated background thread owns the
     /// hotkey: RegisterHotKey with a null HWND posts WM_HOTKEY straight to the
     /// registering thread's message queue, so the thread only needs a GetMessage
     /// loop — no window creation, no subclassing, no interference with Avalonia's

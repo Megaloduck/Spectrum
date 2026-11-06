@@ -9,10 +9,11 @@
         CanResize="True"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="True"
+        Topmost="True" 
         Icon="/Assets/Spectrum.ico"
         Background="{DynamicResource CanvasBrush}">
 
-    <!-- §7 "Multi-window support" — detaching a palette pops out the board only,
+    <!-- "Multi-window support" — detaching a palette pops out the board only,
          not a second copy of the shell. It shares the main window's ViewModel, so
          the floating board and the one on screen are the same palette: selecting,
          editing, locking or dragging a swatch in either window shows in both. -->

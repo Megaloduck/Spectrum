@@ -15,7 +15,7 @@ namespace Spectrum.Services
             }
         }
 
-        /// <summary>Reads the current text clipboard content, or null when unavailable (§2 paste).</summary>
+        /// <summary>Reads the current text clipboard content, or null when unavailable (paste).</summary>
         public static async Task<string?> GetTextAsync()
         {
             if (TopLevelFromMain() is { } topLevel && topLevel.Clipboard is { } clipboard)

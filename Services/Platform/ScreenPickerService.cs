@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// System-wide eyedropper primitives (§3): reads raw pixel colors from the
+    /// System-wide eyedropper primitives: reads raw pixel colors from the
     /// screen using Win32 GDI. Fully local — no network, no capture of content,
     /// just the color under the cursor. Stubbed off on non-Windows platforms.
     /// </summary>

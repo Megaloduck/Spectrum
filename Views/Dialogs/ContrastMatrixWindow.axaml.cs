@@ -14,7 +14,7 @@ using VAlign = Avalonia.Layout.VerticalAlignment;
 namespace Spectrum.Views
 {
     /// <summary>
-    /// §4/§8 "Contrast matrix": an N×N grid of every text-on-background pair in
+    /// "Contrast matrix": an N×N grid of every text-on-background pair in
     /// the palette. Rows are backgrounds, columns are text; each cell shows the
     /// WCAG ratio color-coded by pass level, with APCA Lc in the tooltip.
     /// Snapshots the palette on open (same convention as CompareWindow).

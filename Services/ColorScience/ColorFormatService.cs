@@ -9,8 +9,8 @@ namespace Spectrum.Services
 {
     /// <summary>
     /// Formats a color for the clipboard in every notation the sheet asks for
-    /// (§2 "Copy color in multiple formats") and parses any of them back
-    /// (§2 "Paste color from clipboard"). All numeric formatting is
+    /// ("Copy color in multiple formats") and parses any of them back
+    /// ("Paste color from clipboard"). All numeric formatting is
     /// culture-invariant: the output is clipboard text and CSS that must read
     /// identically on every machine, and TryParse reads numbers back with
     /// InvariantCulture — a decimal-comma locale would otherwise produce

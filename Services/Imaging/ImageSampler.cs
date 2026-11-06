@@ -7,7 +7,7 @@ namespace Spectrum.Services
 {
     /// <summary>
     /// Decodes a bitmap into an in-memory pixel buffer once, so the in-app
-    /// eyedropper (§3) can sample any pixel in O(1) on every mouse move.
+    /// eyedropper can sample any pixel in O(1) on every mouse move.
     /// Handles both RGBA and BGRA byte orders and un-premultiplies alpha.
     /// </summary>
     public sealed class ImageSampler

@@ -1,6 +1,6 @@
 namespace Spectrum.Models
 {
-    /// <summary>§8 "Grid / list / compact view modes" (plus the classic single-row layout).</summary>
+    /// <summary> "Grid / list / compact view modes" (plus the classic single-row layout).</summary>
     public enum ViewMode
     {
         /// <summary>Coolors-style one horizontal strip of full-height cards.</summary>

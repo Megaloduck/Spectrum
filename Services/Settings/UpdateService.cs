@@ -8,7 +8,7 @@ namespace Spectrum.Services
     public sealed record UpdateInfo(string Version, string? Notes, string? Url);
 
     /// <summary>
-    /// §11 "Auto-update mechanism", shaped by §11 "Offline-first": Spectrum
+    /// "Auto-update mechanism", shaped by "Offline-first": Spectrum
     /// makes no network calls in the background, ever. A check runs only when
     /// the user explicitly clicks "Check for updates" in Settings, it fetches a
     /// tiny static manifest, and it only ever *tells* you about a newer

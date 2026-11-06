@@ -1,6 +1,6 @@
 namespace Spectrum.Models
 {
-    /// <summary>Target format for "copy color" — also the §10 setting "default color format on copy".</summary>
+    /// <summary>Target format for "copy color" — also the setting "default color format on copy".</summary>
     public enum CopyFormat
     {
         Hex,

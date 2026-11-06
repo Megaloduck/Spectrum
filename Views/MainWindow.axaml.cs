@@ -83,7 +83,7 @@ namespace Spectrum.Views
             // No-op: the palette rail is always visible.
         }
 
-        // ---------------- Custom title bar (§7) ----------------
+        // ---------------- Custom title bar ----------------
 
         private void OnMinimizeWindow(object? sender, RoutedEventArgs e) =>
             WindowState = WindowState.Minimized;
@@ -146,7 +146,7 @@ namespace Spectrum.Views
             var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement();
             var typing = focused is TextBox;
 
-            // Command palette opens even from inside a text box (§7).
+            // Command palette opens even from inside a text box.
             if (ctrl && e.Key == Key.K)
             {
                 OpenCommandPalette(vm);

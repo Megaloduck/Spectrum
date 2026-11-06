@@ -25,7 +25,7 @@
                 <Grid ColumnDefinitions="*,Auto" Margin="18,16,12,10">
                     <StackPanel Spacing="2">
                         <TextBlock Text="COLOR PANEL" Classes="eyebrow"/>
-                        <TextBlock Text="{Binding Studio.BaseColorName}" Classes="title"
+                        <TextBlock Text="{Binding Studio.BaseColorName}" Classes="displaycolor"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                     <Button Grid.Column="1" Classes="iconChip ghost" Width="28" Height="28"

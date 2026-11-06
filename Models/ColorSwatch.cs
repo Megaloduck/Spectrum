@@ -38,7 +38,7 @@ namespace Spectrum.Models
 
         public string Hex => $"#{Color.R:X2}{Color.G:X2}{Color.B:X2}";
 
-        /// <summary>Rich tooltip readouts (§7 "Tooltips with color info").</summary>
+        /// <summary>Rich tooltip readouts ("Tooltips with color info").</summary>
         public string RgbLabel =>
             Color.A == 255
                 ? $"rgb({Color.R}, {Color.G}, {Color.B})"
@@ -58,7 +58,7 @@ namespace Spectrum.Models
                 ? string.Empty
                 : $" shown as {ColorBlindMode}";
 
-        // ---------------- §8 "Contrast overlay on swatches" ----------------
+        // ---------------- "Contrast overlay on swatches" ----------------
 
         [ObservableProperty]
         private bool _showContrastOverlay;
@@ -83,7 +83,7 @@ namespace Spectrum.Models
             }
         }
 
-        // ---------------- §8 "Swatch zoom view" readouts ----------------
+        // ---------------- "Swatch zoom view" readouts ----------------
 
         public string LabLabel
         {

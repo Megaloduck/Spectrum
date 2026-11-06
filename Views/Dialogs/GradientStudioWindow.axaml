@@ -9,7 +9,7 @@
         Icon="/Assets/Spectrum.ico"
         Background="{DynamicResource CanvasBrush}">
 
-    <!-- §8 — build a multi-stop gradient, then copy CSS / save SVG or PNG,
+    <!-- build a multi-stop gradient, then copy CSS / save SVG or PNG,
          or push its colors straight into the palette (undoable). -->
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="20">

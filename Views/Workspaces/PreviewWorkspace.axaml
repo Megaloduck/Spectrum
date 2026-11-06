@@ -478,7 +478,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Side-by-side comparison (§8) -->
+                        <!-- Side-by-side comparison -->
                         <Button Height="34" Margin="0,0,4,0"
                                 Command="{Binding Preview.ComparePalettesCommand}"
                                 ToolTip.Tip="Compare this palette side-by-side with another one">
@@ -530,10 +530,10 @@
                             </Button.Flyout>
                         </Button>
 
-                        <!-- Detach (§7 multi-window): lives on the Preview toolbar only. -->
+                        <!-- Detach (multi-window): lives on the Preview toolbar only. -->
                         <Button Height="34"
                                 Command="{Binding DetachWindowCommand}"
-                                ToolTip.Tip="Pop this palette's board into its own window (§7 multi-window)">
+                                ToolTip.Tip="Pop this palette's board into its own window (multi-window)">
                             <StackPanel Orientation="Horizontal" Spacing="6"
                                         VerticalAlignment="Center">
                                 <materialIcons:MaterialIcon Kind="WindowRestore" Width="16" Height="16"/>
@@ -543,7 +543,6 @@
 
                     </WrapPanel>
 
-                    <local:ToolbarGlobalsView Grid.Column="1"/>
                 </Grid>
             </Border>
 

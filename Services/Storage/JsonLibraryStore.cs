@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Spectrum.Services
 {
     /// <summary>
-    /// JSON file backend for the palette library (the v1 default from §9).
+    /// JSON file backend for the palette library (the v1 default from).
     ///
     /// Durability features:
     ///  - Atomic saves: everything is first written to a .tmp journal file and

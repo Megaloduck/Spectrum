@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Spectrum.ViewModels
 {
     /// <summary>
-    /// §10 Settings: every option applies immediately and persists to
+    /// Settings: every option applies immediately and persists to
     /// settings.json. Sections: appearance (theme/accent/density), copy &
     /// export defaults, hotkey, storage location/provider, danger zone.
     /// </summary>
@@ -30,7 +30,7 @@ namespace Spectrum.ViewModels
         private string _updateStatus =
             "Offline-first: Spectrum makes no network calls in the background.";
 
-        /// <summary>§11 update check — explicitly user-triggered, never backgrounded.</summary>
+        /// <summary> update check — explicitly user-triggered, never backgrounded.</summary>
         [RelayCommand]
         private async Task CheckForUpdatesAsync()
         {

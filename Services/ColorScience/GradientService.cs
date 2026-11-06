@@ -20,7 +20,7 @@ namespace Spectrum.Services
     public readonly record struct GradientColorStop(Color Color, double Position);
 
     /// <summary>
-    /// §8 "Gradient studio": pure math + serializers for multi-stop gradients.
+    /// "Gradient studio": pure math + serializers for multi-stop gradients.
     /// Deliberately UI-free and culture-invariant (CSS/SVG output must read
     /// identically on every machine) so it can be unit tested headless.
     /// </summary>

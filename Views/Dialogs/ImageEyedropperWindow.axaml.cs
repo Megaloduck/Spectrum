@@ -9,7 +9,7 @@ using System;
 namespace Spectrum.Views
 {
     /// <summary>
-    /// In-app eyedropper (§3 "pick from loaded image"): hover shows the exact
+    /// In-app eyedropper ("pick from loaded image"): hover shows the exact
     /// pixel under the cursor with its hex + auto-name; clicking returns the
     /// color to the caller. Owns and disposes the bitmap it was given.
     /// </summary>

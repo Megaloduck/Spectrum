@@ -16,7 +16,7 @@
          each workspace just places it. -->
 
     <UserControl.Resources>
-        <!-- Board card templates for the four view modes (§8 grid/list/compact).
+        <!-- Board card templates for the four view modes ( grid/list/compact).
              The mode switch is applied in code-behind (PaletteBoardView.ApplyViewMode).
 
              Card actions, in order of how often they're used:
@@ -62,7 +62,7 @@
 
                         <StackPanel Classes="swatchRail" Spacing="6">
 
-                            <!-- Details / zoom (§8) -->
+                            <!-- Details / zoom -->
                             <Button Classes="iconOnly" Foreground="{Binding ForegroundBrush}" ToolTip.Tip="Details">
                                 <materialIcons:MaterialIcon Kind="Magnify" Width="14" Height="14" Foreground="{Binding ForegroundBrush}"/>
                                 <Button.Flyout>
@@ -163,7 +163,7 @@
                         <TextBlock Text="{Binding ContrastLabel}" FontSize="10" Opacity="0.7"
                                    Margin="0,2,0,0"
                                    Foreground="{Binding ForegroundBrush}"/>
-                        <!-- §8 contrast overlay badges -->
+                        <!-- contrast overlay badges -->
                         <TextBlock Text="{Binding WhiteTextBadge}" FontSize="10" Opacity="0.85"
                                    Foreground="{Binding ForegroundBrush}"
                                    IsVisible="{Binding ShowContrastOverlay}"/>
@@ -184,7 +184,7 @@
             </Border>
         </DataTemplate>
 
-        <!-- List: one wide row per swatch with its data (§8 list view). -->
+        <!-- List: one wide row per swatch with its data (list view). -->
         <DataTemplate x:Key="ListCardTemplate" x:DataType="models:ColorSwatch">
             <Border Classes="swatchCard" Classes.selected="{Binding IsSelected}"
                     Background="{Binding Brush}" CornerRadius="12" Margin="5" Height="72" Cursor="Hand"
@@ -281,7 +281,7 @@
             </Border>
         </DataTemplate>
 
-        <!-- Compact: small chips, as many as possible (§8 compact view). -->
+        <!-- Compact: small chips, as many as possible (compact view). -->
         <DataTemplate x:Key="CompactCardTemplate" x:DataType="models:ColorSwatch">
             <Border Classes="swatchCard" Classes.selected="{Binding IsSelected}"
                     Background="{Binding Brush}" CornerRadius="10" Margin="4" Width="108" Height="92"

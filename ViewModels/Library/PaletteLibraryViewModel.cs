@@ -18,9 +18,9 @@ namespace Spectrum.ViewModels
     }
 
     /// <summary>
-    /// Sidebar palette list (§1): create / rename (inline) / duplicate / delete,
+    /// Sidebar palette list: create / rename (inline) / duplicate / delete,
     /// pin, search, filter (all/pinned/recent), version history + restore, and
-    /// whole-library import/export (§9). Owns the PaletteItemViewModel rows and
+    /// whole-library import/export. Owns the PaletteItemViewModel rows and
     /// surfaces the active palette selection to the parent ViewModel.
     /// </summary>
     public partial class PaletteLibraryViewModel : ViewModelBase
@@ -28,7 +28,7 @@ namespace Spectrum.ViewModels
         public ObservableCollection<PaletteItemViewModel> Palettes { get; } = new();
         public ObservableCollection<PaletteItemViewModel> VisiblePalettes { get; } = new();
 
-        /// <summary>Palettes currently open as tabs above the board (§7).</summary>
+        /// <summary>Palettes currently open as tabs above the board.</summary>
         public ObservableCollection<PaletteItemViewModel> OpenTabs { get; } = new();
 
         public Array Filters => Enum.GetValues(typeof(LibraryFilter));

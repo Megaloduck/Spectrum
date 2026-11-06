@@ -9,14 +9,14 @@
         Icon="/Assets/Spectrum.ico"
         Background="{DynamicResource CanvasBrush}">
 
-    <!-- §4/§8 — every text-on-background pair of the palette scored at a glance. -->
+    <!-- every text-on-background pair of the palette scored at a glance. -->
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="20">
 
         <StackPanel Spacing="2">
             <TextBlock Text="CONTRAST MATRIX" Classes="eyebrow"/>
             <TextBlock Classes="subtitle"
-                       Text="Rows are backgrounds, columns are text. Each cell is the WCAG ratio for that pair — hover it for AAA/AA verdicts and APCA (§4)."/>
+                       Text="Rows are backgrounds, columns are text. Each cell is the WCAG ratio for that pair — hover it for AAA/AA verdicts and APCA."/>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" Margin="0,14,0,10"

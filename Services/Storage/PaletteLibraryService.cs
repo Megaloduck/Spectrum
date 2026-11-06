@@ -8,7 +8,7 @@ namespace Spectrum.Services
 {
     /// <summary>
     /// Owns the in-memory palette library and keeps the storage backend in
-    /// sync. Implements autosave with a debounced dirty state (§1/§9):
+    /// sync. Implements autosave with a debounced dirty state:
     ///
     ///   edit → MarkDirty(palette) → 750ms of silence → Flush() → store save
     ///
@@ -66,7 +66,7 @@ namespace Spectrum.Services
         }
 
         /// <summary>Persists pending changes to the current store, then switches to another
-        /// one (storage location / provider changes in Settings, §10) and reloads.</summary>
+        /// one (storage location / provider changes in Settings, and reloads.</summary>
         public static void ChangeStore(ILibraryStore store)
         {
             Flush();

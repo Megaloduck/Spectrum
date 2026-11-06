@@ -211,7 +211,7 @@ namespace Spectrum.ViewModels
             return brush;
         }
 
-        // ---------------- Picking (§3): screen, image, recent history ----------------
+        // ---------------- Picking: screen, image, recent history ----------------
 
         public ObservableCollection<RecentPick> RecentPicks { get; } = new();
 
@@ -220,7 +220,7 @@ namespace Spectrum.ViewModels
         /// <summary>Prevents two windows' hotkey handlers opening two pickers at once.</summary>
         private static bool ScreenPickerOpen;
 
-        /// <summary>§3 "System-wide eyedropper" — click anywhere on screen to capture the color.</summary>
+        /// <summary> "System-wide eyedropper" — click anywhere on screen to capture the color.</summary>
         [RelayCommand]
         private async Task PickFromScreenAsync()
         {
@@ -252,7 +252,7 @@ namespace Spectrum.ViewModels
             }
         }
 
-        /// <summary>§3 "In-app eyedropper (pick from loaded image)".</summary>
+        /// <summary> "In-app eyedropper (pick from loaded image)".</summary>
         [RelayCommand]
         private async Task PickFromImageAsync()
         {
@@ -285,7 +285,7 @@ namespace Spectrum.ViewModels
         {
             ApplyToBaseColor(color);
 
-            // Newest first, no duplicates, capped at 20 (§3 history).
+            // Newest first, no duplicates, capped at 20 (history).
             var existing = RecentPicks.FirstOrDefault(p => p.Color == color);
             if (existing is not null) RecentPicks.Remove(existing);
             RecentPicks.Insert(0, new RecentPick(color));
@@ -304,7 +304,7 @@ namespace Spectrum.ViewModels
             _shell.StatusMessage = $"Loaded {pick.Hex} ({pick.Name}) into the color panel.";
         }
 
-        /// <summary>§3 picked-color history, read at startup.</summary>
+        /// <summary> picked-color history, read at startup.</summary>
         public void RestoreRecentPicks()
         {
             foreach (var hex in SettingsService.Settings.RecentPicks)
@@ -321,7 +321,7 @@ namespace Spectrum.ViewModels
             SettingsService.Save();
         }
 
-        /// <summary>§2 "Paste color from clipboard" — reads any supported notation into the color panel.</summary>
+        /// <summary> "Paste color from clipboard" — reads any supported notation into the color panel.</summary>
         [RelayCommand]
         private async Task PasteColorAsync()
         {
@@ -338,7 +338,7 @@ namespace Spectrum.ViewModels
             _shell.StatusMessage = $"Pasted {ColorMathService.ToHex(color)} from clipboard.";
         }
 
-        /// <summary>§2 "Edit swatch color (picker)" — opens the spectrum dialog for the base color.</summary>
+        /// <summary> "Edit swatch color (picker)" — opens the spectrum dialog for the base color.</summary>
         [RelayCommand]
         private async Task OpenColorPickerAsync()
         {
@@ -464,7 +464,7 @@ namespace Spectrum.ViewModels
             _shell.StatusMessage = $"Extracted {replaced} color{(replaced == 1 ? "" : "s")} from the image.";
         }
 
-        /// <summary>§8 "Gradient studio": build a multi-stop gradient seeded from the
+        /// <summary>"Gradient studio": build a multi-stop gradient seeded from the
         /// palette, export it (CSS / SVG / PNG), then pull its colors into the board.</summary>
         [RelayCommand]
         private async Task OpenGradientStudioAsync()
